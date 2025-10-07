@@ -3,7 +3,7 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// ⚙️ Config Firebase của bạn
+
 const firebaseConfig = {
   apiKey: "AIzaSyDnzNnNMDI__0gsGSg_RTR69m-RKUh9n04",
   authDomain: "astrolove-e53f8.firebaseapp.com",

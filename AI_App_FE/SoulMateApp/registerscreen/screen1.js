@@ -1,17 +1,17 @@
+// RegisterScreen1.jsx
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  Pressable, 
-  StyleSheet, 
-  ActivityIndicator, 
-  Alert 
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../firebaseConfig';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { colors } from '../effectColor.js/BGColor';
+import { auth } from '../firebaseConfig';
+import { colors } from '../components/BGColor';
 
 export default function RegisterScreen1({ navigation }) {
   const [email, setEmail] = useState('');
@@ -19,7 +19,6 @@ export default function RegisterScreen1({ navigation }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // ✅ Xử lý đăng ký tài khoản thật bằng Firebase Auth
   const handleRegister = async () => {
     if (!email || !password || !confirmPassword) {
       Alert.alert('⚠️ Thiếu thông tin', 'Vui lòng điền đầy đủ email và mật khẩu.');
@@ -31,37 +30,21 @@ export default function RegisterScreen1({ navigation }) {
       return;
     }
 
-    // Regex check định dạng email đơn giản
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('📧 Email không hợp lệ', 'Vui lòng nhập đúng định dạng email.');
-      return;
-    }
-
     setLoading(true);
     try {
       // 🔥 Tạo tài khoản Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 💾 Lưu thêm dữ liệu vào Firestore (tùy chọn)
-      await setDoc(doc(db, 'users', user.uid), {
-        email: user.email,
-        createdAt: serverTimestamp(),
-      });
-
-      Alert.alert('🎉 Thành công', 'Tài khoản đã được tạo!');
-      navigation.navigate('RegisterScreen2');
+      Alert.alert('✅ Thành công', 'Bước 1 hoàn tất! Hãy điền thêm thông tin cá nhân.');
+      // 👉 Gửi UID sang RegisterScreen2
+      navigation.navigate('RegisterScreen2', { uid: user.uid });
     } catch (error) {
       console.log('Firebase Auth Error:', error);
       let message = 'Có lỗi xảy ra. Vui lòng thử lại.';
-      if (error.code === 'auth/email-already-in-use') {
-        message = 'Email này đã được đăng ký.';
-      } else if (error.code === 'auth/invalid-email') {
-        message = 'Email không hợp lệ.';
-      } else if (error.code === 'auth/weak-password') {
-        message = 'Mật khẩu quá yếu (tối thiểu 6 ký tự).';
-      }
+      if (error.code === 'auth/email-already-in-use') message = 'Email này đã được đăng ký.';
+      else if (error.code === 'auth/invalid-email') message = 'Email không hợp lệ.';
+      else if (error.code === 'auth/weak-password') message = 'Mật khẩu quá yếu (tối thiểu 6 ký tự).';
       Alert.alert('❌ Lỗi đăng ký', message);
     } finally {
       setLoading(false);
@@ -110,14 +93,9 @@ export default function RegisterScreen1({ navigation }) {
           ]}
           disabled={loading}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Đăng ký</Text>
-          )}
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Tiếp tục</Text>}
         </Pressable>
 
-        {/* Nút chuyển sang đăng nhập */}
         <Pressable onPress={() => navigation.navigate('LoginScreen')}>
           <Text style={styles.switchText}>
             Đã có tài khoản? <Text style={{ color: colors.blueButton }}>Đăng nhập</Text>
@@ -129,55 +107,12 @@ export default function RegisterScreen1({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    justifyContent: 'center', 
-    padding: 20, 
-    backgroundColor: colors.blackBackground 
-  },
-  title: { 
-    fontSize: 28, 
-    fontWeight: '800', 
-    textAlign: 'center', 
-    marginBottom: 20, 
-    color: colors.whiteText 
-  },
-  box: { 
-    padding: 20, 
-    backgroundColor: '#fff', 
-    borderRadius: 12, 
-    elevation: 5 
-  },
-  label: { 
-    fontSize: 14, 
-    color: colors.blackText, 
-    fontWeight: '600', 
-    marginBottom: 6 
-  },
-  input: { 
-    height: 48, 
-    borderWidth: 1, 
-    borderColor: colors.borderGray, 
-    borderRadius: 12, 
-    paddingHorizontal: 12, 
-    fontSize: 16, 
-    marginBottom: 12 
-  },
-  button: { 
-    height: 48, 
-    borderRadius: 12, 
-    backgroundColor: colors.blueButton, 
-    alignItems: 'center', 
-    justifyContent: 'center' 
-  },
-  buttonText: { 
-    color: colors.whiteText, 
-    fontWeight: '700', 
-    fontSize: 16 
-  },
-  switchText: { 
-    textAlign: 'center', 
-    marginTop: 12, 
-    color: colors.blackText 
-  },
+  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: colors.blackBackground },
+  title: { fontSize: 28, fontWeight: '800', textAlign: 'center', marginBottom: 20, color: colors.whiteText },
+  box: { padding: 20, backgroundColor: '#fff', borderRadius: 12, elevation: 5 },
+  label: { fontSize: 14, color: colors.blackText, fontWeight: '600', marginBottom: 6 },
+  input: { height: 48, borderWidth: 1, borderColor: colors.borderGray, borderRadius: 12, paddingHorizontal: 12, fontSize: 16, marginBottom: 12 },
+  button: { height: 48, borderRadius: 12, backgroundColor: colors.blueButton, alignItems: 'center', justifyContent: 'center' },
+  buttonText: { color: colors.whiteText, fontWeight: '700', fontSize: 16 },
+  switchText: { textAlign: 'center', marginTop: 12, color: colors.blackText },
 });
