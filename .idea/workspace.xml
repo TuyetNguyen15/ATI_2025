@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2e85d15f-6407-492c-922d-86e2f1e46b13" name="Changes" comment="" />
+    <list default="true" id="2e85d15f-6407-492c-922d-86e2f1e46b13" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -18,7 +22,7 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/AI_App_FE/SoulMateApp" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
@@ -69,7 +73,10 @@
       <workItem from="1758855931471" duration="3087000" />
       <workItem from="1758882072587" duration="24000" />
       <workItem from="1758882215621" duration="3361000" />
-      <workItem from="1759031088385" duration="1800000" />
+      <workItem from="1759031088385" duration="3017000" />
+      <workItem from="1759287305848" duration="1194000" />
+      <workItem from="1759383033620" duration="629000" />
+      <workItem from="1759551804776" duration="4016000" />
     </task>
     <servers />
   </component>

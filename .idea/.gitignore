@@ -54,3 +54,4 @@ htmlcov/
 # ----- Editors -----
 .idea/
 .vscode/
+.expo/
