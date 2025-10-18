@@ -3,8 +3,43 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   name: "",
   avatar: "",
-  coverPage: "",
+  coverImage: "",
+  age: null,
+  gender: "",
+  height: null,
+  weight: null,
+  job: "",
+  email: "",
+  password: "",
   zodiac: "",
+  sun: "",
+    moon: "",
+    mercury: "",
+    venus: "",
+    mars: "",
+    jupiter: "",
+    saturn: "",
+    uranus: "",
+    neptune: "",
+    house1: "",
+  house2: "",
+  house3: "",
+  house4: "",
+  house5: "",
+  house6: "",
+  house7: "",
+  house8: "",
+  house9: "",
+  house10: "",
+  house11: "",
+  house12: "",
+  conjunctionAspect: "",
+  oppositionAspect: "",
+  trineAspect: "",
+  squareAspect: "",
+  sextileAspect: "",
+  natalChartImage: "",
+
   personalInfo: {},
   matchedHistory: [],
   status: "idle", // idle | loading | success | error
@@ -15,10 +50,10 @@ const profileSlice = createSlice({
   initialState,
   reducers: {
     setProfileData: (state, action) => {
-      const { name, avatar, coverPage, zodiac, personalInfo } = action.payload;
+      const { name, avatar, coverImage, zodiac, personalInfo } = action.payload;
       state.name = name;
       state.avatar = avatar;
-      state.coverPage = coverPage;
+      state.coverImage = coverImage;
       state.zodiac = zodiac;
       state.personalInfo = personalInfo;
     },
