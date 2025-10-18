@@ -7,7 +7,7 @@ import HousesInfo from './components/HousesInfo';
 import AspectsInfo from './components/AspectsInfo';
 import NatalChart from './components/NatalChart';
 // import FunctionRow from './components/FunctionRow';
-// import MatchedHistory from './components/MatchedHistory';
+import MatchedHistory from './components/MatchedHistory';
 
 export default function ProfileScreen() {
   return (
@@ -18,9 +18,10 @@ export default function ProfileScreen() {
       <HousesInfo />
       <AspectsInfo />
       <NatalChart />
+      <MatchedHistory />
       {/*
       <FunctionRow />
-      <MatchedHistory /> */}
+       */}
     </ScrollView>
   );
 }
