@@ -30,7 +30,6 @@ export default function AspectsInfo() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Các Góc Chiếu</Text>
       {aspectRows.map((aspect, index) => (
         <View key={aspect.id} style={styles.row}>
           <MaterialIcons name={aspect.icon} size={26} color={aspect.color} style={styles.icon} />
@@ -38,7 +37,6 @@ export default function AspectsInfo() {
             <Text style={styles.label}>{aspect.label}: </Text>
             <Text style={styles.value}>{aspect.value || ''}</Text>
           </View>
-          {index === aspectRows.length - 1 && <View style={styles.bottomLine} />}
         </View>
       ))}
     </View>
@@ -49,13 +47,6 @@ const styles = StyleSheet.create({
   container: {
     paddingVertical: 22,
     paddingHorizontal: 32,
-    marginTop: 16,
-  },
-  title: {
-    color: '#fff',
-    fontSize: 32,
-    fontWeight: '600',
-    marginBottom: 10,
   },
   row: {
     flexDirection: 'row',
@@ -79,13 +70,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '500',
     marginTop: 2,
-  },
-  bottomLine: {
-    position: 'absolute',
-    bottom: -20,
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: '#fff',
   },
 });

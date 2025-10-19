@@ -65,12 +65,16 @@ const MatchedHistory = () => {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={matchedData}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-      />
+      {matchedData.map((item) => (
+        <View key={item.id} style={styles.card}>
+          <Image source={{ uri: item.avatar }} style={styles.avatar} />
+          <View style={styles.info}>
+            <Text style={styles.name}>{item.name}</Text>
+            <Text style={styles.zodiac}>{item.zodiac}</Text>
+          </View>
+          <Text style={styles.duration}>{item.duration}</Text>
+        </View>
+      ))}
     </View>
   );
 };
@@ -78,6 +82,7 @@ const MatchedHistory = () => {
 const styles = StyleSheet.create({
   container: {
     padding: 32,
+    marginBottom: 40,
     flex: 1,
   },
   header: {
@@ -99,7 +104,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     padding: 22,
-    backgroundColor: '#000000ff',
+    backgroundColor: '#212020ff',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#478ae8',

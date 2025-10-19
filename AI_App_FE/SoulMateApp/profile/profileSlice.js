@@ -39,6 +39,10 @@ const initialState = {
   squareAspect: "",
   sextileAspect: "",
   natalChartImage: "",
+  fireRatio: null,
+  earthRatio: null,
+  airRatio: null,
+  waterRatio: null,
 
   personalInfo: {},
   matchedHistory: [],
