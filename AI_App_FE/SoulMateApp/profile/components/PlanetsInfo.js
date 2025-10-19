@@ -34,8 +34,6 @@ export default function PlanetsInfo() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Hành tinh</Text>
-
       {planetRows.map((planet, index) => (
         <View key={planet.id} style={styles.row}>
           <MaterialIcons name={planet.icon} size={26} color={planet.color} style={styles.icon} />
@@ -43,7 +41,6 @@ export default function PlanetsInfo() {
             <Text style={styles.label}>{planet.label}: </Text>
             <Text style={styles.value}>{planet.value || ''}</Text>
           </View>
-          {index === planetRows.length - 1 && <View style={styles.bottomLine} />}
         </View>
       ))}
     </View>
@@ -54,14 +51,6 @@ const styles = StyleSheet.create({
   container: {
     paddingVertical: 22,
     paddingHorizontal: 32,
-    marginTop: 16,
-  },
-  title: {
-    color: '#fff',
-    fontSize: 32,
-    fontWeight: '600',
-    marginBottom: 10,
-    textAlign: 'left',
   },
   row: {
     flexDirection: 'row',
@@ -85,13 +74,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '500',
     marginTop: 2,
-  },
-  bottomLine: {
-    position: 'absolute',
-    bottom: -20,
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: '#fff',
   },
 });

@@ -41,7 +41,6 @@ export default function HousesInfo() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Các Nhà</Text>
       {houseRows.map((house, index) => (
         <View key={house.id} style={styles.row}>
           <MaterialIcons name="house" size={20} color={house.color} style={styles.icon} />
@@ -49,7 +48,6 @@ export default function HousesInfo() {
             <Text style={styles.label}>{house.label}: </Text>
             <Text style={styles.value}>{house.value || ''}</Text>
           </View>
-          {index === houseRows.length - 1 && <View style={styles.bottomLine} />}
         </View>
       ))}
     </View>
@@ -60,13 +58,6 @@ const styles = StyleSheet.create({
   container: {
     paddingVertical: 22,
     paddingHorizontal: 32,
-    marginTop: 16,
-  },
-  title: {
-    color: '#fff',
-    fontSize: 32,
-    fontWeight: '600',
-    marginBottom: 10,
   },
   row: {
     flexDirection: 'row',
@@ -90,13 +81,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '500',
     marginTop: 2,
-  },
-  bottomLine: {
-    position: 'absolute',
-    bottom: -20,
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: '#fff',
   },
 });
