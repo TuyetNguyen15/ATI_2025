@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { useSelector } from 'react-redux';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
 import { MaterialIcons } from '@expo/vector-icons';
+import { signOut } from 'firebase/auth';
+import { auth } from '../../firebaseConfig';
+import { resetProfile } from '../profileSlice';
 import AppCircleButton from '../../components/AppCircleButton';
 
-export default function ProfileHeader() {
+export default function ProfileHeader({ navigation }) {
   const { name, zodiac, avatar, coverImage } = useSelector((state) => state.profile);
+  const dispatch = useDispatch();
 
   const defaultCover = require('../../assets/default_cover_image.jpg');
   const defaultAvatar = require('../../assets/default_avatar.jpg');
@@ -13,16 +17,51 @@ export default function ProfileHeader() {
   const [showMenu, setShowMenu] = useState(false);
 
   const handleEditCover = () => {
+    setShowMenu(false);
     // TODO: mở modal chọn ảnh hoặc upload
   };
 
   const handleEditAvatar = () => {
+    setShowMenu(false);
     // TODO: mở modal chọn ảnh hoặc upload
   };
 
   const handleLogout = () => {
     setShowMenu(false);
-    // TODO: thực hiện logout
+    
+    Alert.alert(
+      '🚪 Đăng xuất',
+      'Bạn có chắc chắn muốn đăng xuất không?',
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel',
+        },
+        {
+          text: 'Đăng xuất',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // 1. Đăng xuất Firebase Auth
+              await signOut(auth);
+              
+              // 2. Reset Redux state về initial
+              dispatch(resetProfile());
+              
+              // 3. Navigate về Login screen
+              if (navigation) {
+                navigation.replace('LoginScreen');
+              }
+              
+              console.log('✅ Logout successful');
+            } catch (error) {
+              console.error('❌ Logout error:', error);
+              Alert.alert('Lỗi', 'Không thể đăng xuất. Vui lòng thử lại.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -43,8 +82,8 @@ export default function ProfileHeader() {
         {showMenu && (
           <View style={styles.menuContainer}>
             <TouchableOpacity style={styles.menuItemRow} onPress={handleLogout}>
-              <MaterialIcons name="logout" size={20} color="#000" />
-              <Text style={styles.menuItem}>Đăng xuất</Text>
+              <MaterialIcons name="logout" size={20} color="#ff4444" />
+              <Text style={[styles.menuItem, { color: '#ff4444' }]}>Đăng xuất</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -77,8 +116,8 @@ export default function ProfileHeader() {
       </View>
 
       {/* Info */}
-      <Text style={styles.name}>{name || ""}</Text>
-      <Text style={styles.zodiac}>{zodiac || ""}</Text>
+      <Text style={styles.name}>{name || "Người dùng"}</Text>
+      <Text style={styles.zodiac}>{zodiac || "Chưa cập nhật"}</Text>
     </View>
   );
 }
@@ -104,7 +143,7 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     position: 'absolute',
-    top: 45, // nằm ngay dưới icon 3 chấm
+    top: 45,
     right: 18,
     backgroundColor: '#fff',
     borderRadius: 8,
@@ -119,11 +158,12 @@ const styles = StyleSheet.create({
   menuItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6, 
+    gap: 6,
   },
   menuItem: {
     fontSize: 16,
     color: '#333',
+    fontWeight: '600',
   },
   editCoverBtn: {
     position: 'absolute',
