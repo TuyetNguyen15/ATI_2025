@@ -28,9 +28,16 @@ export default function LoginScreen({ navigation }) {
 
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      
+      // 1. Đăng nhập Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. Load profile data từ Firestore vào Redux
+      await loadUserProfile(user.uid);
+
+      // 3. Navigate to Main screen
       navigation.replace('Main'); // 🔥 chuyển sang trang Home (BottomTabs)
+      
     } catch (err) {
       Alert.alert('❌ Lỗi', 'Email hoặc mật khẩu không đúng');
       console.log('Firebase Login Error:', err);
