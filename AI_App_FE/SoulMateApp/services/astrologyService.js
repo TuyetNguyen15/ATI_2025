@@ -1,11 +1,13 @@
 // services/astrologyService.js
-const API_KEY = 'ByNqfA4kvD1EBGyi6ZlUC8aekqCi7FgF8VuJ8SF1';
+import { ZODIAC_TRANSLATIONS, PLANET_TRANSLATIONS } from "../constants/translations";
+
+const API_KEY = '6ldXekUVQh4PJkN8TnLUN1RXYBVTPNrHa0sfdE8a';
 const BASE_URL = 'https://json.freeastrologyapi.com/western';
 
 // Helper: delay để tránh vượt quá 1 request/second
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Helper: Parse địa chỉ thành lat/long (dùng Geocoding API)
+// Helper: Parse địa chỉ thành lat/long
 async function getCoordinates(address) {
   try {
     const response = await fetch(
@@ -18,7 +20,6 @@ async function getCoordinates(address) {
         longitude: parseFloat(data[0].lon),
       };
     }
-    // Default to Hanoi if not found
     return { latitude: 21.0285, longitude: 105.8542 };
   } catch (error) {
     console.error('Geocoding error:', error);
@@ -55,7 +56,7 @@ function createRequestBody(birthDate, birthTime, latitude, longitude) {
       ayanamsha: 'tropical',
       house_system: 'Placidus',
       language: 'en',
-      exclude_planets: ['Lilith', 'Chiron', 'Ceres', 'Vesta', 'Juno', 'Pallas'],
+      exclude_planets: [], // Không loại trừ planet nào
       allowed_aspects: ['Conjunction', 'Opposition', 'Trine', 'Square', 'Sextile'],
       orb_values: {
         Conjunction: 3,
@@ -90,21 +91,43 @@ async function callAPI(endpoint, requestBody, retryCount = 3) {
     } catch (error) {
       console.error(`API call failed (attempt ${i + 1}/${retryCount}):`, error);
       if (i === retryCount - 1) throw error;
-      await delay(2000); // Wait 2s before retry
+      await delay(2000);
     }
   }
 }
 
-// Lấy thông tin hành tinh
+// Lấy thông tin hành tinh (bao gồm tất cả planets)
 async function getPlanetsInfo(requestBody) {
   const data = await callAPI('planets', requestBody);
   const planets = {};
   
   if (data.output && Array.isArray(data.output)) {
     data.output.forEach(item => {
-      const planetName = item.planet.en.toLowerCase();
-      if (['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'].includes(planetName)) {
-        planets[planetName] = item.zodiac_sign.name.en;
+      const planetName = item.planet.en.toLowerCase().replace(/\s+/g, '');
+      const zodiacSign = item.zodiac_sign.name.en;
+      const vietnameseSign = ZODIAC_TRANSLATIONS[zodiacSign] || zodiacSign;
+      
+      // Map all planets including special points
+      const planetMap = {
+        'ascendant': 'ascendant',
+        'sun': 'sun',
+        'moon': 'moon',
+        'mercury': 'mercury',
+        'venus': 'venus',
+        'mars': 'mars',
+        'jupiter': 'jupiter',
+        'saturn': 'saturn',
+        'uranus': 'uranus',
+        'neptune': 'neptune',
+        'pluto': 'pluto',
+        'descendant': 'descendant',
+        'mc': 'mc',
+        'ic': 'ic',
+      };
+      
+      const mappedKey = planetMap[planetName];
+      if (mappedKey) {
+        planets[mappedKey] = vietnameseSign;
       }
     });
   }
@@ -112,15 +135,17 @@ async function getPlanetsInfo(requestBody) {
   return planets;
 }
 
-// Lấy thông tin cung
+// Lấy thông tin cung nhà (chuyển sang tiếng Việt)
 async function getHousesInfo(requestBody) {
-  await delay(1100); // Rate limit: 1 request/second
+  await delay(1100);
   const data = await callAPI('houses', requestBody);
   const houses = {};
   
   if (data.output && data.output.Houses) {
     data.output.Houses.forEach(item => {
-      houses[`house${item.House}`] = item.zodiac_sign.name.en;
+      const zodiacSign = item.zodiac_sign.name.en;
+      const vietnameseSign = ZODIAC_TRANSLATIONS[zodiacSign] || zodiacSign;
+      houses[`house${item.House}`] = vietnameseSign;
     });
   }
   
@@ -142,7 +167,9 @@ async function getAspectsInfo(requestBody) {
   if (data.output && Array.isArray(data.output)) {
     data.output.forEach(item => {
       const aspectType = item.aspect.en.toLowerCase();
-      const aspectString = `${item.planet_1.en} - ${item.planet_2.en}`;
+      const planet1 = PLANET_TRANSLATIONS[item.planet_1.en] || item.planet_1.en;
+      const planet2 = PLANET_TRANSLATIONS[item.planet_2.en] || item.planet_2.en;
+      const aspectString = `${planet1} - ${planet2}`;
       
       if (aspectType === 'conjunction') aspects.conjunction.push(aspectString);
       else if (aspectType === 'opposition') aspects.opposition.push(aspectString);
@@ -162,13 +189,13 @@ async function getNatalChart(requestBody) {
   return data.output || '';
 }
 
-// Tính tỷ lệ nguyên tố dựa trên hành tinh
+// Tính tỷ lệ nguyên tố (với tên tiếng Việt)
 function calculateElementalRatio(planets) {
   const elementMap = {
-    Aries: 'fire', Leo: 'fire', Sagittarius: 'fire',
-    Taurus: 'earth', Virgo: 'earth', Capricorn: 'earth',
-    Gemini: 'air', Libra: 'air', Aquarius: 'air',
-    Cancer: 'water', Scorpio: 'water', Pisces: 'water',
+    'Bạch Dương': 'fire', 'Sư Tử': 'fire', 'Nhân Mã': 'fire',
+    'Kim Ngưu': 'earth', 'Xử Nữ': 'earth', 'Ma Kết': 'earth',
+    'Song Tử': 'air', 'Thiên Bình': 'air', 'Bảo Bình': 'air',
+    'Cự Giải': 'water', 'Bọ Cạp': 'water', 'Song Ngư': 'water',
   };
 
   const counts = { fire: 0, earth: 0, air: 0, water: 0 };
@@ -188,34 +215,25 @@ function calculateElementalRatio(planets) {
   };
 }
 
-// Lấy cung hoàng đạo từ ngày sinh
-function getZodiacSign(birthDate) {
-  const [year, month, day] = birthDate.split('-').map(Number);
-  const zodiacSigns = [
-    { name: 'Capricorn', start: [12, 22], end: [1, 19] },
-    { name: 'Aquarius', start: [1, 20], end: [2, 18] },
-    { name: 'Pisces', start: [2, 19], end: [3, 20] },
-    { name: 'Aries', start: [3, 21], end: [4, 19] },
-    { name: 'Taurus', start: [4, 20], end: [5, 20] },
-    { name: 'Gemini', start: [5, 21], end: [6, 20] },
-    { name: 'Cancer', start: [6, 21], end: [7, 22] },
-    { name: 'Leo', start: [7, 23], end: [8, 22] },
-    { name: 'Virgo', start: [8, 23], end: [9, 22] },
-    { name: 'Libra', start: [9, 23], end: [10, 22] },
-    { name: 'Scorpio', start: [10, 23], end: [11, 21] },
-    { name: 'Sagittarius', start: [11, 22], end: [12, 21] },
-  ];
+// Tính tuổi từ ngày sinh
+function calculateAge(birthDate) {
+  try {
+    const [year, month, day] = birthDate.split('-').map(Number);
+    const today = new Date();
+    let age = today.getFullYear() - year;
 
-  for (const sign of zodiacSigns) {
-    const [startMonth, startDay] = sign.start;
-    const [endMonth, endDay] = sign.end;
-    
-    if ((month === startMonth && day >= startDay) || (month === endMonth && day <= endDay)) {
-      return sign.name;
-    }
+    // Nếu chưa tới sinh nhật năm nay thì trừ đi 1
+    const hasHadBirthday =
+      today.getMonth() + 1 > month ||
+      (today.getMonth() + 1 === month && today.getDate() >= day);
+
+    if (!hasHadBirthday) age--;
+
+    return age;
+  } catch (err) {
+    console.error("Error calculating age:", err);
+    return 0;
   }
-  
-  return 'Unknown';
 }
 
 // Main function: Lấy toàn bộ thông tin chiêm tinh
@@ -223,23 +241,20 @@ export async function fetchAstrologyData(birthDate, birthTime, birthPlace) {
   try {
     console.log('🔮 Fetching astrology data...');
     
-    // 1. Get coordinates
     const { latitude, longitude } = await getCoordinates(birthPlace);
     const requestBody = createRequestBody(birthDate, birthTime, latitude, longitude);
     
-    // 2. Call APIs (with delays)
     const planets = await getPlanetsInfo(requestBody);
     const houses = await getHousesInfo(requestBody);
     const aspects = await getAspectsInfo(requestBody);
     const natalChartImage = await getNatalChart(requestBody);
     
-    // 3. Calculate derived data
     const elementalRatio = calculateElementalRatio(planets);
-    const zodiac = getZodiacSign(birthDate);
+    const age = calculateAge(birthDate);
     
-    // 4. Return complete data
     return {
-      zodiac,
+      sun: planets.sun,
+      age,
       ...planets,
       ...houses,
       conjunctionAspect: aspects.conjunction.join(', '),

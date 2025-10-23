@@ -12,9 +12,8 @@ const initialState = {
   job: "",
   email: "",
   password: "",
-  zodiac: "",
   
-  // Planets
+  // Planets 
   sun: "",
   moon: "",
   mercury: "",
@@ -24,6 +23,11 @@ const initialState = {
   saturn: "",
   uranus: "",
   neptune: "",
+  pluto: "",
+  ascendant: "",
+  descendant: "",
+  mc: "",
+  ic: "",
   
   // Houses
   house1: "",

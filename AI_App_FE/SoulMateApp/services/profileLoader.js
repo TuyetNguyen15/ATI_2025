@@ -38,6 +38,7 @@ export async function loadUserProfile(uid) {
       zodiac: userData.zodiac || '',
       
       // Planets
+      ascendant: userData.ascendant || '',
       sun: userData.sun || '',
       moon: userData.moon || '',
       mercury: userData.mercury || '',
@@ -47,6 +48,10 @@ export async function loadUserProfile(uid) {
       saturn: userData.saturn || '',
       uranus: userData.uranus || '',
       neptune: userData.neptune || '',
+      pluto: userData.pluto || '',
+      descendant: userData.descendant || '',
+      mc: userData.mc || '',
+      ic: userData.ic || '',
       
       // Houses
       house1: userData.house1 || '',

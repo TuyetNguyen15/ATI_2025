@@ -38,7 +38,7 @@ export default function RegisterScreen1({ navigation }) {
 
       Alert.alert('✅ Thành công', 'Bước 1 hoàn tất! Hãy điền thêm thông tin cá nhân.');
       // 👉 Gửi UID sang RegisterScreen2
-      navigation.navigate('RegisterScreen2', { uid: user.uid });
+      navigation.navigate('RegisterScreen2', { uid: user.uid, email, password });
     } catch (error) {
       console.log('Firebase Auth Error:', error);
       let message = 'Có lỗi xảy ra. Vui lòng thử lại.';

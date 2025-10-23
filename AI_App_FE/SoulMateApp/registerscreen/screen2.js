@@ -7,7 +7,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { fetchAstrologyData } from '../services/astrologyService';
 
 export default function RegisterScreen2({ route, navigation }) {
-  const { uid } = route.params;
+  const { uid, email, password } = route.params;
   const [fullName, setFullName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [birthTime, setBirthTime] = useState('');
@@ -48,12 +48,12 @@ export default function RegisterScreen2({ route, navigation }) {
       await setDoc(doc(db, 'users', uid), {
         // Basic info
         name: fullName,
+        age: astrologyData.age || 0,
         birthDate,
         birthTime,
         birthPlace,
-        
-        // Astrology data
-        zodiac: astrologyData.zodiac,
+        email: email || '',
+        password: password || '',
         
         // Planets
         sun: astrologyData.sun || '',
@@ -65,6 +65,11 @@ export default function RegisterScreen2({ route, navigation }) {
         saturn: astrologyData.saturn || '',
         uranus: astrologyData.uranus || '',
         neptune: astrologyData.neptune || '',
+        pluto: astrologyData.pluto || '',
+        ascendant: astrologyData.ascendant || '',
+        descendant: astrologyData.descendant || '',
+        mc: astrologyData.mc || '',
+        ic: astrologyData.ic || '',
         
         // Houses
         house1: astrologyData.house1 || '',
@@ -99,12 +104,10 @@ export default function RegisterScreen2({ route, navigation }) {
         // Default values for other fields
         avatar: '',
         coverImage: '',
-        age: null,
         gender: '',
         height: null,
         weight: null,
         job: '',
-        email: '',
         
         // Metadata
         createdAt: serverTimestamp(),

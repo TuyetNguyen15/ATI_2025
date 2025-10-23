@@ -8,7 +8,7 @@ import { resetProfile } from '../profileSlice';
 import AppCircleButton from '../../components/AppCircleButton';
 
 export default function ProfileHeader({ navigation }) {
-  const { name, zodiac, avatar, coverImage } = useSelector((state) => state.profile);
+  const { name, sun, avatar, coverImage } = useSelector((state) => state.profile);
   const dispatch = useDispatch();
 
   const defaultCover = require('../../assets/default_cover_image.jpg');
@@ -117,7 +117,7 @@ export default function ProfileHeader({ navigation }) {
 
       {/* Info */}
       <Text style={styles.name}>{name || "Người dùng"}</Text>
-      <Text style={styles.zodiac}>{zodiac || "Chưa cập nhật"}</Text>
+      <Text style={styles.zodiac}>{sun || "Chưa cập nhật"}</Text>
     </View>
   );
 }
