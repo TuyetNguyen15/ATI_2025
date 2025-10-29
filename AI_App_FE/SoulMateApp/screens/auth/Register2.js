@@ -1,8 +1,8 @@
 // RegisterScreen2.jsx
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, ActivityIndicator } from 'react-native';
-import { colors } from '../components/BGColor';
-import { db } from '../firebaseConfig';
+import { colors } from '../../components/BGColor';
+import { db } from '../../firebaseConfig';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function RegisterScreen2({ route, navigation }) {

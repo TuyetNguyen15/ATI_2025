@@ -2,10 +2,11 @@
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import LoginScreen from './registerscreen/LoginScreen';
-import RegisterScreen1 from './registerscreen/screen1';
-import RegisterScreen2 from './registerscreen/screen2';
+import LoginScreen from './screens/auth/LoginScreen';
+import RegisterScreen1 from './screens/auth/Register1';
+import RegisterScreen2 from './screens/auth/Register2';
 import BottomTabs from './components/BottomTabs';
+import PredictionScreen from './screens/home/PredictionScreen';
 import { getApps } from 'firebase/app';
 import app from './firebaseConfig';
 
@@ -24,6 +25,7 @@ export default function App() {
         <Stack.Screen name="RegisterScreen1" component={RegisterScreen1} options={{ headerShown: false }} />
         <Stack.Screen name="RegisterScreen2" component={RegisterScreen2} options={{ headerShown: false }} />
         <Stack.Screen name="Main" component={BottomTabs} options={{ headerShown: false }} />
+       
       </Stack.Navigator>
     </NavigationContainer>
   );

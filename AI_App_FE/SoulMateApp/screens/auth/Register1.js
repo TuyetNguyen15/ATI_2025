@@ -10,8 +10,8 @@ import {
   Alert,
 } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
-import { colors } from '../components/BGColor';
+import { auth } from '../../firebaseConfig';
+import { colors } from '../../components/BGColor';
 
 export default function RegisterScreen1({ navigation }) {
   const [email, setEmail] = useState('');
