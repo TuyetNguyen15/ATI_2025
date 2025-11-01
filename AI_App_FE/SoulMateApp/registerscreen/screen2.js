@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { db } from '../firebaseConfig';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-
+import { fetchAstrologyData } from '../services/astrologyService';
 const { width, height } = Dimensions.get('window');
 
 export default function RegisterScreen2({ route, navigation }) {
@@ -15,7 +15,7 @@ export default function RegisterScreen2({ route, navigation }) {
   const [birthTime, setBirthTime] = useState('');
   const [birthPlace, setBirthPlace] = useState('');
   const [loading, setLoading] = useState(false);
-
+  const [loadingMessage, setLoadingMessage] = useState('');
   const glowAnim = useRef(new Animated.Value(0.7)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const stars = useRef(Array.from({ length: 250 }).map(() => ({
@@ -41,15 +41,79 @@ export default function RegisterScreen2({ route, navigation }) {
       return Alert.alert('⚠️', 'Điền đầy đủ thông tin');
     setLoading(true);
     try {
+      setLoadingMessage('Đang tính toán biểu đồ chiêm tinh...');
+      const astrologyData = await fetchAstrologyData(birthDate, birthTime, birthPlace);
+      
+      // Step 2: Save to Firestore
+      setLoadingMessage('Đang lưu thông tin...');
       await setDoc(doc(db, 'users', uid), {
-        email,
-        fullName,
+        // Basic info
+        name: fullName,
+        age: astrologyData.age || 0,
         birthDate,
         birthTime,
         birthPlace,
-        profileComplete: true,
+        email: email || '',
+        
+        // Planets
+        sun: astrologyData.sun || '',
+        moon: astrologyData.moon || '',
+        mercury: astrologyData.mercury || '',
+        venus: astrologyData.venus || '',
+        mars: astrologyData.mars || '',
+        jupiter: astrologyData.jupiter || '',
+        saturn: astrologyData.saturn || '',
+        uranus: astrologyData.uranus || '',
+        neptune: astrologyData.neptune || '',
+        pluto: astrologyData.pluto || '',
+        ascendant: astrologyData.ascendant || '',
+        descendant: astrologyData.descendant || '',
+        mc: astrologyData.mc || '',
+        ic: astrologyData.ic || '',
+        
+        // Houses
+        house1: astrologyData.house1 || '',
+        house2: astrologyData.house2 || '',
+        house3: astrologyData.house3 || '',
+        house4: astrologyData.house4 || '',
+        house5: astrologyData.house5 || '',
+        house6: astrologyData.house6 || '',
+        house7: astrologyData.house7 || '',
+        house8: astrologyData.house8 || '',
+        house9: astrologyData.house9 || '',
+        house10: astrologyData.house10 || '',
+        house11: astrologyData.house11 || '',
+        house12: astrologyData.house12 || '',
+        
+        // Aspects
+        conjunctionAspect: astrologyData.conjunctionAspect || '',
+        oppositionAspect: astrologyData.oppositionAspect || '',
+        trineAspect: astrologyData.trineAspect || '',
+        squareAspect: astrologyData.squareAspect || '',
+        sextileAspect: astrologyData.sextileAspect || '',
+        
+        // Natal Chart
+        natalChartImage: astrologyData.natalChartImage || '',
+        
+        // Elemental Ratios
+        fireRatio: astrologyData.fireRatio || 0,
+        earthRatio: astrologyData.earthRatio || 0,
+        airRatio: astrologyData.airRatio || 0,
+        waterRatio: astrologyData.waterRatio || 0,
+        
+        // Default values for other fields
+        avatar: '',
+        coverImage: '',
+        gender: '',
+        height: null,
+        weight: null,
+        job: '',
+        
+        // Metadata
+        createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      }, { merge: true });
+      });
+
 
       Alert.alert('🎉', 'Đăng ký hoàn tất!');
       navigation.replace('Main');

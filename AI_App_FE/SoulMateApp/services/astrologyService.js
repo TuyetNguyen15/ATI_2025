@@ -1,7 +1,7 @@
 // services/astrologyService.js
 import { ZODIAC_TRANSLATIONS, PLANET_TRANSLATIONS } from "../constants/translations";
 
-const API_KEY = '6ldXekUVQh4PJkN8TnLUN1RXYBVTPNrHa0sfdE8a';
+const API_KEY = 'ByNqfA4kvD1EBGyi6ZlUC8aekqCi7FgF8VuJ8SF1';
 const BASE_URL = 'https://json.freeastrologyapi.com/western';
 
 // Helper: delay để tránh vượt quá 1 request/second
