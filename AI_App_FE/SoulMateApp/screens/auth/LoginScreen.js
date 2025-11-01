@@ -28,9 +28,16 @@ export default function LoginScreen({ navigation }) {
 
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      
+      // 1. Đăng nhập Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. Load profile data từ Firestore vào Redux
+      await loadUserProfile(user.uid);
+
+      // 3. Navigate to Main screen
       navigation.replace('Main'); // 🔥 chuyển sang trang Home (BottomTabs)
+      
     } catch (err) {
       Alert.alert('❌ Lỗi', 'Email hoặc mật khẩu không đúng');
       console.log('Firebase Login Error:', err);
@@ -78,7 +85,7 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: colors.blackBackground },
+  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: colors.blackBackground , marginBottom: 20},
   title: { fontSize: 28, fontWeight: 'bold', color: colors.whiteText, textAlign: 'center', marginBottom: 20 },
   input: {
     height: 48,

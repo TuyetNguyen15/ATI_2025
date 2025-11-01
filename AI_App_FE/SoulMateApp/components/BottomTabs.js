@@ -16,7 +16,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 // 🏠 Screens
 import HomeScreen from '../screens/home/MainHome';
 import PredictionScreen from '../screens/home/PredictionScreen';
+import ProfileScreen from '../profile/ProfileScreen';
 
+// ⚙️ Tạo các màn hình tạm
 function DummyScreen({ title }) {
   return (
     <View style={styles.screen}>
@@ -27,8 +29,6 @@ function DummyScreen({ title }) {
 
 const NotificationScreen = () => <DummyScreen title="🔔 Thông báo" />;
 const ChatScreen = () => <DummyScreen title="💬 Trò chuyện" />;
-const ProfileScreen = () => <DummyScreen title="👤 Hồ sơ" />;
-
 const Tab = createBottomTabNavigator();
 const HomeStack = createStackNavigator();
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,26 +9,64 @@ import {
   Dimensions,
   ImageBackground,
 } from 'react-native';
+import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useSelector } from 'react-redux';
+import { ELEMENT_MAP, ELEMENT_COLORS, ZODIAC_ICONS } from '../../constants/astrologyMap';
 
 const { width } = Dimensions.get('window');
-
+const API_URL = "http://192.168.1.3:5000/generate";
 export default function HomeScreen( {navigation }) {
   const [scope, setScope] = useState('astro');
+  const profile = useSelector((state) => state.profile); 
+ 
+  const element = ELEMENT_MAP[profile.sun] || '...';
+  const elementColors = ELEMENT_COLORS[element] || ELEMENT_COLORS['Không xác định'];
+  const zodiacIcon = ZODIAC_ICONS[profile.sun] || ZODIAC_ICONS['Không xác định'];
+  const handleGeneratePrediction = async () => {
+    try {
+      const userData = {
+        uid: profile.uid,
+        name: profile.name,
+        sun: profile.sun,
+        moon: profile.moon,
+        birthDate: profile.birthDate,
+      };
+
+      const response = await axios.post(API_URL, {
+        userData,
+        category: "daily",
+        day: "today",
+      });
+
+      if (response.data.error) throw new Error(response.data.error);
+
+      navigation.navigate("Prediction", {
+        prediction: response.data.prediction,
+        userData,
+      });
+    } catch (error) {
+      console.error("❌", error);
+      Alert.alert("Lỗi", "Không thể tạo dự đoán. Hãy thử lại sau!");
+    }
+  };
+
+
+  
   return (
     <ImageBackground
       source={require('../../assets/sky.jpg')}
       style={styles.background}
       resizeMode="cover"
     >
-      {/* <Image source={require('../../assets/moon.jpg')} style={styles.moon} /> */}
+      <Image source={require('../../assets/Moon.png')} style={styles.moon} />
 
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* 🌙 Header */}
         <View style={styles.header}>
           <Text style={styles.date}>Thứ 6, ngày 3/10/2025</Text>
-          <Text style={styles.welcome}>Xin Chào, Tuyết</Text>
+          <Text style={styles.welcome}>Xin Chào, {profile.name || 'bạn'}</Text>
         </View>
 
         <View style={styles.segmentContainer}>
@@ -64,12 +102,12 @@ export default function HomeScreen( {navigation }) {
               <View style={styles.row}>
                 <Text style={styles.infoText}>
                   <Text style={{ fontSize: 14, color: "#a8a8a8" }}>Mặt trời{'\n'}</Text>
-                  <Text style={{ fontSize: 20 }}>Bọ Cạp</Text>
+                  <Text style={{ fontSize: 20 }}>{profile.sun || '...'}</Text>
                 </Text>
 
                 <Text style={styles.infoText}>
                   <Text style={{ fontSize: 14, color: "#a8a8a8" }}>Mặt trăng{'\n'}</Text>
-                  <Text style={{ fontSize: 20 }}>Bọ Cạp</Text>
+                  <Text style={{ fontSize: 20 }}>{profile.moon || '...'}</Text>
                 </Text>
               </View>
 
@@ -80,14 +118,14 @@ export default function HomeScreen( {navigation }) {
                 <View style={styles.topinnerRing} />
                 <View style={styles.middleRing} />
                 <LinearGradient
-                  colors={['#61a4ff', '#913efe']}
+                  colors={elementColors}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   locations={[0, 0.8]}
                   style={styles.circleGradient}
                 >
                   <Image
-                    source={require('../../assets/zodiacsigns/thienyet.png')}
+                    source={zodiacIcon}
                     style={styles.zodiacIcon}
                     resizeMode="contain"
                   />
@@ -98,12 +136,12 @@ export default function HomeScreen( {navigation }) {
               <View style={styles.row}>
                 <Text style={styles.infoText}>
                   <Text style={{ fontSize: 14, color: "#a8a8a8" }}>Điểm mọc{'\n'}</Text>
-                  <Text style={{ fontSize: 20 }}>Bọ Cạp</Text>
+                  <Text style={{ fontSize: 20 }}>{profile.ascendant||"..."}</Text>
                 </Text>
 
                 <Text style={styles.infoText}>
                   <Text style={{ fontSize: 14, color: "#a8a8a8" }}>Nguyên tố{'\n'}</Text>
-                  <Text style={{ fontSize: 20 }}>Bọ Cạp</Text>
+                  <Text style={{ fontSize: 20 }}>{element}</Text>
                 </Text>
               </View>
             </View>
@@ -111,10 +149,10 @@ export default function HomeScreen( {navigation }) {
             {/* 🔘 Button */}
             <TouchableOpacity
              style={styles.button}
-             onPress={() => navigation.navigate('Prediction')}
+             onPress={handleGeneratePrediction}
              >
               <LinearGradient
-                colors={['#61a4ff', '#913efe']}
+                colors={elementColors}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.buttonGradient}
