@@ -1,7 +1,8 @@
-// App.js
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { Provider } from 'react-redux';       
+import { store } from './app/store';                 
 import LoginScreen from './registerscreen/LoginScreen';
 import RegisterScreen1 from './registerscreen/screen1';
 import RegisterScreen2 from './registerscreen/screen2';
@@ -18,13 +19,15 @@ export default function App() {
   }, []);
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="LoginScreen">
-        <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="RegisterScreen1" component={RegisterScreen1} options={{ headerShown: false }} />
-        <Stack.Screen name="RegisterScreen2" component={RegisterScreen2} options={{ headerShown: false }} />
-        <Stack.Screen name="Main" component={BottomTabs} options={{ headerShown: false }} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Provider store={store}>  
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="LoginScreen">
+          <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="RegisterScreen1" component={RegisterScreen1} options={{ headerShown: false }} />
+          <Stack.Screen name="RegisterScreen2" component={RegisterScreen2} options={{ headerShown: false }} />
+          <Stack.Screen name="Main" component={BottomTabs} options={{ headerShown: false }} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </Provider>
   );
 }

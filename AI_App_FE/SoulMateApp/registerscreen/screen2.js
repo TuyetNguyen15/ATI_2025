@@ -44,12 +44,28 @@ export default function RegisterScreen2({ route, navigation }) {
   const rotate = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   const handleSubmit = async () => {
+    // Validate input
     if (!fullName || !birthDate || !birthTime || !birthPlace) {
       Alert.alert('⚠️ Lỗi', 'Vui lòng điền đầy đủ thông tin');
       return;
     }
 
+    // Validate date format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(birthDate)) {
+      Alert.alert('⚠️ Lỗi', 'Ngày sinh phải theo định dạng YYYY-MM-DD (ví dụ: 2000-03-15)');
+      return;
+    }
+
+    // Validate time format (HH:MM)
+    const timeRegex = /^\d{2}:\d{2}$/;
+    if (!timeRegex.test(birthTime)) {
+      Alert.alert('⚠️ Lỗi', 'Giờ sinh phải theo định dạng HH:MM (ví dụ: 14:30)');
+      return;
+    }
+
     setLoading(true);
+    
     try {
       await setDoc(
         doc(db, 'user_info', uid),
@@ -68,10 +84,19 @@ export default function RegisterScreen2({ route, navigation }) {
       Alert.alert('🎉 Hoàn tất', 'Tài khoản của bạn đã được tạo thành công!');
       navigation.replace('Main');
     } catch (error) {
-      console.log('🔥 Firestore error:', error);
-      Alert.alert('❌ Lỗi', 'Không thể lưu dữ liệu. Vui lòng thử lại.');
+      console.error('🔥 Error:', error);
+      
+      let errorMessage = 'Có lỗi xảy ra. Vui lòng thử lại.';
+      if (error.message.includes('API')) {
+        errorMessage = 'Không thể kết nối đến dịch vụ chiêm tinh. Vui lòng thử lại sau.';
+      } else if (error.message.includes('Firestore')) {
+        errorMessage = 'Không thể lưu dữ liệu. Vui lòng kiểm tra kết nối.';
+      }
+      
+      Alert.alert('❌ Lỗi', errorMessage);
     } finally {
       setLoading(false);
+      setLoadingMessage('');
     }
   };
 

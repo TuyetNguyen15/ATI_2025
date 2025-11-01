@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient'; // ⚠️ Expo version
+import ProfileScreen from '../profile/ProfileScreen';
 
 // ⚙️ Tạo các màn hình tạm
 function DummyScreen({ title }) {
@@ -15,7 +16,6 @@ function DummyScreen({ title }) {
 const HomeScreen = () => <DummyScreen title="🏠 Home Screen" />;
 const NotificationScreen = () => <DummyScreen title="🔔 Notification Screen" />;
 const ChatScreen = () => <DummyScreen title="💬 Chat Screen" />;
-const ProfileScreen = () => <DummyScreen title="👤 Profile Screen" />;
 
 const Tab = createBottomTabNavigator();
 
