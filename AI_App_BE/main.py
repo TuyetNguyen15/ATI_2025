@@ -6,6 +6,7 @@ import google.generativeai as genai
 from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, firestore
+import json
 
 # 🚀 Load biến môi trường
 base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -44,23 +45,30 @@ def get_cached_prediction(name, sun, moon, category, day):
         .stream()
     )
     for doc in docs:
-        return doc.to_dict().get("prediction")
+        return doc.to_dict()
     return None
 
 
 # -------------------------------------------------
 # 💾 Lưu dữ liệu vào Firestore
 # -------------------------------------------------
-def save_prediction(name, sun, moon, category, day, prediction):
-    db.collection("user_prediction").add({
+def save_prediction(name, sun, moon, category, day, data):
+    """data có thể là string (daily/love/work) hoặc dict (love_extra)."""
+    doc = {
         "name": name,
         "sun": sun,
         "moon": moon,
         "category": category,
         "day": day,
-        "prediction": prediction,
         "created_at": datetime.now().isoformat(),
-    })
+    }
+
+    if isinstance(data, dict):
+        doc.update(data)
+    else:
+        doc["prediction"] = data
+
+    db.collection("user_prediction").add(doc)
 
 
 # -------------------------------------------------
@@ -80,19 +88,30 @@ def generate_prediction():
     if not name or not sun or not moon:
         return jsonify({"error": "Thiếu thông tin người dùng"}), 400
 
-    # ⚡ Kiểm tra cache
-    cached = get_cached_prediction(name, sun, moon, category, day)
-    if cached:
+    # ⚡ Kiểm tra cache Firestore
+    cached_doc = get_cached_prediction(name, sun, moon, category, day)
+    if cached_doc:
         print(f"✅ Cache Firestore có sẵn cho {name} - {category} ({day})")
-        return jsonify({"prediction": cached, "cached": True})
+
+        if category == "love_extra":
+            return jsonify({
+                "love_luck": cached_doc.get("love_luck"),
+                "best_match": cached_doc.get("best_match"),
+                "compatibility": cached_doc.get("compatibility"),
+                "quote": cached_doc.get("quote"),
+                "cached": True
+            })
+
+        return jsonify({"prediction": cached_doc.get("prediction", ""), "cached": True})
 
     print(f"⚙️ Không có cache → Gọi Gemini ({category}, {day})")
 
-
+    # 🪐 Map tiếng Việt
     category_map = {
         "daily": "Dự đoán hằng ngày",
         "love": "Dự đoán tình duyên",
         "work": "Dự đoán công việc",
+        "love_extra": "Chỉ số tình duyên và cung hợp",
     }
     day_map = {
         "yesterday": "hôm qua",
@@ -125,6 +144,23 @@ def generate_prediction():
       Tập trung vào năng lượng làm việc, cơ hội và thách thức nghề nghiệp.
         Kết thúc bằng lời khuyên ngắn, không dùng emoji hay lời chào.
         """,
+        # 💖 Category mới: chỉ số tình duyên, cung hợp, quote
+        "love_extra": f"""
+        Phân tích chỉ số may mắn trong chuyện tình duyên {day_map.get(day)} cho người có:
+        - Tên: {name}
+        - Mặt Trời: {sun}, Mặt Trăng: {moon}
+
+        Trả về một JSON đúng định dạng:
+        {{
+          "love_luck": <một số nguyên từ 50 đến 100>,
+          "best_match": "<tên một trong 12 cung hoàng đạo tiếng Việt>",
+          "compatibility": <một số nguyên 50..100>,
+          "quote": "<một câu quote ngắn gọn, sâu sắc, không emoji>"
+        }}
+
+        Yêu cầu:
+        - Không in gì khác ngoài JSON (không lời chào, không mô tả).
+        """,
     }
 
     prompt = prompt_templates.get(category, prompt_templates["daily"])
@@ -134,15 +170,36 @@ def generate_prediction():
         response = model.generate_content(prompt)
         text = response.text if hasattr(response, "text") else str(response)
 
-        # 💾 Lưu vào Firestore
+        # 💕 Nếu là category love_extra → parse JSON
+        if category == "love_extra":
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError:
+                data = {
+                    "love_luck": 80,
+                    "best_match": "Kim Ngưu",
+                    "compatibility": 85,
+                    "quote": "Tình yêu là hành trình tự khám phá bản thân qua ánh mắt người khác."
+                }
+
+            save_prediction(name, sun, moon, category, day, data)
+            print(f"✅ Đã lưu Firestore: {name} - love_extra ({day})")
+            return jsonify({**data, "cached": False})
+
+        # ✨ Các loại khác (daily/love/work)
         save_prediction(name, sun, moon, category, day, text)
         print(f"✅ Đã lưu Firestore: {name} - {category} ({day})")
 
         return jsonify({"prediction": text, "cached": False})
+
     except Exception as e:
         print("❌ Gemini Error:", e)
         return jsonify({"error": str(e)}), 500
 
+print("✅ Flask nhận request /generate")
 
+# -------------------------------------------------
+# 🚀 Run app
+# -------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)

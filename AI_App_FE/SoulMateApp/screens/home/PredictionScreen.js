@@ -1,3 +1,4 @@
+// 📄 src/screens/prediction/PredictionScreen.jsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -13,7 +14,7 @@ import axios from "axios";
 import { LinearGradient } from "expo-linear-gradient";
 
 const { width } = Dimensions.get("window");
-const API_URL = "http://192.168.1.3:5000/generate";
+const API_URL = "http://192.168.1.3:5000/generate"; // ⚠️ Đổi IP nếu cần
 
 export default function PredictionScreen({ route }) {
   const [category, setCategory] = useState("daily");
@@ -23,6 +24,7 @@ export default function PredictionScreen({ route }) {
 
   const userData = route?.params?.userData || {};
 
+  // 🗓️ Định dạng ngày theo ngôn ngữ Việt
   const getDateString = () => {
     const today = new Date();
     if (day === "yesterday") today.setDate(today.getDate() - 1);
@@ -35,21 +37,23 @@ export default function PredictionScreen({ route }) {
     });
   };
 
-  // 🎯 Hàm gọi Flask API mỗi khi đổi category hoặc day
+  // 🔮 Gọi Flask API mỗi khi đổi category hoặc day
   const fetchPrediction = async () => {
     try {
-      setLoading(true);
-      const response = await axios.post(API_URL, {
-        userData,
-        category,
-        day,
-      });
+      setLoading(true);console.log("🔍 userData gửi lên:", userData);
+      const response = await axios.post(
+        API_URL,
+        { userData, category, day },
+        { timeout: 60000 } // tăng timeout 60s
+      );
+
 
       if (response.data.error) throw new Error(response.data.error);
       setPrediction(response.data.prediction);
     } catch (error) {
       console.error("❌ Fetch error:", error);
-      Alert.alert("Lỗi", "Không thể lấy dữ liệu chiêm tinh. Hãy thử lại!");
+     
+      setPrediction("Hiện tại hệ thống đang bận. Vui lòng thử lại sau!");
     } finally {
       setLoading(false);
     }
@@ -60,7 +64,7 @@ export default function PredictionScreen({ route }) {
     fetchPrediction();
   }, [category, day]);
 
-  // 🎨 Gradient theo category
+  // 🎨 Gradient khác nhau cho từng category
   const getGradientColors = () => {
     switch (category) {
       case "love":
@@ -79,7 +83,7 @@ export default function PredictionScreen({ route }) {
         <Text style={styles.title}>Dự đoán</Text>
         <Text style={styles.subtitle}>
           {category === "daily"
-            ? "Chiêm tinh"
+            ? "Chiêm tinh hằng ngày"
             : category === "love"
             ? "Tình duyên"
             : "Công việc"}
@@ -143,7 +147,12 @@ export default function PredictionScreen({ route }) {
 
         <ScrollView style={styles.predictionScroll}>
           {loading ? (
-            <ActivityIndicator size="large" color="#fff" style={{ marginTop: 40 }} />
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#fff" />
+              <Text style={styles.loadingText}>
+                🔮 Đang tính toán năng lượng vũ trụ...
+              </Text>
+            </View>
           ) : (
             <Text style={styles.predictionText}>
               {prediction || "Không có dữ liệu chiêm tinh nào được tạo ra 😢"}
@@ -155,22 +164,40 @@ export default function PredictionScreen({ route }) {
   );
 }
 
+// 🌈 Màu riêng cho từng tab khi active
 const getActiveButtonColor = (key) => {
   switch (key) {
     case "love":
-      return { backgroundColor: "#ff8fd6" };
+      return { backgroundColor: "rgba(255, 143, 214, 0.6)" };
     case "work":
-      return { backgroundColor: "#2d6f1a" };
+      return { backgroundColor: "rgba(45, 111, 26, 0.6)" };
     default:
-      return { backgroundColor: "#6c5ce7" };
+      return { backgroundColor: "rgba(108, 92, 231, 0.6)" };
   }
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: "center", paddingBottom: 80 },
-  header: { marginTop: 60, alignSelf: "flex-start", paddingHorizontal: 40 },
-  title: { fontSize: 36, color: "#fff", fontWeight: "500" },
-  subtitle: { fontSize: 32, color: "#d6ceff", fontWeight: "400", marginTop: 4 },
+  container: {
+    flex: 1,
+    alignItems: "center",
+    paddingBottom: 80,
+  },
+  header: {
+    marginTop: 60,
+    alignSelf: "flex-start",
+    paddingHorizontal: 40,
+  },
+  title: {
+    fontSize: 36,
+    color: "#fff",
+    fontWeight: "600",
+  },
+  subtitle: {
+    fontSize: 30,
+    color: "#d6ceff",
+    fontWeight: "400",
+    marginTop: 6,
+  },
   categoryTabs: {
     flexDirection: "row",
     justifyContent: "center",
@@ -179,8 +206,17 @@ const styles = StyleSheet.create({
     padding: 5,
     marginTop: 25,
   },
-  categoryButton: { paddingVertical: 8, paddingHorizontal: 18, borderRadius: 20 },
-  categoryText: { color: "#bfb9d9", fontSize: 15, fontWeight: "600" },
+  categoryButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    marginHorizontal: 5,
+  },
+  categoryText: {
+    color: "#bfb9d9",
+    fontSize: 15,
+    fontWeight: "600",
+  },
   categoryTextActive: { color: "#fff" },
   dayTabs: {
     flexDirection: "row",
@@ -201,7 +237,31 @@ const styles = StyleSheet.create({
     marginTop: 25,
   },
   predictionScroll: { flexGrow: 0 },
-  predictionTitle: { color: "#fff", fontSize: 22, fontWeight: "700", marginBottom: 4 },
-  predictionDate: { color: "#cfc9ff", fontSize: 16, marginBottom: 10 },
-  predictionText: { color: "#dcd6ff", fontSize: 17, lineHeight: 26, textAlign: "justify" },
+  predictionTitle: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  predictionDate: {
+    color: "#cfc9ff",
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  predictionText: {
+    color: "#dcd6ff",
+    fontSize: 17,
+    lineHeight: 26,
+    textAlign: "justify",
+  },
+  loadingContainer: {
+    alignItems: "center",
+    marginTop: 40,
+  },
+  loadingText: {
+    color: "#fff",
+    fontSize: 16,
+    marginTop: 10,
+    opacity: 0.8,
+  },
 });

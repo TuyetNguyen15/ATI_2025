@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { ELEMENT_MAP, ELEMENT_COLORS, ZODIAC_ICONS } from '../../constants/astrologyMap';
+import { Alert } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const API_URL = "http://192.168.1.3:5000/generate";
@@ -24,33 +25,23 @@ export default function HomeScreen( {navigation }) {
   const element = ELEMENT_MAP[profile.sun] || '...';
   const elementColors = ELEMENT_COLORS[element] || ELEMENT_COLORS['Không xác định'];
   const zodiacIcon = ZODIAC_ICONS[profile.sun] || ZODIAC_ICONS['Không xác định'];
-  const handleGeneratePrediction = async () => {
-    try {
-      const userData = {
-        uid: profile.uid,
-        name: profile.name,
-        sun: profile.sun,
-        moon: profile.moon,
-        birthDate: profile.birthDate,
-      };
-
-      const response = await axios.post(API_URL, {
-        userData,
-        category: "daily",
-        day: "today",
-      });
-
-      if (response.data.error) throw new Error(response.data.error);
-
-      navigation.navigate("Prediction", {
-        prediction: response.data.prediction,
-        userData,
-      });
-    } catch (error) {
-      console.error("❌", error);
-      Alert.alert("Lỗi", "Không thể tạo dự đoán. Hãy thử lại sau!");
-    }
+ const handleGeneratePrediction = () => {
+  const userData = {
+    name: profile.name,
+    sun: profile.sun,
+    moon: profile.moon,
+    // birthDate: profile.birthDate,
   };
+
+  console.log("🧠 Profile hiện tại:", profile);
+
+  if (!userData.name || !userData.sun || !userData.moon) {
+    Alert.alert("⚠️ Thiếu dữ liệu", "Hãy nhập đủ tên, Mặt Trời và Mặt Trăng trước khi dự đoán!");
+    return;
+  }
+
+  navigation.navigate("Prediction", { userData });
+};
 
 
   
