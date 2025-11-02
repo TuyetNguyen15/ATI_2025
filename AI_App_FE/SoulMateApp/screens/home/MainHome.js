@@ -220,9 +220,10 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.matchTitle}>Cung hợp</Text>
                 <View style={styles.matchContent}>
                   <Image
-                    source={require('../../assets/zodiacsigns/kimnguu.png')}
+                    source={ZODIAC_ICONS[loveMetrics?.best_match] || ZODIAC_ICONS['Không xác định']}
                     style={styles.matchAvatar}
                   />
+
                   <View>
                     <Text style={styles.matchName}>
                       {loveMetrics?.best_match || '—'}
