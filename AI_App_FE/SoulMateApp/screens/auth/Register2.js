@@ -115,11 +115,11 @@ export default function RegisterScreen2({ route, navigation }) {
       });
 
 
-      Alert.alert('🎉', 'Đăng ký hoàn tất!');
+      Alert.alert('Đăng ký hoàn tất!');
       navigation.replace('Main');
     } catch (err) {
       console.log(err);
-      Alert.alert('❌', 'Không thể lưu dữ liệu');
+      Alert.alert('Không thể lưu dữ liệu');
     } finally {
       setLoading(false);
     }

@@ -30,12 +30,14 @@ CORS(app)
 
 MODEL_NAME = "gemini-2.5-flash"
 
+
 # -------------------------------------------------
-# 🧠 Lấy dữ liệu cache Firestore
+# 🧠 Lấy dữ liệu cache Firestore (thêm uid)
 # -------------------------------------------------
-def get_cached_prediction(name, sun, moon, category, day):
-    docs = (
+def get_cached_prediction(uid, name, sun, moon, category, day):
+    query = (
         db.collection("user_prediction")
+        .where("uid", "==", uid)
         .where("name", "==", name)
         .where("sun", "==", sun)
         .where("moon", "==", moon)
@@ -44,17 +46,18 @@ def get_cached_prediction(name, sun, moon, category, day):
         .limit(1)
         .stream()
     )
-    for doc in docs:
+    for doc in query:
         return doc.to_dict()
     return None
 
 
 # -------------------------------------------------
-# 💾 Lưu dữ liệu vào Firestore
+# 💾 Lưu dữ liệu vào Firestore (thêm uid)
 # -------------------------------------------------
-def save_prediction(name, sun, moon, category, day, data):
-    """data có thể là string (daily/love/work) hoặc dict (love_extra)."""
+def save_prediction(uid, name, sun, moon, category, day, data):
+
     doc = {
+        "uid": uid,
         "name": name,
         "sun": sun,
         "moon": moon,
@@ -81,6 +84,7 @@ def generate_prediction():
     category = data.get("category", "daily")
     day = data.get("day", "today")
 
+    uid = user_data.get("uid", "")
     name = user_data.get("name", "")
     sun = user_data.get("sun", "")
     moon = user_data.get("moon", "")
@@ -88,12 +92,12 @@ def generate_prediction():
     if not name or not sun or not moon:
         return jsonify({"error": "Thiếu thông tin người dùng"}), 400
 
-    # ⚡ Kiểm tra cache Firestore
-    cached_doc = get_cached_prediction(name, sun, moon, category, day)
+    # ⚡ Kiểm tra cache Firestore (thêm uid)
+    cached_doc = get_cached_prediction(uid, name, sun, moon, category, day)
     if cached_doc:
-        print(f"✅ Cache Firestore có sẵn cho {name} - {category} ({day})")
+        print(f"✅ Cache Firestore có sẵn cho {name} ({uid}) - {category} ({day})")
 
-        if category == "love_extra":
+        if category == "love_metrics":
             return jsonify({
                 "love_luck": cached_doc.get("love_luck"),
                 "best_match": cached_doc.get("best_match"),
@@ -111,7 +115,7 @@ def generate_prediction():
         "daily": "Dự đoán hằng ngày",
         "love": "Dự đoán tình duyên",
         "work": "Dự đoán công việc",
-        "love_extra": "Chỉ số tình duyên và cung hợp",
+        "love_metrics": "Chỉ số tình duyên và cung hợp",
     }
     day_map = {
         "yesterday": "hôm qua",
@@ -126,33 +130,33 @@ def generate_prediction():
         - Tên: {name}
         - Mặt Trời: {sun}, Mặt Trăng: {moon}
 
-         Tập trung mô tả năng lượng, cảm xúc và xu hướng chính trong ngày, kèm một lời khuyên ngắn.
-        Không dùng emoji, không chào hỏi, không mở đầu hay kết thúc dư thừa.
+        Tập trung mô tả năng lượng, cảm xúc và xu hướng chính trong ngày, kèm một lời khuyên ngắn.
+        Không dùng emoji, không dùng các kí tự, không chào hỏi, không mở đầu hay kết thúc dư thừa.
         """,
         "love": f"""
         {category_map['love']} cho {day_map.get(day)}:
         - Tên: {name}
         - Mặt Trời: {sun}, Mặt Trăng: {moon}
-  Mô tả cảm xúc, mối quan hệ hoặc cơ hội trong tình yêu, cùng lời khuyên thực tế.
-        Không dùng emoji, không chào hỏi, không văn phong hoa mỹ.
+
+        Mô tả cảm xúc, mối quan hệ hoặc cơ hội trong tình yêu, cùng lời khuyên thực tế.
+        Không dùng emoji, không dùng các kí tự, không chào hỏi, không văn phong hoa mỹ.
         """,
         "work": f"""
-        💼 {category_map['work']} cho {day_map.get(day)}:
+        {category_map['work']} cho {day_map.get(day)}:
         - Tên: {name}
         - Mặt Trời: {sun}, Mặt Trăng: {moon}
 
-      Tập trung vào năng lượng làm việc, cơ hội và thách thức nghề nghiệp.
-        Kết thúc bằng lời khuyên ngắn, không dùng emoji hay lời chào.
+        Tập trung vào năng lượng làm việc, cơ hội và thách thức nghề nghiệp.
+        Kết thúc bằng lời khuyên ngắn, không dùng emoji, không dùng các kí tự, hay lời chào.
         """,
-        # 💖 Category mới: chỉ số tình duyên, cung hợp, quote
-        "love_extra": f"""
+        "love_metrics": f"""
         Phân tích chỉ số may mắn trong chuyện tình duyên {day_map.get(day)} cho người có:
         - Tên: {name}
         - Mặt Trời: {sun}, Mặt Trăng: {moon}
 
         Trả về một JSON đúng định dạng:
         {{
-          "love_luck": <một số nguyên từ 50 đến 100>,
+          "love_luck": <một số nguyên từ 0 đến 100>,
           "best_match": "<tên một trong 12 cung hoàng đạo tiếng Việt>",
           "compatibility": <một số nguyên 50..100>,
           "quote": "<một câu quote ngắn gọn, sâu sắc, không emoji>"
@@ -170,8 +174,8 @@ def generate_prediction():
         response = model.generate_content(prompt)
         text = response.text if hasattr(response, "text") else str(response)
 
-        # 💕 Nếu là category love_extra → parse JSON
-        if category == "love_extra":
+
+        if category == "love_metrics":
             try:
                 data = json.loads(text)
             except json.JSONDecodeError:
@@ -182,19 +186,28 @@ def generate_prediction():
                     "quote": "Tình yêu là hành trình tự khám phá bản thân qua ánh mắt người khác."
                 }
 
-            save_prediction(name, sun, moon, category, day, data)
-            print(f"✅ Đã lưu Firestore: {name} - love_extra ({day})")
+            save_prediction(uid, name, sun, moon, category, day, data)
+            print(f"✅ Đã lưu Firestore: {name} ({uid}) - love_metrics ({day})")
             return jsonify({**data, "cached": False})
 
         # ✨ Các loại khác (daily/love/work)
-        save_prediction(name, sun, moon, category, day, text)
-        print(f"✅ Đã lưu Firestore: {name} - {category} ({day})")
+        save_prediction(uid, name, sun, moon, category, day, text)
+        print(f"✅ Đã lưu Firestore: {name} ({uid}) - {category} ({day})")
 
         return jsonify({"prediction": text, "cached": False})
 
     except Exception as e:
         print("❌ Gemini Error:", e)
         return jsonify({"error": str(e)}), 500
+
+
+# -------------------------------------------------
+# 🌐 Route test server
+# -------------------------------------------------
+@app.route("/", methods=["GET"])
+def home():
+    return "✅ Flask server đang hoạt động bình thường!"
+
 
 print("✅ Flask nhận request /generate")
 

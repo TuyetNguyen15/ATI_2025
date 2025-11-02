@@ -6,6 +6,7 @@ import {
 import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
+import { loadUserProfile } from '../../services/profileLoader';
 
 const { width, height } = Dimensions.get('window');
 
@@ -54,8 +55,10 @@ export default function LoginScreen({ navigation }) {
             data.birthDate && data.birthTime && data.birthPlace && data.sun && data.moon;
 
           if (hasFullInfo) {
-           
-            navigation.replace('Main');
+            await loadUserProfile(uid);
+            setTimeout(() => {
+              navigation.replace('Main');
+            }, 400);
           } else {
           
             navigation.navigate('RegisterScreen2', { uid: user.uid, from: 'login', email: data.email || '' });

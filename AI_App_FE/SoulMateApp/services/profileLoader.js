@@ -10,12 +10,12 @@ import { setProfileData } from '../profile/profileSlice';
  */
 export async function loadUserProfile(uid) {
   try {
-    console.log('📥 Loading user profile for UID:', uid);
+    console.log('Loading user profile for UID:', uid);
     
     const userDoc = await getDoc(doc(db, 'users', uid));
     
     if (!userDoc.exists()) {
-      console.warn('⚠️ User profile not found');
+      console.warn('User profile not found');
       return null;
     }
     
@@ -24,6 +24,7 @@ export async function loadUserProfile(uid) {
     // Dispatch data to Redux
     store.dispatch(setProfileData({
       // Basic info
+      uid,
       name: userData.name || '',
       avatar: userData.avatar || '',
       coverImage: userData.coverImage || '',
@@ -84,11 +85,11 @@ export async function loadUserProfile(uid) {
       waterRatio: userData.waterRatio || 0,
     }));
     
-    console.log('✅ Profile loaded successfully');
+    console.log('Profile loaded successfully');
     return userData;
     
   } catch (error) {
-    console.error('❌ Error loading profile:', error);
+    console.error('Error loading profile:', error);
     throw error;
   }
 }
