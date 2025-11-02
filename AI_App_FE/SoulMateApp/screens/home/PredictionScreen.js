@@ -10,30 +10,14 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import axios from "axios";
+import { getVietnameseDate } from "../../utils/date";
 import { LinearGradient } from "expo-linear-gradient";
 import useAstroAPI from "../../hook/useAstroAPI";
 const { width } = Dimensions.get("window");
-const API_URL = "http://172.168.1.47:5000/generate" 
+
 
 export default function PredictionScreen({ route }) {
-  // const { userData, initialPrediction } = route.params || {};
-  // const [category, setCategory] = useState("daily");
-  // const [day, setDay] = useState("today");
-  // const [loading, setLoading] = useState(false);
-  // const [prediction, setPrediction] = useState(initialPrediction || "");
-  // const fetchPrediction = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const response = await axios.post(API_URL, { userData, category, day }, { timeout: 60000 });
-  //     setPrediction(response.data.prediction);
-  //   } catch (error) {
-  //     console.error("Fetch error:", error);
-  //     setPrediction("Hệ thống đang bận, vui lòng thử lại sau!");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+
   const { userData, initialPrediction } = route.params || {};
   const [category, setCategory] = useState("daily");
   const [day, setDay] = useState("today");
@@ -47,19 +31,6 @@ export default function PredictionScreen({ route }) {
       });
     }
   }, [category, day]);
-  const getDateString = () => {
-    const today = new Date();
-    if (day === "yesterday") today.setDate(today.getDate() - 1);
-    if (day === "tomorrow") today.setDate(today.getDate() + 1);
-
-    return today.toLocaleDateString("vi-VN", {
-      weekday: "long",
-      day: "numeric",
-      month: "numeric",
-      year: "numeric",
-    });
-  };
-
   // 🎨 Gradient khác nhau cho từng category
   const getGradientColors = () => {
     switch (category) {
@@ -81,8 +52,8 @@ export default function PredictionScreen({ route }) {
           {category === "daily"
             ? "Chiêm tinh hằng ngày"
             : category === "love"
-            ? "Tình duyên"
-            : "Công việc"}
+              ? "Tình duyên"
+              : "Công việc"}
         </Text>
       </View>
 
@@ -136,10 +107,12 @@ export default function PredictionScreen({ route }) {
           {category === "daily"
             ? "Dự đoán hằng ngày của bạn"
             : category === "love"
-            ? "Dự đoán tình duyên của bạn"
-            : "Dự đoán công việc của bạn"}
+              ? "Dự đoán tình duyên của bạn"
+              : "Dự đoán công việc của bạn"}
         </Text>
-        <Text style={styles.predictionDate}>{getDateString()}</Text>
+        <Text style={styles.predictionDate}>
+          {getVietnameseDate(day)} 
+        </Text>
 
         <ScrollView style={styles.predictionScroll}>
           {loading ? (

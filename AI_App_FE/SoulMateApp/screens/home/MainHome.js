@@ -14,6 +14,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
+import { getVietnameseDate } from "../../utils/date";
 import { ELEMENT_MAP, ELEMENT_COLORS, ZODIAC_ICONS } from '../../constants/astrologyMap';
 import useAstroAPI from '../../hook/useAstroAPI';
 import { loadUserProfile } from "../../services/profileLoader";
@@ -25,7 +26,7 @@ export default function HomeScreen({ navigation }) {
   const profile = useSelector((state) => state.profile);
   useEffect(() => {
     if (profile.uid) {
-     
+
       loadUserProfile(profile.uid);
     }
   }, [profile.uid]);
@@ -33,19 +34,24 @@ export default function HomeScreen({ navigation }) {
   const element = ELEMENT_MAP[profile.sun] || '...';
   const elementColors = ELEMENT_COLORS[element] || ELEMENT_COLORS['Không xác định'];
   const zodiacIcon = ZODIAC_ICONS[profile.sun] || ZODIAC_ICONS['Không xác định'];
-
- 
   useEffect(() => {
     if (profile.uid && profile.sun && profile.moon) {
       const timer = setTimeout(() => {
         handleLoveMetrics();
-      }, 500); 
+      }, 500);
       return () => clearTimeout(timer);
     } else {
       console.log("Profile chưa sẵn sàng:");
     }
   }, [profile]);
-  
+  const [currentDate, setCurrentDate] = useState(getVietnameseDate("today"));
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentDate(getVietnameseDate("today"));
+    }, 60000); // Cập nhật mỗi phút
+    return () => clearInterval(interval);
+  }, []);
+
   const handleGeneratePrediction = () => {
     const userData = {
       uid: profile.uid,
@@ -82,7 +88,7 @@ export default function HomeScreen({ navigation }) {
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* 🌙 Header */}
         <View style={styles.header}>
-          <Text style={styles.date}>Thứ 6, ngày 3/10/2025</Text>
+          <Text style={styles.date}>{currentDate}</Text>
           <Text style={styles.welcome}>Xin Chào, {profile.name || 'bạn'}</Text>
         </View>
 
@@ -312,7 +318,7 @@ const styles = StyleSheet.create({
   },
   background: { flex: 1 },
   scroll: { alignItems: 'center', paddingBottom: 120 },
-  header: { bottom: 30, alignItems: 'center', marginTop: 100 },
+  header: { bottom: 30, alignItems: 'center', marginTop: 130 },
   date: { color: '#dcdcdc', fontSize: 20, opacity: 0.8 },
   welcome: {
     color: '#fff',

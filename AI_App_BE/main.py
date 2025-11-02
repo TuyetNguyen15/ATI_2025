@@ -7,6 +7,7 @@ from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, firestore
 import json
+import re  # ✅ Dùng để clean JSON Gemini trả về
 
 # 🚀 Load biến môi trường
 base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -55,7 +56,6 @@ def get_cached_prediction(uid, name, sun, moon, category, day):
 # 💾 Lưu dữ liệu vào Firestore (thêm uid)
 # -------------------------------------------------
 def save_prediction(uid, name, sun, moon, category, day, data):
-
     doc = {
         "uid": uid,
         "name": name,
@@ -174,11 +174,15 @@ def generate_prediction():
         response = model.generate_content(prompt)
         text = response.text if hasattr(response, "text") else str(response)
 
-
+        text = re.sub(r"(```json|```|'''|\"\"\")", "", text).strip()
         if category == "love_metrics":
             try:
-                data = json.loads(text)
-            except json.JSONDecodeError:
+
+                cleaned = re.sub(r"^.*?(\{.*\}).*$", r"\1", text, flags=re.DOTALL)
+                data = json.loads(cleaned)
+            except Exception as e:
+                print("JSON Parse Error:", e)
+                print("Gemini trả về không hợp lệ → dùng fallback.")
                 data = {
                     "love_luck": 80,
                     "best_match": "Kim Ngưu",
@@ -187,17 +191,17 @@ def generate_prediction():
                 }
 
             save_prediction(uid, name, sun, moon, category, day, data)
-            print(f"✅ Đã lưu Firestore: {name} ({uid}) - love_metrics ({day})")
+            print(f"Đã lưu Firestore: {name} ({uid}) - love_metrics ({day})")
             return jsonify({**data, "cached": False})
 
         # ✨ Các loại khác (daily/love/work)
         save_prediction(uid, name, sun, moon, category, day, text)
-        print(f"✅ Đã lưu Firestore: {name} ({uid}) - {category} ({day})")
+        print(f"Đã lưu Firestore: {name} ({uid}) - {category} ({day})")
 
         return jsonify({"prediction": text, "cached": False})
 
     except Exception as e:
-        print("❌ Gemini Error:", e)
+        print("Gemini Error:", e)
         return jsonify({"error": str(e)}), 500
 
 
@@ -206,13 +210,13 @@ def generate_prediction():
 # -------------------------------------------------
 @app.route("/", methods=["GET"])
 def home():
-    return "✅ Flask server đang hoạt động bình thường!"
+    return "Flask server đang hoạt động bình thường!"
 
 
-print("✅ Flask nhận request /generate")
+print("Flask nhận request /generate")
 
 # -------------------------------------------------
-# 🚀 Run app
+
 # -------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
