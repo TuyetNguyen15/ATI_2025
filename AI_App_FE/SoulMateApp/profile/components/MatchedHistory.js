@@ -1,6 +1,7 @@
 // src/components/MatchedHistory.js
 import React from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const matchedData = [
   {
@@ -41,17 +42,6 @@ const matchedData = [
 ];
 
 const MatchedHistory = () => {
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Image source={{ uri: item.avatar }} style={styles.avatar} />
-      <View style={styles.info}>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.zodiac}>{item.zodiac}</Text>
-      </View>
-      <Text style={styles.duration}>{item.duration}</Text>
-    </View>
-  );
-
   const handleSeeMore = () => {
     // Xử lý khi nhấn vào "Xem thêm" (điều hướng sang màn hình chi tiết)
   };
@@ -66,13 +56,22 @@ const MatchedHistory = () => {
       </View>
 
       {matchedData.map((item) => (
-        <View key={item.id} style={styles.card}>
-          <Image source={{ uri: item.avatar }} style={styles.avatar} />
-          <View style={styles.info}>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.zodiac}>{item.zodiac}</Text>
-          </View>
-          <Text style={styles.duration}>{item.duration}</Text>
+        <View key={item.id} style={styles.cardWrapper}>
+          <LinearGradient
+            colors={['#ff7bbf', '#b36dff', '#ff7bbf']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientBorder}
+          >
+            <View style={styles.card}>
+              <Image source={{ uri: item.avatar }} style={styles.avatar} />
+              <View style={styles.info}>
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.zodiac}>{item.zodiac}</Text>
+              </View>
+              <Text style={styles.duration}>{item.duration}</Text>
+            </View>
+          </LinearGradient>
         </View>
       ))}
     </View>
@@ -98,17 +97,27 @@ const styles = StyleSheet.create({
   },
   seeMore: {
     fontSize: 16,
-    color: '#478ae8',
+    color: '#ff7bbf',
     fontWeight: 'bold',
+  },
+  cardWrapper: {
+    marginBottom: 12,
+    // Shadow blur effect (glowing)
+    shadowColor: '#ff7acb',
+    shadowOpacity: 0.5,
+    shadowRadius: 15,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 12,
+  },
+  gradientBorder: {
+    borderRadius: 12,
+    padding: 2, // Độ dày viền gradient
   },
   card: {
     flexDirection: 'row',
     padding: 22,
-    backgroundColor: '#212020ff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#478ae8',
-    marginBottom: 12,
+    backgroundColor: '#161616ff',
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'space-between',
   },

@@ -1,33 +1,31 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
 import { resetProfile } from '../profileSlice';
-import AppCircleButton from '../../components/AppCircleButton';
 
-export default function ProfileHeader({ navigation }) {
+export default function ProfileHeader({ navigation, menuVisible, setMenuVisible }) {
   const { name, sun, avatar, coverImage } = useSelector((state) => state.profile);
   const dispatch = useDispatch();
 
   const defaultCover = require('../../assets/default_cover_image.jpg');
   const defaultAvatar = require('../../assets/default_avatar.jpg');
 
-  const [showMenu, setShowMenu] = useState(false);
-
   const handleEditCover = () => {
-    setShowMenu(false);
+    setMenuVisible(false);
     // TODO: mở modal chọn ảnh hoặc upload
   };
 
   const handleEditAvatar = () => {
-    setShowMenu(false);
+    setMenuVisible(false);
     // TODO: mở modal chọn ảnh hoặc upload
   };
 
   const handleLogout = () => {
-    setShowMenu(false);
+    setMenuVisible(false);
     
     Alert.alert(
       '🚪 Đăng xuất',
@@ -42,13 +40,9 @@ export default function ProfileHeader({ navigation }) {
           style: 'destructive',
           onPress: async () => {
             try {
-              // 1. Đăng xuất Firebase Auth
               await signOut(auth);
-              
-              // 2. Reset Redux state về initial
               dispatch(resetProfile());
               
-              // 3. Navigate về Login screen
               if (navigation) {
                 navigation.replace('LoginScreen');
               }
@@ -64,6 +58,10 @@ export default function ProfileHeader({ navigation }) {
     );
   };
 
+  const toggleMenu = () => {
+    setMenuVisible(!menuVisible);
+  };
+
   return (
     <View style={styles.container}>
       {/* Cover Image */}
@@ -74,29 +72,43 @@ export default function ProfileHeader({ navigation }) {
         />
 
         {/* Icon menu (3 chấm) */}
-        <TouchableOpacity style={styles.moreIcon} onPress={() => setShowMenu(!showMenu)}>
+        <TouchableOpacity 
+          style={styles.moreIcon} 
+          onPress={toggleMenu}
+          activeOpacity={0.7}
+        >
           <MaterialIcons name="more-horiz" size={32} color="#fff" />
         </TouchableOpacity>
 
         {/* Dropdown menu */}
-        {showMenu && (
-          <View style={styles.menuContainer}>
+        {menuVisible && (
+          <TouchableOpacity 
+            activeOpacity={1}
+            style={styles.menuContainer}
+            onPress={(e) => e.stopPropagation()}
+          >
             <TouchableOpacity style={styles.menuItemRow} onPress={handleLogout}>
               <MaterialIcons name="logout" size={20} color="#ff4444" />
               <Text style={[styles.menuItem, { color: '#ff4444' }]}>Đăng xuất</Text>
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         )}
 
-        {/* Nút chỉnh sửa ảnh bìa */}
-        <AppCircleButton
-          icon="edit"
-          size={20}
-          backgroundColor="#478ae8ff"
-          color="#fff"
+        {/* Nút chỉnh sửa ảnh bìa - Gradient Button */}
+        <TouchableOpacity 
+          activeOpacity={0.8}
           onPress={handleEditCover}
           style={styles.editCoverBtn}
-        />
+        >
+          <LinearGradient
+            colors={['#ff7bbf', '#b36dff']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientButton}
+          >
+            <MaterialIcons name="edit" size={20} color="#fff" />
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
 
       {/* Avatar */}
@@ -105,14 +117,22 @@ export default function ProfileHeader({ navigation }) {
           source={avatar ? { uri: avatar } : defaultAvatar}
           style={styles.avatar}
         />
-        <AppCircleButton
-          icon="edit"
-          size={18}
-          backgroundColor="#478ae8ff"
-          color="#fff"
+        
+        {/* Nút chỉnh sửa avatar - Gradient Button */}
+        <TouchableOpacity 
+          activeOpacity={0.8}
           onPress={handleEditAvatar}
           style={styles.editAvatarBtn}
-        />
+        >
+          <LinearGradient
+            colors={['#ff7bbf', '#b36dff']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientButton}
+          >
+            <MaterialIcons name="edit" size={18} color="#fff" />
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
 
       {/* Info */}
@@ -123,7 +143,10 @@ export default function ProfileHeader({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', marginBottom: 20 },
+  container: { 
+    alignItems: 'center', 
+    marginBottom: 20 
+  },
 
   coverContainer: {
     position: 'relative',
@@ -154,6 +177,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
+    zIndex: 1000,
   },
   menuItemRow: {
     flexDirection: 'row',
@@ -189,6 +213,29 @@ const styles = StyleSheet.create({
     right: 5,
   },
 
-  name: { fontSize: 20, color: '#fff', fontWeight: '600', marginTop: 10 },
-  zodiac: { fontSize: 16, color: '#999', marginTop: 5 },
+  // Gradient button styles
+  gradientButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#ff7acb',
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 8,
+  },
+
+  name: { 
+    fontSize: 20, 
+    color: '#fff', 
+    fontWeight: '600', 
+    marginTop: 10 
+  },
+  zodiac: { 
+    fontSize: 16, 
+    color: '#999', 
+    marginTop: 5 
+  },
 });

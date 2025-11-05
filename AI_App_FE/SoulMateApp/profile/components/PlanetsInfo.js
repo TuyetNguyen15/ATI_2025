@@ -26,33 +26,30 @@ export default function PlanetsInfo() {
     IC: '#43a047',
   };
 
-  const planetRows= [
-  { id: 'sun', icon: 'wb-sunny', label: 'Mặt Trời', value: sun, color: colors.Sun },
-  { id: 'moon', icon: 'nightlight-round', label: 'Mặt Trăng', value: moon, color: colors.Moon },
-  { id: 'mercury', icon: 'bolt', label: 'Sao Thủy', value: mercury, color: colors.Mercury },
-  { id: 'venus', icon: 'favorite', label: 'Sao Kim', value: venus, color: colors.Venus },
-  { id: 'mars', icon: 'whatshot', label: 'Sao Hỏa', value: mars, color: colors.Mars },
-  { id: 'jupiter', icon: 'brightness-high', label: 'Sao Mộc', value: jupiter, color: colors.Jupiter },
-  { id: 'saturn', icon: 'grain', label: 'Sao Thổ', value: saturn, color: colors.Saturn },
-  { id: 'uranus', icon: 'flash-on', label: 'Sao Thiên Vương', value: uranus, color: colors.Uranus },
-  { id: 'neptune', icon: 'waves', label: 'Sao Hải Vương', value: neptune, color: colors.Neptune },
-  { id: 'pluto', icon: 'contrast', label: 'Sao Diêm Vương', value: pluto, color: colors.Pluto },
-  { id: 'ascendant', icon: 'north-east', label: 'Cung Mọc', value: ascendant, color: colors.Ascendant },
-  { id: 'descendant', icon: 'south-west', label: 'Cung Lặn', value: descendant, color: colors.Descendant },
-  { id: 'mc', icon: 'arrow-upward', label: 'Thiên Đỉnh', value: mc, color: colors.MC },
-  { id: 'ic', icon: 'arrow-downward', label: 'Thiên Đế', value: ic, color: colors.IC },
-];
-
+  const planetRows = [
+    { id: 'sun', icon: 'wb-sunny', label: 'Mặt Trời', value: sun, color: colors.Sun },
+    { id: 'moon', icon: 'nightlight-round', label: 'Mặt Trăng', value: moon, color: colors.Moon },
+    { id: 'mercury', icon: 'bolt', label: 'Sao Thủy', value: mercury, color: colors.Mercury },
+    { id: 'venus', icon: 'favorite', label: 'Sao Kim', value: venus, color: colors.Venus },
+    { id: 'mars', icon: 'whatshot', label: 'Sao Hỏa', value: mars, color: colors.Mars },
+    { id: 'jupiter', icon: 'brightness-high', label: 'Sao Mộc', value: jupiter, color: colors.Jupiter },
+    { id: 'saturn', icon: 'grain', label: 'Sao Thổ', value: saturn, color: colors.Saturn },
+    { id: 'uranus', icon: 'flash-on', label: 'Sao Thiên Vương', value: uranus, color: colors.Uranus },
+    { id: 'neptune', icon: 'waves', label: 'Sao Hải Vương', value: neptune, color: colors.Neptune },
+    { id: 'pluto', icon: 'contrast', label: 'Sao Diêm Vương', value: pluto, color: colors.Pluto },
+    { id: 'ascendant', icon: 'north-east', label: 'Cung Mọc', value: ascendant, color: colors.Ascendant },
+    { id: 'descendant', icon: 'south-west', label: 'Cung Lặn', value: descendant, color: colors.Descendant },
+    { id: 'mc', icon: 'arrow-upward', label: 'Thiên đỉnh', value: mc, color: colors.MC },
+    { id: 'ic', icon: 'arrow-downward', label: 'Thiên để', value: ic, color: colors.IC },
+  ];
 
   return (
     <View style={styles.container}>
       {planetRows.map((planet, index) => (
         <View key={planet.id} style={styles.row}>
           <MaterialIcons name={planet.icon} size={26} color={planet.color} style={styles.icon} />
-          <View style={styles.textContainer}>
-            <Text style={styles.label}>{planet.label}: </Text>
-            <Text style={styles.value}>{planet.value || ''}</Text>
-          </View>
+          <Text style={styles.label}>{planet.label}:</Text>
+          <Text style={styles.value}>{planet.value || ''}</Text>
         </View>
       ))}
     </View>
@@ -68,23 +65,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 6,
-    position: 'relative',
   },
   icon: {
     marginRight: 12,
-  },
-  textContainer: {
-    flexDirection: 'row',
+    width: 26,
   },
   label: {
     fontSize: 16,
     color: '#fff',
     fontWeight: '600',
+    width: 160, // Width cố định để thẳng hàng
   },
   value: {
     fontSize: 16,
     color: '#fff',
     fontWeight: '500',
-    marginTop: 2,
+    flex: 1,
   },
 });

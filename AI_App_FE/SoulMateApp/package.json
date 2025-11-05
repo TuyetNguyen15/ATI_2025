@@ -13,7 +13,7 @@
     "@expo-google-fonts/crimson-pro": "^0.4.2",
     "@expo-google-fonts/great-vibes": "^0.4.1",
     "@expo/vector-icons": "^15.0.2",
-    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-navigation/bottom-tabs": "^7.4.8",
     "@react-navigation/native": "^7.1.18",
     "@react-navigation/stack": "^7.4.8",
@@ -40,5 +40,8 @@
     "react-native-vector-icons": "^10.3.0",
     "react-native-web": "^0.21.0"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "metro-react-native-babel-transformer": "^0.77.0"
+  }
 }

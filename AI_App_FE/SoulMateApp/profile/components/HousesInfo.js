@@ -44,10 +44,8 @@ export default function HousesInfo() {
       {houseRows.map((house, index) => (
         <View key={house.id} style={styles.row}>
           <MaterialIcons name="house" size={20} color={house.color} style={styles.icon} />
-          <View style={styles.textContainer}>
-            <Text style={styles.label}>{house.label}: </Text>
-            <Text style={styles.value}>{house.value || ''}</Text>
-          </View>
+          <Text style={styles.label}>{house.label}:</Text>
+          <Text style={styles.value}>{house.value || ''}</Text>
         </View>
       ))}
     </View>
@@ -63,23 +61,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 6,
-    position: 'relative',
   },
   icon: {
     marginRight: 12,
-  },
-  textContainer: {
-    flexDirection: 'row',
+    width: 20,
   },
   label: {
     fontSize: 16,
     color: '#fff',
     fontWeight: '600',
+    width: 80, // Width cố định để thẳng hàng
   },
   value: {
     fontSize: 16,
     color: '#fff',
     fontWeight: '500',
-    marginTop: 2,
+    flex: 1,
   },
 });
