@@ -21,7 +21,7 @@ const ElementalPieChart = () => {
     {
       name: 'Thổ',
       ratio: earthRatio || 0,
-      color: '#8B4513',
+      color: '#C9A96E',
       legendFontColor: '#fff',
       legendFontSize: 14,
     },
