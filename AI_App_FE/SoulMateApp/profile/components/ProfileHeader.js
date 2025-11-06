@@ -16,12 +16,12 @@ export default function ProfileHeader({ navigation, menuVisible, setMenuVisible 
 
   const handleEditCover = () => {
     setMenuVisible(false);
-    // TODO: mở modal chọn ảnh hoặc upload
+    navigation.navigate('UpdateAvatar', { imageType: 'coverImage' });
   };
 
   const handleEditAvatar = () => {
     setMenuVisible(false);
-    // TODO: mở modal chọn ảnh hoặc upload
+    navigation.navigate('UpdateAvatar', { imageType: 'avatar' });
   };
 
   const handleLogout = () => {
