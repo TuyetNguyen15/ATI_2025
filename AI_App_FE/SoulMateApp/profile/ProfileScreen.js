@@ -32,7 +32,7 @@ export default function ProfileScreen({ navigation }) {
           setMenuVisible={setMenuVisible}
         />
         <Pressable onPress={closeMenu}>
-          <PersonalInfo />
+          <PersonalInfo navigation={navigation} />
           <AstrologyDetails />
           <NatalChart />
           <MatchedHistory />

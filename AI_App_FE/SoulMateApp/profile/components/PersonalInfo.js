@@ -4,7 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSelector } from 'react-redux';
 
-export default function PersonalInfo() {
+export default function PersonalInfo({ navigation }) {
   const [activeTab, setActiveTab] = useState('personal');
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -40,8 +40,7 @@ export default function PersonalInfo() {
   ];
 
   const handleEdit = () => {
-    // TODO: Mở modal hoặc navigate đến màn hình edit
-    console.log('Edit button pressed for tab:', activeTab);
+    navigation.navigate('EditProfile', { editType: activeTab });
   };
 
   const renderInfo = (items) =>
