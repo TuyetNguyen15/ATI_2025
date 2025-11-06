@@ -13,6 +13,7 @@ import LoginScreen from './screens/auth/LoginScreen';
 import RegisterScreen1 from './screens/auth/Register1';
 import RegisterScreen2 from './screens/auth/Register2';
 import BottomTabs from './components/BottomTabs';
+import UpdateAvatar from './screens/avatar/UpdateAvatar';
 import { getApps } from 'firebase/app';
 import app from './firebaseConfig';
 
@@ -61,6 +62,7 @@ function AppNavigator() {
         <Stack.Screen name="RegisterScreen1" component={RegisterScreen1} options={{ headerShown: false }} />
         <Stack.Screen name="RegisterScreen2" component={RegisterScreen2} options={{ headerShown: false }} />
         <Stack.Screen name="Main" component={BottomTabs} options={{ headerShown: false }} />
+        <Stack.Screen name="UpdateAvatar" component={UpdateAvatar} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
