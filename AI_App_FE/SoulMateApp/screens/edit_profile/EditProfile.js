@@ -41,42 +41,154 @@ export default function EditProfile({ navigation, route }) {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Validate form
+  // ✅ Validate form với các giới hạn hợp lý
   const validatePersonalInfo = () => {
+    // Tên: không được rỗng, chỉ chứa chữ cái, khoảng trắng, dấu tiếng Việt
     if (!name.trim()) {
       Alert.alert('Lỗi', 'Vui lòng nhập tên');
       return false;
     }
-    if (age && (isNaN(age) || parseInt(age) < 1 || parseInt(age) > 150)) {
-      Alert.alert('Lỗi', 'Tuổi không hợp lệ');
+    if (name.trim().length < 2) {
+      Alert.alert('Lỗi', 'Tên phải có ít nhất 2 ký tự');
       return false;
     }
-    if (height && (isNaN(height) || parseFloat(height) < 50 || parseFloat(height) > 300)) {
-      Alert.alert('Lỗi', 'Chiều cao không hợp lệ (50-300 cm)');
+    if (name.trim().length > 50) {
+      Alert.alert('Lỗi', 'Tên không được quá 50 ký tự');
       return false;
     }
-    if (weight && (isNaN(weight) || parseFloat(weight) < 20 || parseFloat(weight) > 500)) {
-      Alert.alert('Lỗi', 'Cân nặng không hợp lệ (20-500 kg)');
+    // Kiểm tra tên chỉ chứa chữ cái và khoảng trắng
+    const nameRegex = /^[a-zA-ZÀ-ỹ\s]+$/;
+    if (!nameRegex.test(name.trim())) {
+      Alert.alert('Lỗi', 'Tên chỉ được chứa chữ cái');
       return false;
     }
+
+    // Tuổi: 1-120
+    if (age && (isNaN(age) || parseInt(age) < 1 || parseInt(age) > 120)) {
+      Alert.alert('Lỗi', 'Tuổi không hợp lệ (1-120)');
+      return false;
+    }
+
+    // Chiều cao: 0.5m - 3.0m (50cm - 300cm)
+    if (height) {
+      const heightNum = parseFloat(height);
+      if (isNaN(heightNum) || heightNum < 0.5 || heightNum > 3.0) {
+        Alert.alert('Lỗi', 'Chiều cao không hợp lệ (0.5m - 3.0m)');
+        return false;
+      }
+      // Kiểm tra số thập phân không quá 2 chữ số
+      if (height.includes('.') && height.split('.')[1].length > 2) {
+        Alert.alert('Lỗi', 'Chiều cao chỉ được nhập tối đa 2 số thập phân');
+        return false;
+      }
+    }
+
+    // Cân nặng: 20kg - 300kg
+    if (weight) {
+      const weightNum = parseFloat(weight);
+      if (isNaN(weightNum) || weightNum < 20 || weightNum > 300) {
+        Alert.alert('Lỗi', 'Cân nặng không hợp lệ (20kg - 300kg)');
+        return false;
+      }
+      // Kiểm tra số thập phân không quá 1 chữ số
+      if (weight.includes('.') && weight.split('.')[1].length > 1) {
+        Alert.alert('Lỗi', 'Cân nặng chỉ được nhập tối đa 1 số thập phân');
+        return false;
+      }
+    }
+
+    // Giới tính: phải chọn
+    if (!gender) {
+      Alert.alert('Lỗi', 'Vui lòng chọn giới tính');
+      return false;
+    }
+
+    // Công việc: tối đa 100 ký tự
+    if (job && job.trim().length > 100) {
+      Alert.alert('Lỗi', 'Công việc không được quá 100 ký tự');
+      return false;
+    }
+
     return true;
   };
 
   const validateSecurityInfo = () => {
+    // Email: phải đúng định dạng
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập email');
+      return false;
+    }
     if (!emailRegex.test(email)) {
       Alert.alert('Lỗi', 'Email không hợp lệ');
       return false;
     }
-    if (newPassword && newPassword.length < 6) {
-      Alert.alert('Lỗi', 'Mật khẩu mới phải có ít nhất 6 ký tự');
-      return false;
+
+    // Nếu đổi mật khẩu
+    if (newPassword || currentPassword || confirmPassword) {
+      // Phải nhập đủ 3 trường
+      if (!currentPassword) {
+        Alert.alert('Lỗi', 'Vui lòng nhập mật khẩu hiện tại');
+        return false;
+      }
+      if (!newPassword) {
+        Alert.alert('Lỗi', 'Vui lòng nhập mật khẩu mới');
+        return false;
+      }
+      if (!confirmPassword) {
+        Alert.alert('Lỗi', 'Vui lòng xác nhận mật khẩu mới');
+        return false;
+      }
+
+      // Mật khẩu mới phải có ít nhất 6 ký tự
+      if (newPassword.length < 6) {
+        Alert.alert('Lỗi', 'Mật khẩu mới phải có ít nhất 6 ký tự');
+        return false;
+      }
+
+      // Mật khẩu mới không được quá 50 ký tự
+      if (newPassword.length > 50) {
+        Alert.alert('Lỗi', 'Mật khẩu mới không được quá 50 ký tự');
+        return false;
+      }
+
+      // Mật khẩu mới phải khác mật khẩu cũ
+      if (newPassword === currentPassword) {
+        Alert.alert('Lỗi', 'Mật khẩu mới phải khác mật khẩu hiện tại');
+        return false;
+      }
+
+      // Xác nhận mật khẩu phải khớp
+      if (newPassword !== confirmPassword) {
+        Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp');
+        return false;
+      }
     }
-    if (newPassword && newPassword !== confirmPassword) {
-      Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp');
-      return false;
-    }
+
     return true;
+  };
+
+  // ✅ Xử lý input chỉ cho phép số và dấu chấm
+  const handleHeightChange = (text) => {
+    // Chỉ cho phép số và 1 dấu chấm
+    const cleaned = text.replace(/[^0-9.]/g, '');
+    // Không cho phép nhiều hơn 1 dấu chấm
+    const parts = cleaned.split('.');
+    if (parts.length > 2) return;
+    setHeight(cleaned);
+  };
+
+  const handleWeightChange = (text) => {
+    const cleaned = text.replace(/[^0-9.]/g, '');
+    const parts = cleaned.split('.');
+    if (parts.length > 2) return;
+    setWeight(cleaned);
+  };
+
+  const handleAgeChange = (text) => {
+    // Chỉ cho phép số nguyên
+    const cleaned = text.replace(/[^0-9]/g, '');
+    setAge(cleaned);
   };
 
   // Handle Save
@@ -125,7 +237,7 @@ export default function EditProfile({ navigation, route }) {
           return;
         }
 
-        const updatedFields = { email };
+        const updatedFields = { email: email.trim() };
 
         // Nếu có đổi mật khẩu
         if (newPassword) {
@@ -165,14 +277,16 @@ export default function EditProfile({ navigation, route }) {
       <View style={styles.inputGroup}>
         <MaterialIcons name="badge" size={22} color="#ff7bbf" style={styles.inputIcon} />
         <View style={styles.inputWrapper}>
-          <Text style={styles.inputLabel}>Tên</Text>
+          <Text style={styles.inputLabel}>Tên *</Text>
           <TextInput
             style={styles.input}
             value={name}
             onChangeText={setName}
             placeholder="Nhập tên của bạn"
             placeholderTextColor="#666"
+            maxLength={50}
           />
+          <Text style={styles.helperText}>Chỉ chữ cái, 2-50 ký tự</Text>
         </View>
       </View>
 
@@ -183,18 +297,20 @@ export default function EditProfile({ navigation, route }) {
           <TextInput
             style={styles.input}
             value={age}
-            onChangeText={setAge}
-            placeholder="Nhập tuổi"
+            onChangeText={handleAgeChange}
+            placeholder="Nhập tuổi (1-120)"
             placeholderTextColor="#666"
             keyboardType="numeric"
+            maxLength={3}
           />
+          <Text style={styles.helperText}>Từ 1 đến 120</Text>
         </View>
       </View>
 
       <View style={styles.inputGroup}>
         <MaterialIcons name="wc" size={22} color="#ff7bbf" style={styles.inputIcon} />
         <View style={styles.inputWrapper}>
-          <Text style={styles.inputLabel}>Giới tính</Text>
+          <Text style={styles.inputLabel}>Giới tính *</Text>
           <View style={styles.genderRow}>
             <TouchableOpacity
               style={[styles.genderButton, gender === 'Nam' && styles.genderButtonActive]}
@@ -227,15 +343,17 @@ export default function EditProfile({ navigation, route }) {
       <View style={styles.inputGroup}>
         <MaterialIcons name="straighten" size={22} color="#ff7bbf" style={styles.inputIcon} />
         <View style={styles.inputWrapper}>
-          <Text style={styles.inputLabel}>Chiều cao (cm)</Text>
+          <Text style={styles.inputLabel}>Chiều cao (m)</Text>
           <TextInput
             style={styles.input}
             value={height}
-            onChangeText={setHeight}
-            placeholder="Nhập chiều cao"
+            onChangeText={handleHeightChange}
+            placeholder="Ví dụ: 1.70"
             placeholderTextColor="#666"
             keyboardType="decimal-pad"
+            maxLength={4}
           />
+          <Text style={styles.helperText}>Từ 0.5m đến 3.0m (vd: 1.75)</Text>
         </View>
       </View>
 
@@ -246,16 +364,18 @@ export default function EditProfile({ navigation, route }) {
           <TextInput
             style={styles.input}
             value={weight}
-            onChangeText={setWeight}
-            placeholder="Nhập cân nặng"
+            onChangeText={handleWeightChange}
+            placeholder="Ví dụ: 65.5"
             placeholderTextColor="#666"
             keyboardType="decimal-pad"
+            maxLength={5}
           />
+          <Text style={styles.helperText}>Từ 20kg đến 300kg</Text>
         </View>
       </View>
 
       <View style={styles.inputGroup}>
-        <MaterialIcons name="school" size={22} color="#ff7bbf" style={styles.inputIcon} />
+        <MaterialIcons name="work" size={22} color="#ff7bbf" style={styles.inputIcon} />
         <View style={styles.inputWrapper}>
           <Text style={styles.inputLabel}>Công việc</Text>
           <TextInput
@@ -264,7 +384,9 @@ export default function EditProfile({ navigation, route }) {
             onChangeText={setJob}
             placeholder="Nhập công việc"
             placeholderTextColor="#666"
+            maxLength={100}
           />
+          <Text style={styles.helperText}>Tối đa 100 ký tự</Text>
         </View>
       </View>
     </>
@@ -276,7 +398,7 @@ export default function EditProfile({ navigation, route }) {
       <View style={styles.inputGroup}>
         <MaterialIcons name="email" size={22} color="#ff7bbf" style={styles.inputIcon} />
         <View style={styles.inputWrapper}>
-          <Text style={styles.inputLabel}>Email</Text>
+          <Text style={styles.inputLabel}>Email *</Text>
           <TextInput
             style={styles.input}
             value={email}
@@ -286,6 +408,7 @@ export default function EditProfile({ navigation, route }) {
             keyboardType="email-address"
             autoCapitalize="none"
           />
+          <Text style={styles.helperText}>Email hợp lệ</Text>
         </View>
       </View>
 
@@ -307,6 +430,7 @@ export default function EditProfile({ navigation, route }) {
               placeholder="Nhập mật khẩu hiện tại"
               placeholderTextColor="#666"
               secureTextEntry={!showCurrentPassword}
+              maxLength={50}
             />
             <TouchableOpacity onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
               <MaterialIcons
@@ -331,6 +455,7 @@ export default function EditProfile({ navigation, route }) {
               placeholder="Nhập mật khẩu mới"
               placeholderTextColor="#666"
               secureTextEntry={!showNewPassword}
+              maxLength={50}
             />
             <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)}>
               <MaterialIcons
@@ -340,6 +465,7 @@ export default function EditProfile({ navigation, route }) {
               />
             </TouchableOpacity>
           </View>
+          <Text style={styles.helperText}>Ít nhất 6 ký tự</Text>
         </View>
       </View>
 
@@ -355,6 +481,7 @@ export default function EditProfile({ navigation, route }) {
               placeholder="Nhập lại mật khẩu mới"
               placeholderTextColor="#666"
               secureTextEntry={!showConfirmPassword}
+              maxLength={50}
             />
             <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
               <MaterialIcons
@@ -525,6 +652,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#333',
+  },
+  helperText: {
+    color: '#666',
+    fontSize: 11,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   genderRow: {
     flexDirection: 'row',
