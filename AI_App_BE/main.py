@@ -5,13 +5,12 @@ import os
 import google.generativeai as genai
 from datetime import datetime
 import firebase_admin
-from firebase_admin import credentials, firestore, storage
+from firebase_admin import credentials, firestore
 import json
 import re
 import base64
-import uuid
-from werkzeug.utils import secure_filename
-import io
+import cloudinary
+import cloudinary.uploader
 
 # 🚀 Load biến môi trường
 base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -24,13 +23,17 @@ if not api_key:
 # 🔮 Cấu hình Gemini
 genai.configure(api_key=api_key)
 
-# 🔥 Firebase Admin
+# 🔥 Firebase Admin (chỉ Firestore)
 cred = credentials.Certificate(os.path.join(base_dir, "firebase-key.json"))
-firebase_admin.initialize_app(cred, {
-    'storageBucket': 'astrolove-e53f8.firebasestorage.app'  # Thay bằng bucket của bạn
-})
+firebase_admin.initialize_app(cred)
 db = firestore.client()
-bucket = storage.bucket()  # ✅ Khởi tạo sau initialize_app
+
+# ☁️ Cấu hình Cloudinary (MIỄN PHÍ)
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", "YOUR_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY", "YOUR_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET", "YOUR_API_SECRET")
+)
 
 # 🚀 Flask setup
 app = Flask(__name__)
@@ -40,7 +43,7 @@ MODEL_NAME = "gemini-2.5-flash"
 
 
 # -------------------------------------------------
-# 🧠 Lấy dữ liệu cache Firestore (thêm uid)
+# 🧠 Lấy dữ liệu cache Firestore
 # -------------------------------------------------
 def get_cached_prediction(uid, name, sun, moon, category, day):
     query = (
@@ -60,7 +63,7 @@ def get_cached_prediction(uid, name, sun, moon, category, day):
 
 
 # -------------------------------------------------
-# 💾 Lưu dữ liệu vào Firestore (thêm uid)
+# 💾 Lưu dữ liệu vào Firestore
 # -------------------------------------------------
 def save_prediction(uid, name, sun, moon, category, day, data):
     doc = {
@@ -99,7 +102,7 @@ def generate_prediction():
     if not name or not sun or not moon:
         return jsonify({"error": "Thiếu thông tin người dùng"}), 400
 
-    # ⚡ Kiểm tra cache Firestore (thêm uid)
+    # ⚡ Kiểm tra cache Firestore
     cached_doc = get_cached_prediction(uid, name, sun, moon, category, day)
     if cached_doc:
         print(f"✅ Cache Firestore có sẵn cho {name} ({uid}) - {category} ({day})")
@@ -218,18 +221,14 @@ def generate_prediction():
 def home():
     return "Flask server đang hoạt động bình thường!"
 
+
 # -------------------------------------------------
-# 📸 Route Upload Avatar/Cover
+# 📸 Route Upload Image (CLOUDINARY)
 # -------------------------------------------------
 @app.route("/upload-image", methods=["POST"])
 def upload_image():
     """
-    Upload ảnh avatar hoặc cover image lên Firebase Storage
-    Body: {
-        "uid": "user_id",
-        "imageType": "avatar" | "coverImage",
-        "imageData": "base64_string" hoặc file
-    }
+    Upload ảnh lên Cloudinary (MIỄN PHÍ)
     """
     try:
         data = request.get_json()
@@ -243,26 +242,21 @@ def upload_image():
         # Decode base64
         try:
             if "," in image_data:
-                image_data = image_data.split(",")[1]
+                header, image_data = image_data.split(",", 1)
             
-            image_bytes = base64.b64decode(image_data)
+            # Upload lên Cloudinary
+            upload_result = cloudinary.uploader.upload(
+                f"data:image/jpeg;base64,{image_data}",
+                folder=f"astrolove/{image_type}",
+                public_id=f"{uid}_{image_type}",
+                overwrite=True,
+                resource_type="image"
+            )
+            
+            image_url = upload_result.get("secure_url")
+            
         except Exception as e:
-            return jsonify({"error": f"Lỗi decode base64: {str(e)}"}), 400
-        
-        # Tạo tên file unique
-        file_extension = "jpg"
-        unique_filename = f"{image_type}/{uid}_{uuid.uuid4().hex}.{file_extension}"
-        
-        # Upload lên Firebase Storage
-        blob = bucket.blob(unique_filename)
-        blob.upload_from_string(
-            image_bytes,
-            content_type="image/jpeg"
-        )
-        
-        # Make public và lấy URL
-        blob.make_public()
-        image_url = blob.public_url
+            return jsonify({"error": f"Lỗi upload: {str(e)}"}), 400
         
         # Cập nhật Firestore
         user_ref = db.collection("users").document(uid)
@@ -285,20 +279,12 @@ def upload_image():
 
 
 # -------------------------------------------------
-# 📄 Route Update Profile Field
+# 📝 Route Update Profile
 # -------------------------------------------------
 @app.route("/update-profile", methods=["POST"])
 def update_profile():
     """
-    Cập nhật một hoặc nhiều field trong profile
-    Body: {
-        "uid": "user_id",
-        "fields": {
-            "name": "New Name",
-            "gender": "male",
-            ...
-        }
-    }
+    Cập nhật profile
     """
     try:
         data = request.get_json()
@@ -308,7 +294,6 @@ def update_profile():
         if not uid or not fields:
             return jsonify({"error": "Thiếu uid hoặc fields"}), 400
         
-        # Cập nhật Firestore
         user_ref = db.collection("users").document(uid)
         fields["updatedAt"] = firestore.SERVER_TIMESTAMP
         user_ref.update(fields)
@@ -326,17 +311,12 @@ def update_profile():
 
 
 # -------------------------------------------------
-# 🗑️ Route Delete Image (optional)
+# 🗑️ Route Delete Image (CLOUDINARY)
 # -------------------------------------------------
 @app.route("/delete-image", methods=["POST"])
 def delete_image():
     """
-    Xóa ảnh khỏi Storage và reset field trong Firestore
-    Body: {
-        "uid": "user_id",
-        "imageType": "avatar" | "coverImage",
-        "imageUrl": "https://..."
-    }
+    Xóa ảnh từ Cloudinary
     """
     try:
         data = request.get_json()
@@ -347,17 +327,15 @@ def delete_image():
         if not uid or not image_type:
             return jsonify({"error": "Thiếu uid hoặc imageType"}), 400
         
-        # Xóa file từ Storage (nếu có URL)
-        if image_url and "firebase" in image_url:
+        # Xóa từ Cloudinary
+        if image_url and "cloudinary" in image_url:
             try:
-                # Extract path từ URL
-                path = image_url.split("/o/")[1].split("?")[0]
-                path = path.replace("%2F", "/")
-                blob = bucket.blob(path)
-                blob.delete()
-                print(f"🗑️ Đã xóa file: {path}")
+                # Extract public_id từ URL
+                public_id = f"astrolove/{image_type}/{uid}_{image_type}"
+                cloudinary.uploader.destroy(public_id)
+                print(f"🗑️ Đã xóa ảnh: {public_id}")
             except Exception as e:
-                print(f"⚠️ Không thể xóa file: {str(e)}")
+                print(f"⚠️ Không thể xóa ảnh: {str(e)}")
         
         # Reset field trong Firestore
         user_ref = db.collection("users").document(uid)
@@ -380,5 +358,5 @@ def delete_image():
 # 🚀 Run Flask App
 # -------------------------------------------------
 if __name__ == "__main__":
-    print("Flask nhận request /generate")
+    print("Flask nhận request /generate và /upload-image (Cloudinary)")
     app.run(debug=True, host="0.0.0.0", port=5000)
