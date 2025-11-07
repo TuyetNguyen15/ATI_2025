@@ -29,7 +29,7 @@ export default function PersonalInfo({ navigation }) {
     { icon: 'badge', label: 'Tên', value: name || 'Chưa cập nhật' },
     { icon: 'cake', label: 'Tuổi', value: age || 'Chưa cập nhật' },
     { icon: 'wc', label: 'Giới tính', value: gender || 'Chưa cập nhật' },
-    { icon: 'straighten', label: 'Chiều cao', value: height != null ? `${height} cm` : 'Chưa cập nhật' },
+    { icon: 'straighten', label: 'Chiều cao', value: height != null ? `${height} m` : 'Chưa cập nhật' },
     { icon: 'fitness-center', label: 'Cân nặng', value: weight != null ? `${weight} kg` : 'Chưa cập nhật' },
     { icon: 'school', label: 'Công việc', value: job || 'Chưa cập nhật' },
   ];
