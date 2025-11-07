@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, Modal } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,6 +25,7 @@ export default function ProfileHeader({ navigation, menuVisible, setMenuVisible 
   };
 
   const handleLogout = () => {
+    console.log('🔴 handleLogout được gọi'); // Debug log
     setMenuVisible(false);
     
     Alert.alert(
@@ -59,6 +60,7 @@ export default function ProfileHeader({ navigation, menuVisible, setMenuVisible 
   };
 
   const toggleMenu = () => {
+    console.log('🔵 toggleMenu - menuVisible:', !menuVisible); // Debug log
     setMenuVisible(!menuVisible);
   };
 
@@ -80,20 +82,6 @@ export default function ProfileHeader({ navigation, menuVisible, setMenuVisible 
           <MaterialIcons name="more-horiz" size={32} color="#fff" />
         </TouchableOpacity>
 
-        {/* Dropdown menu */}
-        {menuVisible && (
-          <TouchableOpacity 
-            activeOpacity={1}
-            style={styles.menuContainer}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <TouchableOpacity style={styles.menuItemRow} onPress={handleLogout}>
-              <MaterialIcons name="logout" size={20} color="#ff4444" />
-              <Text style={[styles.menuItem, { color: '#ff4444' }]}>Đăng xuất</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        )}
-
         {/* Nút chỉnh sửa ảnh bìa - Gradient Button */}
         <TouchableOpacity 
           activeOpacity={0.8}
@@ -110,6 +98,38 @@ export default function ProfileHeader({ navigation, menuVisible, setMenuVisible 
           </LinearGradient>
         </TouchableOpacity>
       </View>
+
+      {/* Dropdown menu với Modal */}
+      <Modal
+        visible={menuVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => {
+            console.log('🟡 Overlay pressed - closing menu');
+            setMenuVisible(false);
+          }}
+        >
+          <View style={styles.menuContainer}>
+            <TouchableOpacity 
+              style={styles.menuItemRow} 
+              onPress={(e) => {
+                e.stopPropagation();
+                console.log('🟢 Logout button pressed');
+                handleLogout();
+              }}
+              activeOpacity={0.7}
+            >
+              <MaterialIcons name="logout" size={20} color="#ff4444" />
+              <Text style={[styles.menuItem, { color: '#ff4444' }]}>Đăng xuất</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Avatar */}
       <View style={styles.avatarContainer}>
@@ -164,10 +184,15 @@ const styles = StyleSheet.create({
     right: 10,
     padding: 5,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+    paddingTop: 55,
+    paddingRight: 18,
+  },
   menuContainer: {
-    position: 'absolute',
-    top: 45,
-    right: 18,
     backgroundColor: '#fff',
     borderRadius: 8,
     paddingVertical: 8,
@@ -177,12 +202,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
-    zIndex: 1000,
   },
   menuItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
   menuItem: {
     fontSize: 16,
