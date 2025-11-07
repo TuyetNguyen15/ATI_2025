@@ -352,7 +352,168 @@ def delete_image():
     except Exception as e:
         print(f"❌ Delete error: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
+    
+    
+# -------------------------------------------------
+# 🔮 Route phân tích bản đồ sao
+# -------------------------------------------------
+@app.route("/natal-analysis", methods=["POST"])
+def natal_chart_analysis():
+    """
+    Phân tích chi tiết bản đồ sao dựa trên thông tin chiêm tinh
+    """
+    try:
+        data = request.get_json()
+        uid = data.get("uid", "")
+        
+        # Lấy thông tin từ request
+        user_info = {
+            "name": data.get("name", ""),
+            "sun": data.get("sun", ""),
+            "moon": data.get("moon", ""),
+            "mercury": data.get("mercury", ""),
+            "venus": data.get("venus", ""),
+            "mars": data.get("mars", ""),
+            "jupiter": data.get("jupiter", ""),
+            "saturn": data.get("saturn", ""),
+            "uranus": data.get("uranus", ""),
+            "neptune": data.get("neptune", ""),
+            "pluto": data.get("pluto", ""),
+            "ascendant": data.get("ascendant", ""),
+            "descendant": data.get("descendant", ""),
+            "mc": data.get("mc", ""),
+            "ic": data.get("ic", ""),
+        }
+        
+        # Lấy thông tin houses
+        houses = {
+            f"house{i}": data.get(f"house{i}", "") for i in range(1, 13)
+        }
+        
+        # Lấy thông tin aspects
+        aspects = {
+            "conjunction": data.get("conjunctionAspect", ""),
+            "opposition": data.get("oppositionAspect", ""),
+            "trine": data.get("trineAspect", ""),
+            "square": data.get("squareAspect", ""),
+            "sextile": data.get("sextileAspect", ""),
+        }
+        
+        # Lấy tỷ lệ nguyên tố
+        elemental_ratios = {
+            "fire": data.get("fireRatio", 0),
+            "earth": data.get("earthRatio", 0),
+            "air": data.get("airRatio", 0),
+            "water": data.get("waterRatio", 0),
+        }
+        
+        if not user_info["name"] or not user_info["sun"] or not user_info["moon"]:
+            return jsonify({"error": "Thiếu thông tin cơ bản"}), 400
+        
+        # ⚡ Kiểm tra cache Firestore
+        cache_query = (
+            db.collection("natal_analysis")
+            .where("uid", "==", uid)
+            .limit(1)
+            .stream()
+        )
+        
+        for doc in cache_query:
+            cached_data = doc.to_dict()
+            print(f"✅ Cache phân tích có sẵn cho {user_info['name']} ({uid})")
+            return jsonify({
+                "analysis": cached_data.get("analysis", ""),
+                "cached": True
+            })
+        
+        print(f"⚙️ Không có cache → Gọi Gemini để phân tích")
+        
+        # 🔮 Tạo prompt phân tích chi tiết
+        prompt = f"""
+        Phân tích bản đồ sao chi tiết cho người có thông tin sau:
+        
+        **Thông tin cơ bản:**
+        - Tên: {user_info['name']}
+        - Mặt Trời: {user_info['sun']}
+        - Mặt Trăng: {user_info['moon']}
+        - Thủy tinh: {user_info['mercury']}
+        - Kim tinh: {user_info['venus']}
+        - Hỏa tinh: {user_info['mars']}
+        - Mộc tinh: {user_info['jupiter']}
+        - Thổ tinh: {user_info['saturn']}
+        - Thiên Vương tinh: {user_info['uranus']}
+        - Hải Vương tinh: {user_info['neptune']}
+        - Diêm Vương tinh: {user_info['pluto']}
+        
+        **Điểm đặc biệt:**
+        - Ascendant (Cung Thăng): {user_info['ascendant']}
+        - Descendant: {user_info['descendant']}
+        - MC (Midheaven): {user_info['mc']}
+        - IC: {user_info['ic']}
+        
+        **Các nhà (Houses):**
+        {chr(10).join([f"- Nhà {i}: {houses[f'house{i}']}" for i in range(1, 13) if houses[f'house{i}']])}
+        
+        **Các góc tương tác (Aspects):**
+        - Conjunction: {aspects['conjunction']}
+        - Opposition: {aspects['opposition']}
+        - Trine: {aspects['trine']}
+        - Square: {aspects['square']}
+        - Sextile: {aspects['sextile']}
+        
+        **Tỷ lệ nguyên tố:**
+        - Lửa: {elemental_ratios['fire']}%
+        - Đất: {elemental_ratios['earth']}%
+        - Khí: {elemental_ratios['air']}%
+        - Nước: {elemental_ratios['water']}%
+        
+        Hãy phân tích chi tiết và sâu sắc bản đồ sao này theo các mục sau:
+        
+        1. **Tổng quan tính cách**: Dựa vào Mặt Trời, Mặt Trăng và Ascendant
+        2. **Cảm xúc và nội tâm**: Phân tích sâu về Mặt Trăng và các hành tinh cá nhân
+        3. **Sự nghiệp và mục tiêu**: Dựa vào MC, Mặt Trời, và các nhà liên quan
+        4. **Tình yêu và quan hệ**: Phân tích Kim tinh, Nhà 7, và Descendant
+        5. **Thế mạnh và thách thức**: Dựa vào các aspects và vị trí hành tinh
+        6. **Cân bằng nguyên tố**: Ý nghĩa của tỷ lệ Lửa-Đất-Khí-Nước
+        7. **Lời khuyên phát triển**: Hướng dẫn cụ thể để phát huy tiềm năng
+        
+        Yêu cầu:
+        - Viết bằng tiếng Việt, văn phong chuyên nghiệp nhưng dễ hiểu
+        - Mỗi mục khoảng 2-3 đoạn văn
+        - Không dùng emoji, không dùng ký tự đặc biệt
+        - Không chào hỏi hay văn phong dư thừa
+        - Tập trung vào phân tích sâu, có căn cứ chiêm tinh học
+        """
+        
+        # Gọi Gemini API
+        model = genai.GenerativeModel(MODEL_NAME)
+        response = model.generate_content(prompt)
+        analysis_text = response.text if hasattr(response, "text") else str(response)
+        
+        # Làm sạch text
+        analysis_text = re.sub(r"(```|'''|\"\"\")", "", analysis_text).strip()
+        
+        # Lưu vào Firestore
+        analysis_doc = {
+            "uid": uid,
+            "name": user_info["name"],
+            "analysis": analysis_text,
+            "created_at": datetime.now().isoformat(),
+            "user_data": {**user_info, **houses, **aspects, **elemental_ratios}
+        }
+        
+        db.collection("natal_analysis").add(analysis_doc)
+        print(f"✅ Đã lưu phân tích cho {user_info['name']} ({uid})")
+        
+        return jsonify({
+            "analysis": analysis_text,
+            "cached": False
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error in natal analysis: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
 
 # -------------------------------------------------
 # 🚀 Run Flask App

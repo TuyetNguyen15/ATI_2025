@@ -15,6 +15,8 @@ import RegisterScreen2 from './screens/auth/Register2';
 import BottomTabs from './components/BottomTabs';
 import UpdateAvatar from './screens/avatar/UpdateAvatar';
 import EditProfile from './screens/edit_profile/EditProfile';
+import NatalChartAnalysis from './screens/astrology_analysis/NatalChartAnalysis';
+
 import { getApps } from 'firebase/app';
 import app from './firebaseConfig';
 
@@ -65,6 +67,7 @@ function AppNavigator() {
         <Stack.Screen name="Main" component={BottomTabs} options={{ headerShown: false }} />
         <Stack.Screen name="UpdateAvatar" component={UpdateAvatar} options={{ headerShown: false }} />
         <Stack.Screen name="EditProfile" component={EditProfile} options={{ headerShown: false }} />
+        <Stack.Screen name="NatalChartAnalysis" component={NatalChartAnalysis} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
