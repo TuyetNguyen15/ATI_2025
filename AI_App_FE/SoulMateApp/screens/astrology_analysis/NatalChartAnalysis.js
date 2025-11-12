@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert, } from 'react-native';
 import { useSelector } from 'react-redux';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import axios from 'axios';
 
 const API_URL = 'http://192.168.23.106:5000';
@@ -80,85 +80,115 @@ export default function NatalChartAnalysis({ navigation }) {
     }
   };
 
+  const getSectionIcon = (title) => {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes('tổng quan') || lowerTitle.includes('tính cách')) {
+      return { name: 'person-outline', color: '#ff7bbf' };
+    } else if (lowerTitle.includes('cảm xúc') || lowerTitle.includes('nội tâm')) {
+      return { name: 'heart-outline', color: '#f472b6' };
+    } else if (lowerTitle.includes('sự nghiệp') || lowerTitle.includes('mục tiêu')) {
+      return { name: 'briefcase-outline', color: '#c084fc' };
+    } else if (lowerTitle.includes('tình yêu') || lowerTitle.includes('quan hệ')) {
+      return { name: 'heart-circle-outline', color: '#fb7185' };
+    } else if (lowerTitle.includes('thế mạnh') || lowerTitle.includes('thách thức')) {
+      return { name: 'trophy-outline', color: '#fbbf24' };
+    } else if (lowerTitle.includes('cân bằng') || lowerTitle.includes('nguyên tố')) {
+      return { name: 'planet-outline', color: '#60a5fa' };
+    } else if (lowerTitle.includes('lời khuyên') || lowerTitle.includes('phát triển')) {
+      return { name: 'bulb-outline', color: '#34d399' };
+    } else if (lowerTitle.includes('ghép cặp') || lowerTitle.includes('đối tượng')) {
+      return { name: 'people-outline', color: '#f97316' };
+    }
+    return { name: 'star-outline', color: '#ff7bbf' };
+  };
+
   const formatAnalysis = (text) => {
-    // Tách các phần dựa trên số thứ tự hoặc tiêu đề in đậm
-    const sections = text.split(/\n\n+/);
+    // Loại bỏ TẤT CẢ dấu * (bao gồm cả ** và *)
+    let cleanedText = text.replace(/\*/g, '');
+    
+    // Tách các phần dựa trên số thứ tự
+    const sections = cleanedText.split(/\n\n+/);
     
     return sections.map((section, index) => {
-      // Kiểm tra nếu là tiêu đề (có số thứ tự hoặc **text**)
-      const isBoldTitle = section.match(/^\*\*(.*?)\*\*/);
-      const isNumberedTitle = section.match(/^(\d+\.|###)\s*\*?\*?(.*?)\*?\*?:?/);
+      // Chỉ kiểm tra tiêu đề có số thứ tự (ví dụ: 1. Tiêu đề)
+      const isNumberedTitle = section.match(/^(\d+\.)\s*(.+?)(:)?$/m);
       
-      if (isBoldTitle) {
-        const title = isBoldTitle[1];
-        const content = section.replace(/^\*\*(.*?)\*\*:?\s*/, '');
+      if (isNumberedTitle) {
+        const title = isNumberedTitle[2].trim();
+        // Lấy nội dung sau dòng tiêu đề
+        const contentMatch = section.match(/^(\d+\.)\s*(.+?)(:)?\n\n?([\s\S]*)/);
+        const content = contentMatch ? contentMatch[4].trim() : '';
+        const icon = getSectionIcon(title);
+        
         return (
           <View key={index} style={styles.section}>
-            <Text style={styles.sectionTitle}>{title}</Text>
-            <Text style={styles.sectionContent}>{content.trim()}</Text>
+            <LinearGradient
+              colors={['rgba(255, 123, 191, 0.15)', 'rgba(179, 109, 255, 0.15)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.titleContainer}
+            >
+              <View style={styles.iconContainer}>
+                <Ionicons name={icon.name} size={22} color={icon.color} />
+              </View>
+              <Text style={[styles.sectionTitle, { color: icon.color }]}>{title}</Text>
+            </LinearGradient>
+            {content && <Text style={styles.sectionContent}>{content}</Text>}
           </View>
         );
-      } else if (isNumberedTitle) {
-        const title = isNumberedTitle[2];
-        const content = section.replace(/^(\d+\.|###)\s*\*?\*?(.*?)\*?\*?:?\s*/, '');
-        return (
-          <View key={index} style={styles.section}>
-            <Text style={styles.sectionTitle}>{title}</Text>
-            <Text style={styles.sectionContent}>{content.trim()}</Text>
-          </View>
-        );
-      } else {
+      } else if (section.trim() && !section.match(/^\d+\./)) {
+        // Chỉ hiển thị content nếu không phải là dòng tiêu đề
         return (
           <View key={index} style={styles.section}>
             <Text style={styles.sectionContent}>{section.trim()}</Text>
           </View>
         );
       }
-    });
+      return null;
+    }).filter(Boolean);
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#ff7acb" />
-        <Text style={styles.loadingText}>
-          {cached ? 'Đang tải phân tích...' : 'AI đang phân tích bản đồ sao của bạn...'}
-        </Text>
-        <Text style={styles.loadingSubtext}>
-          Quá trình này có thể mất vài giây
-        </Text>
+        <LinearGradient
+          colors={['#ff7bbf', '#b36dff']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.loadingGradient}
+        >
+          <ActivityIndicator size="large" color="#fff" />
+          <Text style={styles.loadingText}>
+            {cached ? 'Đang tải phân tích...' : 'AI đang phân tích bản đồ sao của bạn...'}
+          </Text>
+          <Text style={styles.loadingSubtext}>
+            Quá trình này có thể mất vài giây
+          </Text>
+        </LinearGradient>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#ff7bbf', '#b36dff']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <MaterialIcons name="arrow-back" size={26} color="#fff" />
         </TouchableOpacity>
         
         <Text style={styles.headerTitle}>Phân tích bản đồ sao</Text>
         
-        <TouchableOpacity
-          style={styles.refreshButton}
-          onPress={fetchAnalysis}
-        >
-          <Ionicons name="refresh" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Badge cache */}
-      {cached && (
-        <View style={styles.cacheBadge}>
-          <Ionicons name="checkmark-circle" size={16} color="#4ade80" />
-          <Text style={styles.cacheBadgeText}>Đã lưu</Text>
-        </View>
-      )}
+        <View style={styles.placeholder} />
+      </LinearGradient>
 
       {/* Content */}
       <ScrollView
@@ -166,29 +196,43 @@ export default function NatalChartAnalysis({ navigation }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <LinearGradient
-          colors={['#1a1a1a', '#0a0a0a']}
-          style={styles.contentCard}
-        >
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{profile.name}</Text>
-            <View style={styles.signInfo}>
-              <Text style={styles.signText}>☀️ {profile.sun}</Text>
-              <Text style={styles.signDivider}>•</Text>
-              <Text style={styles.signText}>🌙 {profile.moon}</Text>
-              <Text style={styles.signDivider}>•</Text>
-              <Text style={styles.signText}>⬆️ {profile.ascendant}</Text>
+        {/* User Info Card */}
+        <View style={styles.userInfoCard}>
+          <Text style={styles.userName}>{profile.name}</Text>
+          <View style={styles.signInfo}>
+            <View style={styles.signItem}>
+              <Text style={styles.signEmoji}>☀️</Text>
+              <Text style={styles.signText}>{profile.sun}</Text>
+            </View>
+            <View style={styles.signDivider} />
+            <View style={styles.signItem}>
+              <Text style={styles.signEmoji}>🌙</Text>
+              <Text style={styles.signText}>{profile.moon}</Text>
+            </View>
+            <View style={styles.signDivider} />
+            <View style={styles.signItem}>
+              <Text style={styles.signEmoji}>⬆️</Text>
+              <Text style={styles.signText}>{profile.ascendant}</Text>
             </View>
           </View>
+          
+          {/* Badge cache */}
+          {cached && (
+            <View style={styles.cacheBadge}>
+              <Ionicons name="checkmark-circle" size={14} color="#4ade80" />
+              <Text style={styles.cacheBadgeText}>Đã lưu</Text>
+            </View>
+          )}
+        </View>
 
-          <View style={styles.divider} />
+        {/* Analysis Content */}
+        <View style={styles.analysisContainer}>
+          {formatAnalysis(analysis)}
+        </View>
 
-          <View style={styles.analysisContainer}>
-            {formatAnalysis(analysis)}
-          </View>
-        </LinearGradient>
-
+        {/* Footer */}
         <View style={styles.footer}>
+          <Ionicons name="sparkles" size={16} color="#ff7bbf" />
           <Text style={styles.footerText}>
             Phân tích được tạo bởi AI dựa trên thông tin chiêm tinh học
           </Text>
@@ -201,24 +245,27 @@ export default function NatalChartAnalysis({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#0a0a0a',
   },
   loadingContainer: {
     flex: 1,
+    backgroundColor: '#0a0a0a',
+  },
+  loadingGradient: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
     paddingHorizontal: 32,
   },
   loadingText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
-    marginTop: 16,
+    marginTop: 20,
     textAlign: 'center',
   },
   loadingSubtext: {
-    color: '#999',
+    color: 'rgba(255,255,255,0.7)',
     fontSize: 14,
     marginTop: 8,
     textAlign: 'center',
@@ -229,8 +276,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 60,
-    paddingBottom: 16,
-    backgroundColor: '#000',
+    paddingBottom: 20,
   },
   backButton: {
     width: 40,
@@ -239,102 +285,143 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#fff',
+    letterSpacing: 0.5,
   },
-  refreshButton: {
+  placeholder: {
     width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cacheBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'center',
-    backgroundColor: '#1a3a1a',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginTop: 8,
-  },
-  cacheBadgeText: {
-    color: '#4ade80',
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 4,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 32,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 40,
   },
-  contentCard: {
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  userInfo: {
+  userInfoCard: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    padding: 24,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+    shadowColor: '#ff7bbf',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
   },
   userName: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
     color: '#fff',
-    marginBottom: 8,
+    marginBottom: 16,
+    letterSpacing: 0.5,
   },
   signInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  signItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  signEmoji: {
+    fontSize: 16,
   },
   signText: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#ddd',
   },
   signDivider: {
-    fontSize: 14,
-    color: '#666',
-    marginHorizontal: 8,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#666',
+    marginHorizontal: 12,
   },
-  divider: {
-    height: 1,
-    backgroundColor: '#333',
-    marginVertical: 16,
+  cacheBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(74, 222, 128, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.3)',
+  },
+  cacheBadgeText: {
+    color: '#4ade80',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
   },
   analysisContainer: {
-    gap: 20,
+    gap: 16,
   },
   section: {
-    marginBottom: 16,
+    marginBottom: 24,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    marginBottom: 14,
+    borderLeftWidth: 3,
+    borderLeftColor: '#ff7bbf',
+    shadowColor: '#ff7bbf',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 123, 191, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#ff7acb',
-    marginBottom: 8,
     lineHeight: 24,
+    flex: 1,
+    letterSpacing: 0.3,
   },
   sectionContent: {
     fontSize: 15,
     color: '#ddd',
-    lineHeight: 24,
-    textAlign: 'justify',
+    lineHeight: 26,
+    paddingLeft: 0,
+    letterSpacing: 0.2,
   },
   footer: {
-    marginTop: 24,
-    paddingTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 32,
+    paddingTop: 24,
+    paddingBottom: 8,
     borderTopWidth: 1,
-    borderTopColor: '#333',
+    borderTopColor: '#2a2a2a',
+    gap: 8,
   },
   footerText: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 13,
+    color: '#888',
     textAlign: 'center',
     fontStyle: 'italic',
   },

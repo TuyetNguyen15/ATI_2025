@@ -555,6 +555,9 @@ def natal_chart_analysis():
         5. **Thế mạnh và thách thức**: Dựa vào các aspects và vị trí hành tinh
         6. **Cân bằng nguyên tố**: Ý nghĩa của tỷ lệ Lửa-Đất-Khí-Nước
         7. **Lời khuyên phát triển**: Hướng dẫn cụ thể để phát huy tiềm năng
+        8. **Đối tượng ghép cặp phù hợp**: Phân tích kiểu người, năng lượng và cung hoàng đạo phù hợp nhất 
+        với bản đồ sao này. Giải thích vì sao những đặc điểm đó tạo ra sự hòa hợp trong cảm xúc, trí tuệ và 
+        giá trị sống, đồng thời chỉ ra những dạng năng lượng dễ xung khắc hoặc cần học cách dung hòa.
         
         Yêu cầu:
         - Viết bằng tiếng Việt, văn phong chuyên nghiệp nhưng dễ hiểu
