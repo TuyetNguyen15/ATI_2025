@@ -103,7 +103,7 @@ export const loadUserProfile = async (userId, dispatch) => {
     return profileData;
 
   } catch (error) {
-    console.error('❌ Error loading profile:', error);
+    console.error(' ', error);
     dispatch(setStatus('error'));
     return null;
   }
