@@ -5,18 +5,21 @@ import os
 import google.generativeai as genai
 from datetime import datetime
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, auth
 import json
 import re
 import base64
 import cloudinary
 import cloudinary.uploader
+import requests
 
 # 🚀 Load biến môi trường
 base_dir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(base_dir, ".env"))
 
 api_key = os.getenv("GEMINI_API_KEY")
+firebase_api_key = os.getenv("FIREBASE_API_KEY") 
+
 if not api_key:
     raise ValueError("⚠️ Chưa load được GEMINI_API_KEY!")
 
@@ -82,6 +85,114 @@ def save_prediction(uid, name, sun, moon, category, day, data):
         doc["prediction"] = data
 
     db.collection("user_prediction").add(doc)
+
+
+# -------------------------------------------------
+# 🔐 Route Verify Password (XÁC THỰC MẬT KHẨU)
+# -------------------------------------------------
+@app.route("/verify-password", methods=["POST"])
+def verify_password():
+    try:
+        data = request.get_json()
+        email = data.get("email")
+        password = data.get("password")
+        
+        print(f"=== VERIFY PASSWORD DEBUG ===")
+        print(f"Email nhận được: {email}")
+        print(f"Password length: {len(password) if password else 0}")
+        print(f"Firebase API Key có tồn tại: {bool(firebase_api_key)}")
+        
+        if not email or not password:
+            return jsonify({"success": False, "error": "Thiếu email hoặc password"}), 400
+        
+        url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={firebase_api_key}"
+        
+        payload = {
+            "email": email.strip(),  # ✅ Thêm strip() để loại bỏ khoảng trắng
+            "password": password,
+            "returnSecureToken": True
+        }
+        
+        print(f"Gửi request đến Firebase Auth...")
+        response = requests.post(url, json=payload)
+        result = response.json()
+        
+        print(f"Response status: {response.status_code}")
+        print(f"Response body: {result}")
+        
+        if response.status_code == 200 and result.get("idToken"):
+            print(f"✅ Xác thực thành công cho {email}")
+            return jsonify({"success": True}), 200
+        else:
+            error_msg = result.get("error", {}).get("message", "Invalid password")
+            print(f"❌ Xác thực thất bại: {error_msg}")
+            return jsonify({"success": False, "error": "Mật khẩu không đúng"}), 401
+            
+    except Exception as e:
+        print(f"❌ Verify error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# -------------------------------------------------
+# 📝 Route Update Profile (CẬP NHẬT AUTHENTICATION)
+# -------------------------------------------------
+@app.route("/update-profile", methods=["POST"])
+def update_profile():
+    """
+    Cập nhật profile bao gồm Firebase Authentication
+    """
+    try:
+        data = request.get_json()
+        uid = data.get("uid")
+        fields = data.get("fields", {})
+        
+        if not uid or not fields:
+            return jsonify({"error": "Thiếu uid hoặc fields"}), 400
+        
+        # ✅ Cập nhật Firebase Authentication nếu có email hoặc password
+        auth_updated = False
+        auth_updates = {}
+        
+        if "email" in fields:
+            auth_updates["email"] = fields["email"]
+            auth_updated = True
+        
+        if "password" in fields:
+            auth_updates["password"] = fields["password"]
+            auth_updated = True
+        
+        # Cập nhật Authentication
+        if auth_updated:
+            try:
+                auth.update_user(uid, **auth_updates)
+                print(f"✅ Đã cập nhật Firebase Authentication cho {uid}")
+                
+                # Không lưu password vào Firestore
+                if "password" in fields:
+                    del fields["password"]
+                    
+            except Exception as e:
+                print(f"❌ Lỗi cập nhật Authentication: {str(e)}")
+                return jsonify({"error": f"Không thể cập nhật thông tin xác thực: {str(e)}"}), 500
+        
+        # Cập nhật Firestore (không bao gồm password)
+        if fields:
+            user_ref = db.collection("users").document(uid)
+            fields["updatedAt"] = firestore.SERVER_TIMESTAMP
+            user_ref.update(fields)
+            print(f"✅ Đã cập nhật Firestore cho user {uid}")
+        
+        return jsonify({
+            "success": True,
+            "message": "Cập nhật thành công",
+            "authUpdated": auth_updated
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Update error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 # -------------------------------------------------
@@ -275,38 +386,6 @@ def upload_image():
         
     except Exception as e:
         print(f"❌ Upload error: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-
-# -------------------------------------------------
-# 📝 Route Update Profile
-# -------------------------------------------------
-@app.route("/update-profile", methods=["POST"])
-def update_profile():
-    """
-    Cập nhật profile
-    """
-    try:
-        data = request.get_json()
-        uid = data.get("uid")
-        fields = data.get("fields", {})
-        
-        if not uid or not fields:
-            return jsonify({"error": "Thiếu uid hoặc fields"}), 400
-        
-        user_ref = db.collection("users").document(uid)
-        fields["updatedAt"] = firestore.SERVER_TIMESTAMP
-        user_ref.update(fields)
-        
-        print(f"✅ Đã cập nhật profile cho user {uid}")
-        
-        return jsonify({
-            "success": True,
-            "message": "Cập nhật thành công"
-        }), 200
-        
-    except Exception as e:
-        print(f"❌ Update error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -519,5 +598,5 @@ def natal_chart_analysis():
 # 🚀 Run Flask App
 # -------------------------------------------------
 if __name__ == "__main__":
-    print("Flask nhận request /generate và /upload-image (Cloudinary)")
+    print("Flask nhận request /generate, /upload-image, /update-profile, /verify-password")
     app.run(debug=True, host="0.0.0.0", port=5000)

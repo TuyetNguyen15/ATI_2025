@@ -14,7 +14,9 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateProfileField, setProfileData } from '../../profile/profileSlice';
+import { updateProfileField, resetProfile } from '../../profile/profileSlice'; // ✅ Sửa: import resetProfile thay vì logout
+import { signOut } from 'firebase/auth';
+import { auth } from '../../firebaseConfig';
 
 export default function EditProfile({ navigation, route }) {
   const dispatch = useDispatch();
@@ -191,6 +193,18 @@ export default function EditProfile({ navigation, route }) {
     setAge(cleaned);
   };
 
+  // ✅ Hàm logout đúng cách
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      dispatch(resetProfile());
+      navigation.replace('LoginScreen');
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert('Lỗi', 'Không thể đăng xuất. Vui lòng thử lại.');
+    }
+  };
+
   // Handle Save
   const handleSave = async () => {
     setLoading(true);
@@ -224,7 +238,10 @@ export default function EditProfile({ navigation, route }) {
         const result = await response.json();
 
         if (result.success) {
-          dispatch(updateProfileField(updatedFields));
+          // ✅ Sửa: Cập nhật từng field thay vì truyền object
+          Object.entries(updatedFields).forEach(([field, value]) => {
+            dispatch(updateProfileField({ field, value }));
+          });
           Alert.alert('Thành công', 'Đã cập nhật thông tin cá nhân');
           navigation.goBack();
         } else {
@@ -237,11 +254,36 @@ export default function EditProfile({ navigation, route }) {
           return;
         }
 
-        const updatedFields = { email: email.trim() };
+        // ✅ Nếu đổi mật khẩu, xác thực mật khẩu hiện tại trước
+        if (newPassword || email.trim() !== profile.email) {
+          try {
+            const verifyResponse = await fetch('http://192.168.23.106:5000/verify-password', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: profile.email, // Email hiện tại
+                password: currentPassword,
+              }),
+            });
 
-        // Nếu có đổi mật khẩu
+            const verifyResult = await verifyResponse.json();
+
+            if (!verifyResult.success) {
+              Alert.alert('Lỗi', 'Mật khẩu hiện tại không đúng');
+              setLoading(false);
+              return;
+            }
+          } catch (error) {
+            Alert.alert('Lỗi', 'Không thể xác thực mật khẩu');
+            setLoading(false);
+            return;
+          }
+        }
+
+        const updatedFields = { email: email.trim() };
+        
+        // Thêm mật khẩu mới nếu có
         if (newPassword) {
-          // TODO: Xác thực currentPassword với server
           updatedFields.password = newPassword;
         }
 
@@ -257,9 +299,26 @@ export default function EditProfile({ navigation, route }) {
         const result = await response.json();
 
         if (result.success) {
-          dispatch(updateProfileField(updatedFields));
-          Alert.alert('Thành công', 'Đã cập nhật thông tin bảo mật');
-          navigation.goBack();
+          // Chỉ cập nhật email vào Redux (không cập nhật password)
+          dispatch(updateProfileField({ field: 'email', value: updatedFields.email }));
+
+          // ✅ Nếu đổi email hoặc mật khẩu, bắt buộc đăng xuất
+          if (result.authUpdated) {
+            Alert.alert(
+              'Thành công',
+              'Đã cập nhật thông tin bảo mật. Vui lòng đăng nhập lại với thông tin mới.',
+              [
+                {
+                  text: 'OK',
+                  onPress: handleLogout, // ✅ Sửa: Gọi hàm handleLogout thay vì dispatch(logout())
+                },
+              ],
+              { cancelable: false }
+            );
+          } else {
+            Alert.alert('Thành công', 'Đã cập nhật thông tin bảo mật');
+            navigation.goBack();
+          }
         } else {
           Alert.alert('Lỗi', result.error || 'Không thể cập nhật');
         }
