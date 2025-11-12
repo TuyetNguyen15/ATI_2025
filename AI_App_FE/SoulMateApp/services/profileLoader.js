@@ -1,29 +1,39 @@
 // services/profileLoader.js
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { store } from '../app/store';
-import { setProfileData } from '../profile/profileSlice';
+import { setProfileData, setStatus } from '../profile/profileSlice';
 
 /**
- * Load user profile từ Firestore và cập nhật vào Redux
- * @param {string} uid - User ID từ Firebase Auth
+ * Load user profile từ Firestore và cập nhật Redux store
+ * @param {string} userId - UID của user
+ * @param {Function} dispatch - Redux dispatch function
+ * @returns {Promise<Object|null>} - Profile data hoặc null nếu có lỗi
  */
-export async function loadUserProfile(uid) {
+export const loadUserProfile = async (userId, dispatch) => {
+  if (!userId) {
+    console.error('❌ userId is required');
+    return null;
+  }
+
   try {
-    console.log('📥 Loading user profile for UID:', uid);
-    
-    const userDoc = await getDoc(doc(db, 'users', uid));
-    
-    if (!userDoc.exists()) {
-      console.warn('⚠️ User profile not found');
+    // Set status loading
+    dispatch(setStatus('loading'));
+
+    // Fetch dữ liệu từ Firestore
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      console.error('❌ User not found in Firestore');
+      dispatch(setStatus('error'));
       return null;
     }
-    
-    const userData = userDoc.data();
-    
-    // Dispatch data to Redux
-    store.dispatch(setProfileData({
-      // Basic info
+
+    const userData = userSnap.data();
+
+    // Chuẩn bị data để cập nhật Redux
+    const profileData = {
+      uid: userId,
       name: userData.name || '',
       avatar: userData.avatar || '',
       coverImage: userData.coverImage || '',
@@ -33,12 +43,9 @@ export async function loadUserProfile(uid) {
       weight: userData.weight || null,
       job: userData.job || '',
       email: userData.email || '',
-      
-      // Astrology data
-      zodiac: userData.zodiac || '',
+      password: userData.password || '',
       
       // Planets
-      ascendant: userData.ascendant || '',
       sun: userData.sun || '',
       moon: userData.moon || '',
       mercury: userData.mercury || '',
@@ -49,6 +56,7 @@ export async function loadUserProfile(uid) {
       uranus: userData.uranus || '',
       neptune: userData.neptune || '',
       pluto: userData.pluto || '',
+      ascendant: userData.ascendant || '',
       descendant: userData.descendant || '',
       mc: userData.mc || '',
       ic: userData.ic || '',
@@ -78,19 +86,30 @@ export async function loadUserProfile(uid) {
       natalChartImage: userData.natalChartImage || '',
       
       // Elemental Ratios
-      fireRatio: userData.fireRatio || 0,
-      earthRatio: userData.earthRatio || 0,
-      airRatio: userData.airRatio || 0,
-      waterRatio: userData.waterRatio || 0,
-    }));
-    
-    console.log('✅ Profile loaded successfully');
-    return userData;
-    
-  } catch (error) {
-    console.error('❌ Error loading profile:', error);
-    throw error;
-  }
-}
+      fireRatio: userData.fireRatio || null,
+      earthRatio: userData.earthRatio || null,
+      airRatio: userData.airRatio || null,
+      waterRatio: userData.waterRatio || null,
+      
+      // Other
+      matchedHistory: userData.matchedHistory || [],
+      status: 'success',
+    };
 
-export default loadUserProfile;
+    // Cập nhật Redux store
+    dispatch(setProfileData(profileData));
+    
+    console.log('✅ Profile loaded successfully:', profileData.name);
+    return profileData;
+
+  } catch (error) {
+    console.error(' ', error);
+    dispatch(setStatus('error'));
+    return null;
+  }
+};
+
+/**
+ * Refresh profile - alias cho loadUserProfile
+ */
+export const refreshUserProfile = loadUserProfile;

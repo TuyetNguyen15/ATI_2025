@@ -9,3 +9,11 @@ chạy fe: npm install => npm start
 5. git commit -m "ghi commit thay đổi mói ở đây" (lệnh commit)
 6. git push origin (dùng để push code lên chính nhánh đang ở)
 7. git push origin  master (dùng để push code lên nhánh chính master)
+**// để chạy đúng dự đoán trang home cần thay đổi ip theo máy tính của bạn**
+- nếu chạy trên expo điện thoại thì:
+  + vào cmd gọi ipconfig ->copy ipv4 address của phần wifi paste vào phần ... trong const API_URL = "http://...:5000/generate"; ở file hook/useAtroAPI
+- Chạy trên giả lập Android / iOS (trên máy tính)
+Android Emulator (AVD) không hiểu localhost là máy tính host đâu, nên phải dùng:
+const API_URL = "http://10.0.2.2:5000/generate";
+iOS Simulator (Mac) thì hiểu localhost, nên dùng được:
+const API_URL = "http://localhost:5000/generate";

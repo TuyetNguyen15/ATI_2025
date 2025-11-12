@@ -7,11 +7,12 @@ import { getFirestore } from "firebase/firestore";
 const firebaseConfig = {
   apiKey: "AIzaSyDnzNnNMDI__0gsGSg_RTR69m-RKUh9n04",
   authDomain: "astrolove-e53f8.firebaseapp.com",
+  databaseURL: "https://astrolove-e53f8-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "astrolove-e53f8",
-  storageBucket: "astrolove-e53f8.appspot.com",
+  storageBucket: "astrolove-e53f8.firebasestorage.app",
   messagingSenderId: "558608123139",
   appId: "1:558608123139:web:1769fc52f3d9960a3b5536",
-  measurementId: "G-PYD6JX4RJN",
+  measurementId: "G-PYD6JX4RJN"
 };
 
 // 🚀 Chỉ khởi tạo 1 lần (chống lỗi duplicate-app)

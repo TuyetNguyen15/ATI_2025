@@ -1,7 +1,7 @@
 // services/astrologyService.js
 import { ZODIAC_TRANSLATIONS, PLANET_TRANSLATIONS } from "../constants/translations";
-
-const API_KEY = '6ldXekUVQh4PJkN8TnLUN1RXYBVTPNrHa0sfdE8a';
+import { ELEMENT_MAP } from "../constants/astrologyMap";
+const API_KEY = 'ByNqfA4kvD1EBGyi6ZlUC8aekqCi7FgF8VuJ8SF1';
 const BASE_URL = 'https://json.freeastrologyapi.com/western';
 
 // Helper: delay để tránh vượt quá 1 request/second
@@ -191,27 +191,26 @@ async function getNatalChart(requestBody) {
 
 // Tính tỷ lệ nguyên tố (với tên tiếng Việt)
 function calculateElementalRatio(planets) {
-  const elementMap = {
-    'Bạch Dương': 'fire', 'Sư Tử': 'fire', 'Nhân Mã': 'fire',
-    'Kim Ngưu': 'earth', 'Xử Nữ': 'earth', 'Ma Kết': 'earth',
-    'Song Tử': 'air', 'Thiên Bình': 'air', 'Bảo Bình': 'air',
-    'Cự Giải': 'water', 'Bọ Cạp': 'water', 'Song Ngư': 'water',
-  };
-
-  const counts = { fire: 0, earth: 0, air: 0, water: 0 };
+  const counts = { 'Hoả': 0, 'Thổ': 0, 'Khí': 0, 'Thuỷ': 0 };
   
   Object.values(planets).forEach(sign => {
-    const element = elementMap[sign];
-    if (element) counts[element]++;
+    const element = ELEMENT_MAP[sign];
+    if (element && counts[element] !== undefined) {
+      counts[element]++;
+    }
   });
 
   const total = Object.values(counts).reduce((sum, val) => sum + val, 0);
   
+  if (total === 0) {
+    return { fireRatio: 0, earthRatio: 0, airRatio: 0, waterRatio: 0 };
+  }
+  
   return {
-    fireRatio: Math.round((counts.fire / total) * 100) || 0,
-    earthRatio: Math.round((counts.earth / total) * 100) || 0,
-    airRatio: Math.round((counts.air / total) * 100) || 0,
-    waterRatio: Math.round((counts.water / total) * 100) || 0,
+    fireRatio: Math.round((counts['Hoả'] / total) * 100),
+    earthRatio: Math.round((counts['Thổ'] / total) * 100),
+    airRatio: Math.round((counts['Khí'] / total) * 100),
+    waterRatio: Math.round((counts['Thuỷ'] / total) * 100),
   };
 }
 

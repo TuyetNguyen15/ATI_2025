@@ -1,8 +1,21 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
+import { CommonActions } from '@react-navigation/native';
+
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient'; // ⚠️ Expo version
+import { LinearGradient } from 'expo-linear-gradient';
+
+// 🏠 Screens
+import HomeScreen from '../screens/home/MainHome';
+import PredictionScreen from '../screens/home/PredictionScreen';
 import ProfileScreen from '../profile/ProfileScreen';
 
 // ⚙️ Tạo các màn hình tạm
@@ -13,11 +26,34 @@ function DummyScreen({ title }) {
     </View>
   );
 }
-const HomeScreen = () => <DummyScreen title="🏠 Home Screen" />;
-const NotificationScreen = () => <DummyScreen title="🔔 Notification Screen" />;
-const ChatScreen = () => <DummyScreen title="💬 Chat Screen" />;
 
+const NotificationScreen = () => <DummyScreen title="🔔 Thông báo" />;
+const ChatScreen = () => <DummyScreen title="💬 Trò chuyện" />;
 const Tab = createBottomTabNavigator();
+const HomeStack = createStackNavigator();
+
+/* 🏠 Stack riêng cho tab Home */
+function HomeStackScreen() {
+  return (
+    <HomeStack.Navigator>
+      <HomeStack.Screen
+        name="Trang chủ"
+        component={HomeScreen}
+        options={{ headerShown: false }}
+      />
+      <HomeStack.Screen
+        name="Prediction"
+        component={PredictionScreen}
+        options={{
+          title: '',
+          headerStyle: { backgroundColor: '#101020' },
+          headerTintColor: '#fff',
+          headerBackTitleVisible: false,
+        }}
+      />
+    </HomeStack.Navigator>
+  );
+}
 
 export default function BottomTabs() {
   return (
@@ -28,30 +64,45 @@ export default function BottomTabs() {
         tabBarStyle: styles.tabBar,
       }}
     >
+      {/* Trang chủ  */}
       <Tab.Screen
         name="Home"
-        component={HomeScreen}
+        component={HomeStackScreen}
         options={{
           tabBarIcon: ({ focused }) => (
             <Ionicons
               name="home-outline"
               size={26}
-              color={focused ? '#fff' : '#ccc'}
+              color={focused ? '#ffb6d9' : '#ccc'}
             />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            navigation.dispatch(
+              CommonActions.navigate({
+                name: 'Home',
+                params: {
+                  screen: 'HomeMain',
+                 
+                },
+              })
+            );
+          },
+        })}
       />
 
-      {/* 🔔 Notification Tab */}
+
+      {/* 🔔 Thông báo */}
       <Tab.Screen
         name="Notifications"
         component={NotificationScreen}
         options={{
           tabBarIcon: ({ focused }) => (
             <Ionicons
-              name={focused ? 'notifications' : 'notifications-outline'} // đổi icon khi được chọn
+              name={focused ? 'notifications' : 'notifications-outline'}
               size={26}
-              color={focused ? '#fff' : '#ccc'}
+              color={focused ? '#ffb6d9' : '#ccc'}
             />
           ),
         }}
@@ -65,16 +116,19 @@ export default function BottomTabs() {
           tabBarIcon: () => (
             <TouchableOpacity activeOpacity={0.7} style={styles.centerButton}>
               <LinearGradient
-                colors={['#b14eff', '#ff4ef0']}
+                colors={['#ff7bbf', '#b36dff']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={styles.heartGradient}
               >
-                <Ionicons name="heart" size={28} color="#fff" />
+                <Ionicons name="heart" size={38} color="#fff" />
               </LinearGradient>
             </TouchableOpacity>
           ),
         }}
       />
 
+      {/* 💬 Chat */}
       <Tab.Screen
         name="Chat"
         component={ChatScreen}
@@ -83,12 +137,13 @@ export default function BottomTabs() {
             <Ionicons
               name="chatbubble-ellipses-outline"
               size={26}
-              color={focused ? '#fff' : '#ccc'}
+              color={focused ? '#ffb6d9' : '#ccc'}
             />
           ),
         }}
       />
 
+      {/* 👤 Profile */}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
@@ -97,7 +152,7 @@ export default function BottomTabs() {
             <Ionicons
               name="person-outline"
               size={26}
-              color={focused ? '#fff' : '#ccc'}
+              color={focused ? '#ffb6d9' : '#ccc'}
             />
           ),
         }}
@@ -106,34 +161,42 @@ export default function BottomTabs() {
   );
 }
 
+/* 🎨 Styles */
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    backgroundColor: '#000',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 75,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     borderTopWidth: 0,
-    height: 70,
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-    elevation: 10,
+    elevation: 15,
+    shadowColor: '#ffb6d9',
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: -2 },
+    backdropFilter: Platform.OS === 'ios' ? 'blur(20px)' : undefined,
   },
   centerButton: {
-    top: -25,
+    top: -15,
     justifyContent: 'center',
     alignItems: 'center',
   },
   heartGradient: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 55,
+    height: 55,
+    borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#ff6ff2',
-    shadowOpacity: 0.5,
+    shadowColor: '#ff7acb',
+    shadowOpacity: 0.6,
     shadowRadius: 10,
+    elevation: 10,
   },
   screen: {
     flex: 1,
-    backgroundColor: '#111',
+    backgroundColor: '#1a0126',
     justifyContent: 'center',
     alignItems: 'center',
   },

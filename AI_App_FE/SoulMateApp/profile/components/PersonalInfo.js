@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSelector } from 'react-redux';
 
-export default function PersonalInfo() {
+export default function PersonalInfo({ navigation }) {
   const [activeTab, setActiveTab] = useState('personal');
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -28,7 +29,7 @@ export default function PersonalInfo() {
     { icon: 'badge', label: 'Tên', value: name || 'Chưa cập nhật' },
     { icon: 'cake', label: 'Tuổi', value: age || 'Chưa cập nhật' },
     { icon: 'wc', label: 'Giới tính', value: gender || 'Chưa cập nhật' },
-    { icon: 'straighten', label: 'Chiều cao', value: height != null ? `${height} cm` : 'Chưa cập nhật' },
+    { icon: 'straighten', label: 'Chiều cao', value: height != null ? `${height} m` : 'Chưa cập nhật' },
     { icon: 'fitness-center', label: 'Cân nặng', value: weight != null ? `${weight} kg` : 'Chưa cập nhật' },
     { icon: 'school', label: 'Công việc', value: job || 'Chưa cập nhật' },
   ];
@@ -39,15 +40,14 @@ export default function PersonalInfo() {
   ];
 
   const handleEdit = () => {
-    // TODO: Mở modal hoặc navigate đến màn hình edit
-    console.log('Edit button pressed for tab:', activeTab);
+    navigation.navigate('EditProfile', { editType: activeTab });
   };
 
   const renderInfo = (items) =>
     items.map((item, index) => (
       <View key={index} style={styles.infoRow}>
         <View style={styles.iconContainer}>
-          <MaterialIcons name={item.icon} size={22} color="#478ae8" />
+          <MaterialIcons name={item.icon} size={22} color="#ff7bbf" />
         </View>
         <View style={styles.infoTextContainer}>
           <Text style={styles.infoLabel}>{item.label}</Text>
@@ -64,9 +64,16 @@ export default function PersonalInfo() {
       <View style={styles.content}>
         <View style={styles.titleRow}>
           <Text style={styles.titleText}>{title}</Text>
-          <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-            <MaterialIcons name="edit" size={18} color="#fff" />
-            <Text style={styles.editButtonText}>Chỉnh sửa</Text>
+          <TouchableOpacity activeOpacity={0.8} onPress={handleEdit}>
+            <LinearGradient
+              colors={['#ff7bbf', '#b36dff']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.editButton}
+            >
+              <MaterialIcons name="edit" size={18} color="#fff" />
+              <Text style={styles.editButtonText}>Chỉnh sửa</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
         {renderInfo(items)}
@@ -75,52 +82,72 @@ export default function PersonalInfo() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Switch Tabs */}
-      <View style={styles.switchWrapper}>
-        <Animated.View style={[styles.switchIndicator, { transform: [{ translateX }] }]} />
-        <View style={styles.switchRow}>
-          <TouchableOpacity onPress={() => setActiveTab('personal')} style={styles.switchItem}>
-            <MaterialIcons
-              name="person"
-              size={26}
-              color={activeTab === 'personal' ? '#478ae8' : '#999'}
-            />
-            <Text style={[styles.switchLabel, activeTab === 'personal' && styles.switchLabelActive]}>
-              Cá nhân
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setActiveTab('security')} style={styles.switchItem}>
-            <MaterialIcons
-              name="security"
-              size={26}
-              color={activeTab === 'security' ? '#478ae8' : '#999'}
-            />
-            <Text style={[styles.switchLabel, activeTab === 'security' && styles.switchLabelActive]}>
-              Bảo mật
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+    <View style={styles.containerWrapper}>
+      {/* Gradient Border với Shadow Blur */}
+      <LinearGradient
+        colors={['#ff7bbf', '#b36dff', '#ff7bbf']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientBorder}
+      >
+        <View style={styles.container}>
+          {/* Switch Tabs */}
+          <View style={styles.switchWrapper}>
+            <Animated.View style={[styles.switchIndicator, { transform: [{ translateX }] }]} />
+            <View style={styles.switchRow}>
+              <TouchableOpacity onPress={() => setActiveTab('personal')} style={styles.switchItem}>
+                <MaterialIcons
+                  name="person"
+                  size={26}
+                  color={activeTab === 'personal' ? '#ff7bbf' : '#999'}
+                />
+                <Text style={[styles.switchLabel, activeTab === 'personal' && styles.switchLabelActive]}>
+                  Cá nhân
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setActiveTab('security')} style={styles.switchItem}>
+                <MaterialIcons
+                  name="security"
+                  size={26}
+                  color={activeTab === 'security' ? '#ff7bbf' : '#999'}
+                />
+                <Text style={[styles.switchLabel, activeTab === 'security' && styles.switchLabelActive]}>
+                  Bảo mật
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
-      {/* Content */}
-      {renderContent()}
+          {/* Content */}
+          {renderContent()}
+        </View>
+      </LinearGradient>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  containerWrapper: {
     width: '90%',
-    minHeight: 400,
-    borderWidth: 1,
-    borderColor: '#478ae8',
-    backgroundColor: '#000',
-    borderRadius: 16,
-    padding: 20,
+    alignSelf: 'center',
     marginTop: 20,
     marginBottom: 32,
-    alignSelf: 'center',
+    // Shadow blur effect (glowing)
+    shadowColor: '#ff7acb',
+    shadowOpacity: 0.6,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 15,
+  },
+  gradientBorder: {
+    borderRadius: 16,
+    padding: 2, // Độ dày viền gradient
+  },
+  container: {
+    minHeight: 400,
+    backgroundColor: '#000',
+    borderRadius: 14,
+    padding: 20,
   },
   switchWrapper: {
     position: 'relative',
@@ -148,7 +175,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   switchLabelActive: {
-    color: '#478ae8',
+    color: '#ff7bbf',
   },
   switchIndicator: {
     position: 'absolute',
@@ -157,7 +184,7 @@ const styles = StyleSheet.create({
     width: '40%',
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#478ae8',
+    backgroundColor: '#ff7bbf',
   },
   content: {
     marginTop: 10,
@@ -179,11 +206,15 @@ const styles = StyleSheet.create({
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#478ae8',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
     gap: 6,
+    shadowColor: '#ff7acb',
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 8,
   },
   editButtonText: {
     color: '#fff',
@@ -205,7 +236,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(71, 138, 232, 0.1)',
+    backgroundColor: 'rgba(255, 123, 191, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
