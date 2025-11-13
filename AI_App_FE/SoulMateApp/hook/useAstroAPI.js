@@ -4,7 +4,7 @@ import { Alert } from "react-native";
 import axios from "axios";
 
 // ⚙️ Địa chỉ Flask server (cập nhật theo IP máy)
-const API_URL = "http://172.168.1.47:5000/generate";
+const API_URL = "http://192.168.56.1:5000/generate";
 
 export default function useAstroAPI() {
   const [loading, setLoading] = useState(false);
