@@ -11,3 +11,5 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+venv/
+AI_App_BE/venv/
