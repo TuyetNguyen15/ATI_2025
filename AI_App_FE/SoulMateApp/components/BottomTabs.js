@@ -18,7 +18,13 @@ import HomeScreen from '../screens/home/MainHome';
 import PredictionScreen from '../screens/home/PredictionScreen';
 import ProfileScreen from '../profile/ProfileScreen';
 
-// ⚙️ Tạo các màn hình tạm
+// 📌 Chat Screens (THẬT)
+import ChatListScreen from '../screens/conversation/ChatListScreen';
+import ChatScreen from '../screens/conversation/ChatScreen';
+import ConnectionActionsScreen from '../screens/conversation/ConnectionActionsScreen';
+import IceBreakerScreen from '../screens/conversation/IceBreakerScreen';
+
+// ⚙️ Màn giả
 function DummyScreen({ title }) {
   return (
     <View style={styles.screen}>
@@ -28,11 +34,29 @@ function DummyScreen({ title }) {
 }
 
 const NotificationScreen = () => <DummyScreen title="🔔 Thông báo" />;
-const ChatScreen = () => <DummyScreen title="💬 Trò chuyện" />;
+
+// ❌ KHÔNG GHI ĐÈ CHATSCREEN NỮA
+// → ĐỔI TÊN MÀN GIẢ
+const DummyChat = () => <DummyScreen title="💬 Trò chuyện" />;
+
+// Tab + Stack
 const Tab = createBottomTabNavigator();
 const HomeStack = createStackNavigator();
+const ChatStack = createStackNavigator();
 
-/* 🏠 Stack riêng cho tab Home */
+// 🧡 Chat stack
+function ChatStackScreen() {
+  return (
+    <ChatStack.Navigator screenOptions={{ headerShown: false }}>
+      <ChatStack.Screen name="ChatList" component={ChatListScreen} />
+      <ChatStack.Screen name="ChatDetail" component={ChatScreen} />
+      <ChatStack.Screen name="ConnectionActions" component={ConnectionActionsScreen} />
+      <ChatStack.Screen name="IceBreaker" component={IceBreakerScreen} />
+    </ChatStack.Navigator>
+  );
+}
+
+/* 🏠 Home stack */
 function HomeStackScreen() {
   return (
     <HomeStack.Navigator>
@@ -64,7 +88,7 @@ export default function BottomTabs() {
         tabBarStyle: styles.tabBar,
       }}
     >
-      {/* Trang chủ  */}
+      {/* HOME */}
       <Tab.Screen
         name="Home"
         component={HomeStackScreen}
@@ -77,23 +101,9 @@ export default function BottomTabs() {
             />
           ),
         }}
-        listeners={({ navigation }) => ({
-          tabPress: e => {
-            navigation.dispatch(
-              CommonActions.navigate({
-                name: 'Home',
-                params: {
-                  screen: 'HomeMain',
-                 
-                },
-              })
-            );
-          },
-        })}
       />
 
-
-      {/* 🔔 Thông báo */}
+      {/* NOTIF */}
       <Tab.Screen
         name="Notifications"
         component={NotificationScreen}
@@ -108,10 +118,10 @@ export default function BottomTabs() {
         }}
       />
 
-      {/* ❤️ Nút giữa */}
+      {/* CENTER HEART */}
       <Tab.Screen
         name="Match"
-        component={ChatScreen}
+        component={DummyChat}
         options={{
           tabBarIcon: () => (
             <TouchableOpacity activeOpacity={0.7} style={styles.centerButton}>
@@ -128,10 +138,10 @@ export default function BottomTabs() {
         }}
       />
 
-      {/* 💬 Chat */}
+      {/* CHAT REAL */}
       <Tab.Screen
         name="Chat"
-        component={ChatScreen}
+        component={ChatStackScreen}
         options={{
           tabBarIcon: ({ focused }) => (
             <Ionicons
@@ -143,7 +153,7 @@ export default function BottomTabs() {
         }}
       />
 
-      {/* 👤 Profile */}
+      {/* PROFILE */}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
@@ -161,7 +171,7 @@ export default function BottomTabs() {
   );
 }
 
-/* 🎨 Styles */
+/* STYLE */
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
@@ -176,7 +186,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: -2 },
-    backdropFilter: Platform.OS === 'ios' ? 'blur(20px)' : undefined,
   },
   centerButton: {
     top: -15,
@@ -189,10 +198,6 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#ff7acb',
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
-    elevation: 10,
   },
   screen: {
     flex: 1,

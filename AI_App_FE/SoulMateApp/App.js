@@ -1,4 +1,5 @@
-// 📄 App.js (Đã được dọn dẹp và gộp code)
+// 📄 App.js (bản chuẩn – không còn conflict)
+
 import * as React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -10,88 +11,62 @@ import { auth } from './config/firebaseConfig';
 import { loadUserProfile } from './services/profileLoader';
 import * as SplashScreen from 'expo-splash-screen';
 
+// ❌ XOÁ import này ⛔
+// import ConnectionActionsScreen from './screens/conversation/ConnectionActionsScreen';
+// import IceBreakerScreen from './screens/conversation/IceBreakerScreen';
 
+// Onboarding + Auth
 import OnboardingScreen from './onboardingScreen/OnboardingScreen';
-
-// Màn hình Đăng nhập/Đăng ký (từ một nhánh)
 import LoginScreen from './screens/auth/LoginScreen';
 import RegisterScreen1 from './screens/auth/Register1';
 import RegisterScreen2 from './screens/auth/Register2';
 
-// Màn hình chính
+// Main app
 import BottomTabs from './components/BottomTabs';
 import UpdateAvatar from './screens/avatar/UpdateAvatar';
 import EditProfile from './screens/edit_profile/EditProfile';
 import NatalChartAnalysis from './screens/astrology_analysis/NatalChartAnalysis';
 
-// Giữ Splash Screen hiển thị
 SplashScreen.preventAutoHideAsync();
-
 const Stack = createStackNavigator();
 
-/**
- * Component này chứa tất cả logic chính của app.
- * Nó chỉ được render sau khi Redux <Provider> đã bọc ở ngoài.
- */
 function AppContent() {
   const dispatch = useDispatch();
-  const [appIsReady, setAppIsReady] = React.useState(false);      // State cho Splash Screen
-  const [isInitializing, setIsInitializing] = React.useState(true); // State để kiểm tra auth
+  const [appIsReady, setAppIsReady] = React.useState(false);
+  const [isInitializing, setIsInitializing] = React.useState(true);
 
-  // 1. Logic cho Splash Screen (tải font, assets...)
   React.useEffect(() => {
     async function prepare() {
-      try {
-        console.log('Splash: Preparing assets...');
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Giả lập tải
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        setAppIsReady(true);
-        console.log('Splash: App is ready.');
-      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setAppIsReady(true);
     }
     prepare();
   }, []);
 
-  // 2. Logic kiểm tra Đăng nhập (Auth)
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        console.log('Auth: User detected → Loading Firestore profile...');
         try {
-          // Tải profile của user vào Redux store
-          await loadUserProfile(user.uid); 
-          console.log('Auth: Profile loaded globally');
+          await loadUserProfile(user.uid);
         } catch (err) {
           console.error('Auth: Failed to load profile:', err);
         }
-      } else {
-        console.log('Auth: No user signed in.');
       }
-      // Dù có user hay không, cũng đánh dấu là đã kiểm tra xong
       setIsInitializing(false);
     });
 
-    return unsubscribe; // Dọn dẹp listener khi component unmount
+    return unsubscribe;
   }, [dispatch]);
 
-  // Hàm để ẩn Splash Screen khi View đã sẵn sàng
   const onLayoutRootView = React.useCallback(async () => {
     if (appIsReady) {
       await SplashScreen.hideAsync();
-      console.log('Splash: Hidden.');
     }
   }, [appIsReady]);
 
-  // --- CÁC TRẠNG THÁI RENDER ---
 
-  // 1. Nếu Splash chưa sẵn sàng, trả về null (Splash native vẫn đang hiển thị)
-  if (!appIsReady) {
-    return null;
-  }
+  if (!appIsReady) return null;
 
-  // 2. Nếu Splash đã xong, nhưng Auth chưa kiểm tra xong, hiển thị loading
   if (isInitializing) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
@@ -100,16 +75,16 @@ function AppContent() {
     );
   }
 
-  // 3. Nếu cả 2 đều xong, hiển thị ứng dụng
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <NavigationContainer>
         <Stack.Navigator
-          // Bắt đầu bằng Onboarding (logic từ nhánh của bạn)
-          initialRouteName="Onboarding" 
+          initialRouteName="Onboarding"
           screenOptions={{ headerShown: false }}
         >
-          {/* Gộp TẤT CẢ các màn hình từ cả 2 nhánh */}
+          {/* ⭐ KHÔNG CÒN ConnectionActions ở đây */}
+          {/* ⭐ KHÔNG CÒN IceBreakerScreen ở đây */}
+
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="RegisterScreen1" component={RegisterScreen1} />
@@ -118,15 +93,13 @@ function AppContent() {
           <Stack.Screen name="UpdateAvatar" component={UpdateAvatar} />
           <Stack.Screen name="EditProfile" component={EditProfile} />
           <Stack.Screen name="NatalChartAnalysis" component={NatalChartAnalysis} />
+
         </Stack.Navigator>
       </NavigationContainer>
     </View>
   );
 }
 
-/**
- * Component App chính, chỉ dùng để bọc Redux Provider
- */
 export default function App() {
   return (
     <Provider store={store}>
