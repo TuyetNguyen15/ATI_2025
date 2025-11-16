@@ -8,8 +8,8 @@ export default function PersonalInfo({ navigation }) {
   const [activeTab, setActiveTab] = useState('personal');
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-  // ✅ Lấy state từ Redux
-  const { name, age, gender, height, weight, job, email, password } = useSelector((state) => state.profile);
+  // ✅ Lấy state từ Redux (thêm sun, bỏ name)
+  const { relationshipStatus , age, gender, height, weight, job, email, password } = useSelector((state) => state.profile);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -26,35 +26,72 @@ export default function PersonalInfo({ navigation }) {
 
   // Cấu hình field + icon (gắn value từ Redux)
   const personalInfoItems = [
-    { icon: 'badge', label: 'Tên', value: name || 'Chưa cập nhật' },
-    { icon: 'cake', label: 'Tuổi', value: age || 'Chưa cập nhật' },
-    { icon: 'wc', label: 'Giới tính', value: gender || 'Chưa cập nhật' },
-    { icon: 'straighten', label: 'Chiều cao', value: height != null ? `${height} m` : 'Chưa cập nhật' },
-    { icon: 'fitness-center', label: 'Cân nặng', value: weight != null ? `${weight} kg` : 'Chưa cập nhật' },
-    { icon: 'school', label: 'Công việc', value: job || 'Chưa cập nhật' },
+    { icon: 'favorite', label: 'Trạng thái', value: relationshipStatus || 'Chưa cập nhật', fullWidth: true },
+    { icon: 'cake', label: 'Tuổi', value: age || 'Chưa cập nhật', halfWidth: true },
+    { icon: 'wc', label: 'Giới tính', value: gender || 'Chưa cập nhật', halfWidth: true },
+    { icon: 'straighten', label: 'Chiều cao', value: height != null ? `${height} m` : 'Chưa cập nhật', halfWidth: true },
+    { icon: 'fitness-center', label: 'Cân nặng', value: weight != null ? `${weight} kg` : 'Chưa cập nhật', halfWidth: true },
+    { icon: 'school', label: 'Công việc', value: job || 'Chưa cập nhật', fullWidth: true },
   ];
 
   const securityInfoItems = [
-    { icon: 'email', label: 'Email', value: email || 'Fetch lỗi' },
-    { icon: 'lock', label: 'Mật khẩu', value: password || '********' },
+    { icon: 'email', label: 'Email', value: email || 'Fetch lỗi', fullWidth: true },
+    { icon: 'lock', label: 'Mật khẩu', value: password || '********', fullWidth: true },
   ];
 
   const handleEdit = () => {
     navigation.navigate('EditProfile', { editType: activeTab });
   };
 
-  const renderInfo = (items) =>
-    items.map((item, index) => (
-      <View key={index} style={styles.infoRow}>
-        <View style={styles.iconContainer}>
-          <MaterialIcons name={item.icon} size={22} color="#ff7bbf" />
-        </View>
-        <View style={styles.infoTextContainer}>
-          <Text style={styles.infoLabel}>{item.label}</Text>
-          <Text style={styles.infoValue}>{item.value}</Text>
-        </View>
+  const renderInfoCard = (item) => (
+    <View style={[styles.infoRow, item.halfWidth && styles.halfWidth]}>
+      <View style={styles.iconContainer}>
+        <MaterialIcons name={item.icon} size={22} color="#ff7bbf" />
       </View>
-    ));
+      <View style={styles.infoTextContainer}>
+        <Text style={styles.infoLabel}>{item.label}</Text>
+        <Text style={styles.infoValue}>{item.value}</Text>
+      </View>
+    </View>
+  );
+
+  const renderInfo = (items) => {
+    const rows = [];
+    let i = 0;
+    
+    while (i < items.length) {
+      const currentItem = items[i];
+      
+      if (currentItem.fullWidth) {
+        // Full width item
+        rows.push(
+          <View key={i} style={styles.rowContainer}>
+            {renderInfoCard(currentItem)}
+          </View>
+        );
+        i++;
+      } else if (currentItem.halfWidth && i + 1 < items.length && items[i + 1].halfWidth) {
+        // Two half width items in a row
+        rows.push(
+          <View key={i} style={styles.rowContainer}>
+            {renderInfoCard(currentItem)}
+            {renderInfoCard(items[i + 1])}
+          </View>
+        );
+        i += 2;
+      } else {
+        // Single half width item (fallback)
+        rows.push(
+          <View key={i} style={styles.rowContainer}>
+            {renderInfoCard(currentItem)}
+          </View>
+        );
+        i++;
+      }
+    }
+    
+    return rows;
+  };
 
   const renderContent = () => {
     const items = activeTab === 'personal' ? personalInfoItems : securityInfoItems;
@@ -221,16 +258,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  rowContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+  },
   infoRow: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 12,
-    marginBottom: 8,
     backgroundColor: '#0a0a0a',
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#1a1a1a',
+  },
+  halfWidth: {
+    flex: 0.5,
   },
   iconContainer: {
     width: 40,

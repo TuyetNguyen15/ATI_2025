@@ -4,15 +4,15 @@ import { useSelector, useDispatch } from 'react-redux';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { signOut } from 'firebase/auth';
-import { auth } from '../../config/firebaseConfig';
+import { auth } from '../../../config/firebaseConfig';
 import { resetProfile } from '../profileSlice';
 
 export default function ProfileHeader({ navigation, menuVisible, setMenuVisible }) {
   const { name, sun, avatar, coverImage } = useSelector((state) => state.profile);
   const dispatch = useDispatch();
 
-  const defaultCover = require('../../assets/default_cover_image.jpg');
-  const defaultAvatar = require('../../assets/default_avatar.jpg');
+  const defaultCover = require('../../../assets/default_cover_image.jpg');
+  const defaultAvatar = require('../../../assets/default_avatar.jpg');
 
   const handleEditCover = () => {
     setMenuVisible(false);

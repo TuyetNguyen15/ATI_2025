@@ -14,7 +14,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateProfileField, resetProfile } from '../../profile/profileSlice'; // ✅ Sửa: import resetProfile thay vì logout
+import { updateProfileField, resetProfile } from '../my_profile/profileSlice';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../config/firebaseConfig';
 

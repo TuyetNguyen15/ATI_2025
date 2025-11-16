@@ -41,11 +41,20 @@ export default function HousesInfo() {
 
   return (
     <View style={styles.container}>
-      {houseRows.map((house, index) => (
-        <View key={house.id} style={styles.row}>
-          <MaterialIcons name="house" size={20} color={house.color} style={styles.icon} />
-          <Text style={styles.label}>{house.label}:</Text>
-          <Text style={styles.value}>{house.value || ''}</Text>
+      {houseRows.map((house) => (
+        <View 
+          key={house.id} 
+          style={[styles.card, { borderLeftColor: house.color, backgroundColor: `${house.color}15` }]}
+        >
+          <View style={[styles.iconContainer, { backgroundColor: house.color }]}>
+            <MaterialIcons name="house" size={20} color="#fff" />
+          </View>
+          <View style={styles.content}>
+            <Text style={styles.label}>{house.label}</Text>
+            <Text style={[styles.value, { color: house.color }]}>
+              {house.value || 'Chưa có dữ liệu'}
+            </Text>
+          </View>
         </View>
       ))}
     </View>
@@ -54,28 +63,43 @@ export default function HousesInfo() {
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 22,
-    paddingHorizontal: 32,
+    padding: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 20,
   },
-  row: {
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
+    width: '46%',
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    padding: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  icon: {
-    marginRight: 12,
-    width: 20,
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  content: {
+    flex: 1,
   },
   label: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: '600',
-    width: 80, // Width cố định để thẳng hàng
+    fontSize: 13,
+    color: '#aaa',
+    fontWeight: '500',
+    marginBottom: 2,
   },
   value: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: '500',
-    flex: 1,
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

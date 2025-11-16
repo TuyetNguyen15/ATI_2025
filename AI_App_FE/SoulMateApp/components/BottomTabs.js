@@ -16,7 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 // 🏠 Screens
 import HomeScreen from '../screens/home/MainHome';
 import PredictionScreen from '../screens/home/PredictionScreen';
-import ProfileScreen from '../profile/ProfileScreen';
+import ProfileScreen from '../screens/my_profile/ProfileScreen';
 
 // ⚙️ Tạo các màn hình tạm
 function DummyScreen({ title }) {
