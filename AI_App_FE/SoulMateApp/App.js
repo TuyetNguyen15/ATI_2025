@@ -23,7 +23,7 @@ import BottomTabs from './components/BottomTabs';
 import UpdateAvatar from './screens/avatar/UpdateAvatar';
 import EditProfile from './screens/edit_profile/EditProfile';
 import NatalChartAnalysis from './screens/astrology_analysis/NatalChartAnalysis';
-
+import LoveMatchSelectScreen from './screens/match/LoveMatchSelectScreen';
 // Giữ Splash Screen hiển thị
 SplashScreen.preventAutoHideAsync();
 
@@ -118,6 +118,7 @@ function AppContent() {
           <Stack.Screen name="UpdateAvatar" component={UpdateAvatar} />
           <Stack.Screen name="EditProfile" component={EditProfile} />
           <Stack.Screen name="NatalChartAnalysis" component={NatalChartAnalysis} />
+          <Stack.Screen name="LoveMatchSelectScreen" component={LoveMatchSelectScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </View>
