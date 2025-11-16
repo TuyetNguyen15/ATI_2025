@@ -17,7 +17,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 // 🏠 Screens
 import HomeScreen from '../screens/home/MainHome';
 import PredictionScreen from '../screens/home/PredictionScreen';
-import ProfileScreen from '../profile/ProfileScreen';
+import ProfileScreen from '../screens/my_profile/ProfileScreen';
+import NotificationScreen from '../screens/notification/NotificationScreen';
 import LoveMatchSelectScreen from '../screens/match/LoveMatchSelectScreen'
 // ⚙️ Tạo các màn hình tạm
 function DummyScreen({ title }) {
@@ -28,7 +29,6 @@ function DummyScreen({ title }) {
   );
 }
 
-const NotificationScreen = () => <DummyScreen title="🔔 Thông báo" />;
 const ChatScreen = () => <DummyScreen title="💬 Trò chuyện" />;
 const Tab = createBottomTabNavigator();
 const HomeStack = createStackNavigator();

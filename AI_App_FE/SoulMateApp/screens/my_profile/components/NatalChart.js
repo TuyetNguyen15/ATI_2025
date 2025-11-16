@@ -3,11 +3,10 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useSelector } from 'react-redux';
 import { SvgUri } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
-import AppButton from '../../components/AppButton';
+import AppButton from '../../../components/AppButton';
 import { useNavigation } from '@react-navigation/native';
 import { SvgXml } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
-// ...existing code...
 
 export default function NatalChart() {
   const navigation = useNavigation();
@@ -53,7 +52,7 @@ export default function NatalChart() {
             <SvgUri
               uri={natalChartImage}
               width="100%"
-              height={600}
+              height="100%"
               onLoad={() => setLoading(false)}
               onError={() => {
                 setError(true);
@@ -108,11 +107,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   imageContainer: {
-    width: '100%',
-    height: 600,
+    width: '126%',
+    height: 660,
     borderRadius: 16,
-    backgroundColor: '#1a1a1a',
     overflow: 'hidden',
+    top: -20,
+    left: -82,
   },
   loadingContainer: {
     position: 'absolute',

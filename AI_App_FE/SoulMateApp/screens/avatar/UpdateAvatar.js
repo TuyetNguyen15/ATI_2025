@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firebaseConfig';
-import { updateProfileField } from '../../profile/profileSlice';
+import { updateProfileField } from '../my_profile/profileSlice';
 
 export default function UpdateAvatar({ route, navigation }) {
   const { imageType } = route.params; // "avatar" hoặc "coverImage"
