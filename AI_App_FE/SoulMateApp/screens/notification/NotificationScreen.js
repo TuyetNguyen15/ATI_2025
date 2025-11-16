@@ -190,6 +190,12 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 100,
+  },
   emptyText: {
     fontSize: 18,
     color: '#666',
