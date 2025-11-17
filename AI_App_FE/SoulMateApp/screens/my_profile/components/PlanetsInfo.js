@@ -73,6 +73,7 @@ export default function PlanetsInfo() {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: '#000',
     padding: 20,
   },
   grid: {
