@@ -42,7 +42,7 @@ cloudinary.config(
 app = Flask(__name__)
 CORS(app)
 
-MODEL_NAME = "gemini-1.5-flash"
+MODEL_NAME ="models/gemini-2.5-flash"
 
 
 # -------------------------------------------------
