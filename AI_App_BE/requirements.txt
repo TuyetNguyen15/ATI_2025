@@ -4,5 +4,4 @@ requests
 python-dotenv
 google-generativeai
 firebase-admin
-grpcio==1.62.2
 cloudinary
