@@ -1,5 +1,7 @@
+
 import React from "react";
 import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
+import { ELEMENT_MAP, ELEMENT_COLORS, ZODIAC_ICONS } from '../../constants/astrologyMap';
 
 const { width } = Dimensions.get("window");
 
@@ -7,23 +9,28 @@ const { width } = Dimensions.get("window");
 const CENTER_IMAGE_SIZE = width * 0.45;
 
 // BÁN KÍNH INFO XOAY QUANH
-const RADIUS = CENTER_IMAGE_SIZE * 0.85;
+const RADIUS = CENTER_IMAGE_SIZE * 0.75;
 
 export default function MysticProfile({ info }) {
   const infoItems = [
-    { label: `Tên: ${info.name}` },
-    { label: `Cung: ${info.zodiac}` },
-    { label: `${info.age} tuổi` },
-    { label: `Hợp: ${info.score || "92%"}` },
-    { label: `Nguyên tố: ${info.element || "Lửa"}` },
-    { label: `Tính cách: ${info.personality || "Năng "}` },
+    { label: `Tên: ${info.name || "Không rõ"}`, row: 1, col: 1 },
+    { label: `Cung: ${info.zodiac || info.planets?.sun || "Không rõ"}`, row: 1, col: 2 },
+
+    { label: `Tuổi: ${info.age || "Không rõ"}`, row: 2, col: 1 },
+    { label: `Hợp: ${info.compatibility_score || info.compatScore || 0}%`, row: 2, col: 2 },
+
+    { label: `Nguyên tố: ${info.element || "Không rõ"}`, row: 3, col: 1 },
+    { label: `Tính cách: ${info.personality || "Không rõ"}`, row: 3, col: 2 },
   ];
+
+
+
 
   return (
     <View style={styles.wrapper}>
       <View style={styles.container}>
 
-        <Text style={styles.title}>Hồ sơ chiêm tinh</Text>
+        <Text style={styles.title}>Bí mật chiêm tinh hé lộ</Text>
 
         {/* 🟣 HÌNH LỚN Ở GIỮA */}
         <Image
@@ -33,95 +40,100 @@ export default function MysticProfile({ info }) {
 
         {/* 🔵 INFO XOAY QUANH */}
         {infoItems.map((item, i) => {
-          const angle = (i / infoItems.length) * 2 * Math.PI;
-          const x = Math.cos(angle) * RADIUS;
-          const y = Math.sin(angle) * RADIUS;
+          // Set góc theo layout 3x2 của em
+          const angleMap = {
+            2: 300, // Tên
+            5: 60,  // Cung
+
+            0: 240, // Tuổi
+            4: 120, // Hợp
+
+            3: 180, // Nguyên tố
+            1: 0,   // Tính cách (hàng cuối bên phải)
+          };
+
+
+          const deg = angleMap[i];
+          const rad = (deg * Math.PI) / 180;
+
+          const x = Math.cos(rad) * RADIUS;
+          const y = Math.sin(rad) * RADIUS;
 
           return (
             <View
               key={i}
               style={[
                 styles.infoDot,
-                { transform: [{ translateX: x }, { translateY: y }] },
+                {
+                  transform: [
+                    { translateX: x },
+                    { translateY: y }
+                  ],
+                },
               ]}
             >
               <Text style={styles.infoText}>{item.label}</Text>
             </View>
           );
         })}
+
       </View>
 
-      {/* ⭐ THÊM ZODIAC COMPATIBILITY Ở ĐÂY ⭐ */}
+      {/* ⭐ Compatibility */}
       <View style={styles.compatBox}>
-        <Text style={styles.compatTitle}>Zodiac Compatibility</Text>
-        <Text style={styles.compatSub}>
-          Based on your responses and birth data, it looks like you have a match
-        </Text>
+        <Text style={styles.compatTitle}>Hòa hợp chiêm tinh</Text>
+        <Text style={styles.compatSub}>Dựa trên phân tích chiêm tinh từ hệ thống</Text>
+        {/* ⭐ ICON 2 CUNG TRÊN VÒNG TRÒN ⭐ */}
+        <View style={styles.zodiacCircleBox}>
 
-        {/* ICON 2 CUNG */}
-        <View style={styles.compatRow}>
-          {/* YOU */}
-          <View style={styles.zodiacSide}>
-            <View style={styles.zodiacGlowWrapper}>
-              <View style={styles.zodiacGlow} />
+          {/* Icon cung của bạn */}
+          <View style={[styles.zodiacItem, { left: width * 0.10 }]}>
+            <View style={styles.iconBg}>
               <Image
-                source={require("../../assets/zodiacsigns/cugiai.png")}
+                source={ZODIAC_ICONS[info.myZodiac] || ZODIAC_ICONS["Không xác định"]}
                 style={styles.zodiacIcon}
               />
             </View>
-
-            <Text style={styles.zName}>{info.myZodiac}</Text>
-            <Text style={styles.element}>{info.myElement}</Text>
           </View>
 
-          {/* SCORE */}
-          <View style={styles.scoreBox}>
-            <Text style={styles.percent}>{info.compatScore || 60}%</Text>
-
-          </View>
-
-          {/* PARTNER */}
-          <View style={styles.zodiacSide}>
-            <View style={styles.zodiacGlowWrapper}>
-              <View style={styles.zodiacGlow} />
+          {/* Icon cung đối phương */}
+          <View style={[styles.zodiacItem, { right: width * 0.10 }]}>
+            <View style={styles.iconBg}>
               <Image
-                source={require("../../assets/zodiacsigns/cugiai.png")}
+                source={ZODIAC_ICONS[info.otherZodiac] || ZODIAC_ICONS["Không xác định"]}
                 style={styles.zodiacIcon}
               />
             </View>
-
-            <Text style={styles.zName}>{info.otherZodiac}</Text>
-            <Text style={styles.element}>{info.otherElement}</Text>
           </View>
+
+          {/* Điểm hợp nằm chính giữa */}
+          <View style={styles.scoreCenter}>
+            <Text style={styles.scoreNumber}>
+              {info.compatibility_score || info.compatScore || 0}%
+            </Text>
+          </View>
+
         </View>
 
-        {/* 4 CHỈ SỐ */}
+
+        {/* 4 Chỉ số */}
         <View style={styles.metricsContainer}>
-          {/* Cột trái */}
           <View style={styles.metricColumn}>
-            <Metric label="Love" value={info.love || 55} color="#ff5f5f" />
-            <Metric label="Trust" value={info.trust || 55} color="#f4ca57" />
+            <Metric label="Love" value={info.love} color="#ff5f5f" />
+            <Metric label="Trust" value={info.trust} color="#f4ca57" />
           </View>
 
-          {/* Cột phải */}
           <View style={styles.metricColumn}>
-            <Metric
-              label="Communication"
-              value={info.communication || 45}
-              color="#58a7f8"
-            />
-            <Metric label="Marriage" value={info.marriage || 55} color="#5ff7a2" />
+            <Metric label="Communication" value={info.communication} color="#58a7f8" />
+            <Metric label="Marriage" value={info.marriage} color="#5ff7a2" />
           </View>
         </View>
 
-
-        <Text style={styles.otherText}>Other best matches</Text>
       </View>
     </View>
   );
 }
 
-// Component thanh thông số
 function Metric({ label, value, color }) {
   return (
     <View style={{ marginBottom: 14 }}>
@@ -135,39 +147,10 @@ function Metric({ label, value, color }) {
 }
 
 const styles = StyleSheet.create({
-
-  zodiacGlowWrapper: {
-    width: 80,
-    height: 80,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-  },
-
-  zodiacGlow: {
-    position: "absolute",
-    width: 100,
-    height: 100,
-    borderRadius: 60,
-    backgroundColor: "rgba(200, 100, 255, 0.25)",
-    blurRadius: 20,         // iOS
-    opacity: 0.6,
-  },
-
-  zodiacIcon: {
-    width: 60,
-    height: 60,
-    resizeMode: "contain",
-  },
-
-
-  wrapper: {
-    alignItems: "center",
-    width: "100%",
-  },
+  wrapper: { alignItems: "center", width: "100%" },
 
   container: {
-    marginTop: 40,
+    marginTop: 50,
     width: width * 0.9,
     height: width * 1.0,
     alignItems: "center",
@@ -179,7 +162,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -10,
     color: "#fff",
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "700",
   },
 
@@ -198,18 +181,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     maxWidth: width * 0.35,
   },
-
   infoText: {
     color: "#fff",
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "400",
     textAlign: "center",
+    lineHeight: 20,
+    flexWrap: "wrap",
+    maxWidth: width * 0.33
   },
 
-  /* --- ZODIAC COMPATIBILITY BOX --- */
   compatBox: {
     width: width * 0.92,
-    marginTop: 20,
+    marginTop: 10,
     paddingVertical: 20,
     paddingHorizontal: 15,
     borderRadius: 20,
@@ -221,7 +205,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
   },
-
   compatSub: {
     textAlign: "center",
     color: "#ccc",
@@ -229,57 +212,16 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  compatRow: {
+  metricsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 25,
+    width: "100%",
+    marginTop: 20,
   },
 
-  zodiacSide: {
-    width: width * 0.23,
-    alignItems: "center",
-  },
+  metricColumn: { width: "48%" },
 
-  zodiacIcon: {
-    width: 65,
-    height: 65,
-    resizeMode: "contain",
-  },
-
-  zName: {
-    color: "#fff",
-    marginTop: 6,
-    fontSize: 14,
-  },
-
-  element: {
-    color: "#bbb",
-    fontSize: 12,
-  },
-
-  scoreBox: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  percent: {
-    color: "#fff",
-    fontSize: 30,
-    fontWeight: "700",
-  },
-
-  wave: {
-    width: 60,
-    height: 20,
-    resizeMode: "contain",
-    marginTop: -4,
-  },
-
-  metricLabel: {
-    color: "#fff",
-    fontSize: 16,
-    marginBottom: 4,
-  },
+  metricLabel: { color: "#fff", fontSize: 16, marginBottom: 4 },
 
   metricLine: {
     width: "100%",
@@ -288,33 +230,67 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     overflow: "hidden",
   },
-  metricsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginTop: 20,
+
+  metricFill: { height: 6, borderRadius: 10 },
+
+  metricValue: { color: "#fff", fontSize: 18, marginTop: 2 },
+
+  zodiacCircleBox: {
+    width: width * 0.9,
+    height: width * 0.42,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  zodiacItem: {
+    position: "absolute",
+    top: "30%",
+    alignItems: "center",
   },
 
-  metricColumn: {
-    width: "48%",
+  zodiacIcon: {
+    width: 60,
+    height: 60,
+    resizeMode: "contain",
   },
 
-  metricFill: {
-    height: 6,
-    borderRadius: 10,
-  },
-
-  metricValue: {
+  zLabel: {
     color: "#fff",
-    fontSize: 18,
-    marginTop: 2,
-  },
-
-  otherText: {
-    textAlign: "center",
-    marginTop: 20,
-    color: "#fff",
+    marginTop: 6,
     fontSize: 15,
-    opacity: 0.85,
+    fontWeight: "700",
   },
+
+  zElement: {
+    color: "#bbb",
+    fontSize: 12,
+  },
+
+  scoreCenter: {
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  scoreNumber: {
+    fontSize: 26,
+    color: "#fff",
+    fontWeight: "800",
+    textShadowColor: "rgba(255,255,255,0.4)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
+  },
+  iconBg: {
+    width: 90,
+    height: 90,
+    borderRadius: 60,
+    backgroundColor: "rgba(255,255,255,0.12)",  // 🔮 glow mờ
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#ffffff",
+    shadowOpacity: 0.4,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 12,
+  },
+
 });

@@ -87,6 +87,33 @@ def save_prediction(uid, name, sun, moon, category, day, data):
         doc["prediction"] = data
 
     db.collection("user_prediction").add(doc)
+# ===============================
+# 🎯 Lọc user có đầy đủ dữ liệu chiêm tinh
+# ===============================
+def is_valid_user(u):
+    try:
+        planets = u.get("planets", {})
+        required_planets = ["sun", "moon", "mercury", "venus", "mars"]
+
+        # thiếu 1 planets → loại
+        if any(p not in planets or not planets[p] for p in required_planets):
+            return False
+
+        # houses phải có ít nhất 12 nhà
+        houses = u.get("houses", {})
+        if not houses or len(houses) < 12:
+            return False
+
+        # elements phải có 4 loại
+        elements = u.get("elements", {})
+        required_elements = ["fire", "earth", "air", "water"]
+        if any(e not in elements for e in required_elements):
+            return False
+
+        return True
+
+    except:
+        return False
 
 
 # -------------------------------------------------
@@ -1206,64 +1233,129 @@ def get_match_requests():
         print(f"❌ Get match requests error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
-# -------------------------------------------------
-# 💑 Route: Lấy thông tin match hiện tại
-# -------------------------------------------------
-@app.route("/get-current-match", methods=["GET"])
-def get_current_match():
-    """
-    Lấy thông tin về match hiện tại của user
-    """
+# //matching love result
+@app.route("/love-matching/<match_type>", methods=["POST"])
+def love_matching_single(match_type):
     try:
-        user_id = request.args.get("userId")
-        
-        if not user_id:
-            return jsonify({"error": "Thiếu userId"}), 400
-        
-        # Lấy thông tin user
-        user_doc = db.collection("users").document(user_id).get()
-        if not user_doc.exists:
+        valid_types = ["redflag", "greenflag", "karmic", "destiny", "twinflame"]
+        if match_type not in valid_types:
+            return jsonify({"error": "Loại kết nối không hợp lệ"}), 400
+
+        data = request.get_json()
+        uid = data.get("uid")
+
+        if not uid:
+            return jsonify({"error": "Thiếu uid"}), 400
+
+        # Lấy user A
+        me_doc = db.collection("users").document(uid).get()
+        if not me_doc.exists:
             return jsonify({"error": "Không tìm thấy user"}), 404
-        
-        user_data = user_doc.to_dict()
-        match_id = user_data.get("matchId")
-        partner_id = user_data.get("partnerId")
-        
-        if not match_id or not partner_id:
-            return jsonify({
-                "success": True,
-                "hasMatch": False,
-                "message": "User chưa có match"
-            }), 200
-        
-        # Lấy thông tin match
-        match_doc = db.collection("matches").document(match_id).get()
-        match_data = match_doc.to_dict() if match_doc.exists else {}
-        
-        # Lấy thông tin partner
-        partner_doc = db.collection("users").document(partner_id).get()
-        partner_data = partner_doc.to_dict() if partner_doc.exists else {}
-        
+
+        me_raw = me_doc.to_dict()
+
+        def extract_planets(u):
+            keys = ["sun","moon","mercury","venus","mars"]
+            return {k: u.get(k, "") for k in keys}
+
+        def extract_houses(u):
+            return {f"house{i}": u.get(f"house{i}", "") for i in range(1, 13)}
+
+        def extract_elements(u):
+            return {
+                "fire": u.get("fireRatio", 0),
+                "earth": u.get("earthRatio", 0),
+                "air": u.get("airRatio", 0),
+                "water": u.get("waterRatio", 0)
+            }
+
+        me = {
+            "uid": uid,
+            "name": me_raw.get("name", ""),
+            "zodiac": me_raw.get("sun", ""),
+            "age": me_raw.get("age", None),
+            "element": me_raw.get("mainElement", ""),
+            "personality": me_raw.get("personality", ""),
+            "planets": extract_planets(me_raw),
+            "elements": extract_elements(me_raw),
+            "houses": extract_houses(me_raw)
+        }
+
+        if not me["planets"]["sun"] or not me["planets"]["moon"]:
+            return jsonify({"error": "User A thiếu dữ liệu planets"}), 400
+
+        # Lấy danh sách người B
+        others = []
+        for doc in db.collection("users").stream():
+            if doc.id == uid:
+                continue
+            u = doc.to_dict()
+
+            candidate = {
+                "uid": doc.id,
+                "name": u.get("name", ""),
+                "zodiac": u.get("sun", ""),
+                "age": u.get("age", None),
+                "element": u.get("mainElement", ""),
+                "personality": u.get("personality", ""),
+                "planets": extract_planets(u),
+                "houses": extract_houses(u),
+                "elements": extract_elements(u),
+            }
+
+            # check đủ planets
+            if candidate["planets"]["sun"] and candidate["planets"]["moon"]:
+                others.append(candidate)
+
+        if len(others) < 5:
+            return jsonify({"error": "Không đủ user để phân tích"}), 400
+
+        # 🧠 PROMPT TỐI ƯU
+        prompt = f"""
+Phân tích độ hợp loại [{match_type}] giữa Người A và danh sách Người B.
+
+Người A:
+{json.dumps(me, ensure_ascii=False)}
+
+Danh sách Người B:
+{json.dumps(others, ensure_ascii=False)}
+
+Trả về JSON dạng LIST gồm đúng 5 người:
+[
+  {{
+    "uid": "...",
+    "name": "...",
+    "zodiac": "...",
+    "age": <number>,
+    "element": "...",
+    "personality": "<1 câu mô tả tính cách dài 1 từ>",
+    "compatibility_score": <0-100>,
+    "love": <0-100>,
+    "trust": <0-100>,
+    "communication": <0-100>,
+    "marriage": <0-100>
+  }}
+]
+
+KHÔNG in bất kỳ văn bản nào ngoài JSON.
+"""
+
+        model = genai.GenerativeModel(MODEL_NAME)
+        response = model.generate_content(prompt)
+        raw = response.text.strip()
+
+        clean = re.sub(r"(```json|```)", "", raw).strip()
+        result = json.loads(clean)
+
         return jsonify({
             "success": True,
-            "hasMatch": True,
-            "match": {
-                "matchId": match_id,
-                "partnerId": partner_id,
-                "partnerName": partner_data.get("name", ""),
-                "partnerAvatar": partner_data.get("avatar", ""),
-                "partnerAge": partner_data.get("age", 0),
-                "partnerJob": partner_data.get("job", ""),
-                "createdAt": match_data.get("createdAt"),
-                "status": match_data.get("status", "active")
-            }
-        }), 200
-        
+            "type": match_type,
+            "users": result
+        })
+
     except Exception as e:
-        print(f"❌ Get current match error: {str(e)}")
+        print("🔥 ERROR:", e)
         return jsonify({"error": str(e)}), 500
-        
 
 # -------------------------------------------------
 # 🚀 Run Flask App
