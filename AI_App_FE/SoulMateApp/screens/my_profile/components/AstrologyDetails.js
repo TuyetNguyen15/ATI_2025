@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   content: {
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#000',
     padding: 16,
   },
 });
