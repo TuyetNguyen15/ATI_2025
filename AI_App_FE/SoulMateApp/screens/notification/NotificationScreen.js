@@ -1,56 +1,78 @@
 // src/components/NotificationsScreen.js
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  Animated, 
-  PanResponder,
   RefreshControl 
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRefresh } from '../../hook/useRefresh';
 import SwipeableNotification from './components/SwipeableNotification';
 
-const NotificationsScreen = () => {
+const NotificationsScreen = ({ navigation }) => {
   const [notifications, setNotifications] = useState([
     {
       id: '1',
-      type: 'prediction',
-      title: 'Dự đoán hàng ngày đã sẵn sàng',
-      message: 'Xem ngay dự đoán chiêm tinh cho hôm nay của bạn',
+      type: 'match_request', // Loại thông báo ghép đôi
+      title: 'Lời mời ghép đôi từ Nguyễn Văn A',
+      message: 'Xin chào! Tôi thấy chúng ta có nhiều điểm chung...',
       time: '2 giờ trước',
       read: false,
-      icon: 'stars'
+      icon: 'favorite',
+      navigable: true, // Có thể nhấn để điều hướng
+      navigationData: {
+        screen: 'MatchRequestDetail',
+        params: {
+          requestId: 'req_001',
+          senderId: 'user_123',
+          senderName: 'Nguyễn Văn A',
+          senderAvatar: 'https://...',
+          message: 'Xin chào! Tôi thấy chúng ta có nhiều điểm chung...',
+          senderAge: 25,
+          senderJob: 'Kỹ sư phần mềm'
+        }
+      }
     },
     {
       id: '2',
-      type: 'love',
-      title: 'Chỉ số tình duyên cao sdfasdf',
-      message: 'Hôm nay là ngày tốt để gặp gỡ người mới',
+      type: 'prediction',
+      title: 'Dự đoán hàng ngày đã sẵn sàng',
+      message: 'Xem ngay dự đoán chiêm tinh cho hôm nay của bạn',
       time: '5 giờ trước',
       read: false,
-      icon: 'favorite'
+      icon: 'stars',
+      navigable: false // Không điều hướng, chỉ đánh dấu đã đọc
     },
     {
       id: '3',
-      type: 'work',
-      title: 'Cơ hội nghề nghiệp',
-      message: 'Năng lượng làm việc của bạn đang ở mức cao nhất',
+      type: 'love',
+      title: 'Chỉ số tình duyên cao',
+      message: 'Hôm nay là ngày tốt để gặp gỡ người mới',
       time: '1 ngày trước',
       read: true,
-      icon: 'work'
+      icon: 'favorite',
+      navigable: false
     },
     {
       id: '4',
-      type: 'system',
-      title: 'Cập nhật hệ thống',
-      message: 'Phiên bản mới với nhiều tính năng thú vị',
+      type: 'match_accepted', // Thông báo đã được chấp nhận
+      title: 'Nguyễn Thị B đã chấp nhận ghép đôi',
+      message: 'Hãy bắt đầu trò chuyện ngay!',
       time: '2 ngày trước',
       read: true,
-      icon: 'info'
+      icon: 'check-circle',
+      navigable: true,
+      navigationData: {
+        screen: 'Chat',
+        params: {
+          matchId: 'match_001',
+          partnerId: 'user_456',
+          partnerName: 'Nguyễn Thị B'
+        }
+      }
     }
   ]);
 
@@ -74,16 +96,21 @@ const NotificationsScreen = () => {
     );
   };
 
+  // Xử lý khi nhấn vào thông báo
+  const handleNotificationPress = (notif) => {
+    // Đánh dấu đã đọc
+    markAsRead(notif.id);
+
+    // Nếu thông báo có thể điều hướng
+    if (notif.navigable && notif.navigationData) {
+      navigation.navigate(notif.navigationData.screen, notif.navigationData.params);
+    }
+  };
+
   // Pull-to-refresh để load lại thông báo
   const loadNotifications = async () => {
     // TODO: Gọi API để load thông báo mới từ Firebase/Backend
-    // Ví dụ:
-    // const newNotifications = await fetchNotifications(userId);
-    // setNotifications(newNotifications);
-    
-    // Giả lập delay API call
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
     console.log('Đã load lại thông báo');
   };
 
@@ -137,6 +164,7 @@ const NotificationsScreen = () => {
             <SwipeableNotification
               key={notif.id}
               notif={notif}
+              onPress={() => handleNotificationPress(notif)}
               onMarkAsRead={markAsRead}
               onDelete={deleteNotification}
             />
