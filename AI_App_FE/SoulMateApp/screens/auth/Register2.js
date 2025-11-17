@@ -108,6 +108,7 @@ export default function RegisterScreen2({ route, navigation }) {
         height: null,
         weight: null,
         job: '',
+        relationshipStatus: 'độc thân',
         
         // Metadata
         createdAt: serverTimestamp(),

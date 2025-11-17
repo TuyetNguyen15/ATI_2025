@@ -31,7 +31,7 @@ export default function PersonalInfo({ navigation }) {
     { icon: 'wc', label: 'Giới tính', value: gender || 'Chưa cập nhật', halfWidth: true },
     { icon: 'straighten', label: 'Chiều cao', value: height != null ? `${height} m` : 'Chưa cập nhật', halfWidth: true },
     { icon: 'fitness-center', label: 'Cân nặng', value: weight != null ? `${weight} kg` : 'Chưa cập nhật', halfWidth: true },
-    { icon: 'school', label: 'Công việc', value: job || 'Chưa cập nhật', fullWidth: true },
+    { icon: 'work', label: 'Công việc', value: job || 'Chưa cập nhật', fullWidth: true },
   ];
 
   const securityInfoItems = [

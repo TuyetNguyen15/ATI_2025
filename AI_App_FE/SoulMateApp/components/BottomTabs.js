@@ -17,7 +17,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import HomeScreen from '../screens/home/MainHome';
 import PredictionScreen from '../screens/home/PredictionScreen';
 import ProfileScreen from '../screens/my_profile/ProfileScreen';
+import UserProfileScreen from '../screens/user_profile/UserProfileScreen';
 import NotificationScreen from '../screens/notification/NotificationScreen';
+import { Use } from 'react-native-svg';
 
 // ⚙️ Tạo các màn hình tạm
 function DummyScreen({ title }) {

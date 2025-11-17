@@ -1,12 +1,31 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function UserPersonalInfo({ userData, onMatchPress }) {
   const { relationshipStatus, age, gender, height, weight, job } = userData || {};
+  const [showPopup, setShowPopup] = useState(false);
+  const [message, setMessage] = useState('');
 
-  const isSingle = relationshipStatus?.toLowerCase() === 'độc thân' || relationshipStatus?.toLowerCase() === 'single';
+  const isSingle = relationshipStatus?.toLowerCase() === 'độc thân';
+
+  const handleMatchPress = () => {
+    setShowPopup(true);
+  };
+
+  const handleCancel = () => {
+    setShowPopup(false);
+    setMessage('');
+  };
+
+  const handleSend = () => {
+    if (onMatchPress) {
+      onMatchPress(message);
+    }
+    setShowPopup(false);
+    setMessage('');
+  };
 
   const renderInfoCard = (item, isFullWidth = false) => (
     <View style={[styles.infoCard, isFullWidth && styles.fullWidth]} key={item.label}>
@@ -43,7 +62,7 @@ export default function UserPersonalInfo({ userData, onMatchPress }) {
         {/* Công việc - Full width */}
         <View style={styles.jobRow}>
           {renderInfoCard({ 
-            icon: 'school', 
+            icon: 'work', 
             label: 'Công việc', 
             value: job || 'Chưa cập nhật' 
           }, true)}
@@ -54,7 +73,7 @@ export default function UserPersonalInfo({ userData, onMatchPress }) {
       {isSingle && (
         <TouchableOpacity 
           activeOpacity={0.85} 
-          onPress={onMatchPress}
+          onPress={handleMatchPress}
           style={styles.matchButtonWrapper}
         >
           <LinearGradient
@@ -68,6 +87,59 @@ export default function UserPersonalInfo({ userData, onMatchPress }) {
           </LinearGradient>
         </TouchableOpacity>
       )}
+
+      {/* Popup Modal */}
+      <Modal
+        visible={showPopup}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancel}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <MaterialIcons name="favorite" size={28} color="#ff6b9d" />
+              <Text style={styles.modalTitle}>Gửi lời nhắn ghép đôi</Text>
+            </View>
+
+            <TextInput
+              style={styles.textInput}
+              placeholder="Nhập lời nhắn của bạn..."
+              placeholderTextColor="#999"
+              value={message}
+              onChangeText={setMessage}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity 
+                style={[styles.button, styles.cancelButton]} 
+                onPress={handleCancel}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cancelButtonText}>Hủy</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.button} 
+                onPress={handleSend}
+                activeOpacity={0.7}
+              >
+                <LinearGradient
+                  colors={['#ff6b9d', '#c44dff']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.sendButton}
+                >
+                  <Text style={styles.sendButtonText}>Gửi</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -152,5 +224,71 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     letterSpacing: 0.4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 500,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 40,
+    padding: 28,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  textInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
+    padding: 16,
+    color: '#fff',
+    fontSize: 15,
+    minHeight: 220,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 123, 191, 0.2)',
+    marginBottom: 20,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  button: {
+    flex: 1,
+  },
+  cancelButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 123, 191, 0.3)',
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  sendButton: {
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  sendButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });
