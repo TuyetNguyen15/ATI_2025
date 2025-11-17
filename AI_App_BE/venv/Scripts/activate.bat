@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=E:\Personal Project\ATI_2025\AI_App_FinalP_2025\AI_App_BE\venv
+set VIRTUAL_ENV=C:\FIT_Senior\ATI\ATI_2025\ATI_2025\AI_App_BE\venv
 
 if not defined PROMPT set PROMPT=$P$G
 
