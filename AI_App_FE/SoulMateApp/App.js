@@ -25,9 +25,16 @@ import EditProfile from './screens/edit_profile/EditProfile';
 import NatalChartAnalysis from './screens/astrology_analysis/NatalChartAnalysis';
 import UserProfileScreen from './screens/user_profile/UserProfileScreen';
 import LoveMatchSelectScreen from './screens/match/LoveMatchSelectScreen';
-// Giữ Splash Screen hiển thị
-SplashScreen.preventAutoHideAsync();
 
+// CONNECTION
+import ConnectionActionsScreen from './screens/conversation/ConnectionActionsScreen';
+import IceBreakerScreen from './screens/conversation/IceBreakerScreen';
+
+// ⭐ PROFILE (THÊM MỚI)
+import UserProfileScreen from './screens/user_profile/UserProfileScreen';
+
+
+SplashScreen.preventAutoHideAsync();
 const Stack = createStackNavigator();
 
 /**
@@ -36,33 +43,26 @@ const Stack = createStackNavigator();
  */
 function AppContent() {
   const dispatch = useDispatch();
-  const [appIsReady, setAppIsReady] = React.useState(false);      // State cho Splash Screen
-  const [isInitializing, setIsInitializing] = React.useState(true); // State để kiểm tra auth
+  const [appIsReady, setAppIsReady] = React.useState(false);
+  const [isInitializing, setIsInitializing] = React.useState(true);
 
   // 1. Logic cho Splash Screen (tải font, assets...)
   React.useEffect(() => {
     async function prepare() {
-      try {
-        console.log('Splash: Preparing assets...');
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Giả lập tải
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        setAppIsReady(true);
-        console.log('Splash: App is ready.');
-      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setAppIsReady(true);
     }
     prepare();
   }, []);
 
-  // 2. Logic kiểm tra Đăng nhập (Auth)
+  // 2. Logic kiểm tra Đăng nhập
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         console.log('Auth: User detected → Loading Firestore profile...');
         try {
-          // Tải profile của user vào Redux store
-          await loadUserProfile(user.uid);
+          await loadUserProfile(user.uid, dispatch);
+
           console.log('Auth: Profile loaded globally');
         } catch (err) {
           console.error('Auth: Failed to load profile:', err);
@@ -106,7 +106,6 @@ function AppContent() {
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <NavigationContainer>
         <Stack.Navigator
-          // Bắt đầu bằng Onboarding (logic từ nhánh của bạn)
           initialRouteName="Onboarding"
           screenOptions={{ headerShown: false }}
         >
@@ -120,10 +119,15 @@ function AppContent() {
           <Stack.Screen name="EditProfile" component={EditProfile} />
           <Stack.Screen name="NatalChartAnalysis" component={NatalChartAnalysis} />
           <Stack.Screen name="LoveMatchSelectScreen" component={LoveMatchSelectScreen} />
-          <Stack.Screen
-            name="UserProfileScreen"
-            component={UserProfileScreen}
-          />
+
+          {/* CONNECTION */}
+          <Stack.Screen name="ConnectionActionsScreen" component={ConnectionActionsScreen} />
+          <Stack.Screen name="IceBreakerScreen" component={IceBreakerScreen} />
+
+          {/* ⭐ PROFILE */}
+          <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} />
+
+
         </Stack.Navigator>
       </NavigationContainer>
     </View>

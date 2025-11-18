@@ -37,16 +37,33 @@ export default function RegisterScreen2({ route, navigation }) {
   const rotate = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
   const handleSubmit = async () => {
-    if (!fullName || !birthDate || !birthTime || !birthPlace)
+    // Validate input
+    if (!fullName || !birthDate || !birthTime || !birthPlace) {
       return Alert.alert('⚠️', 'Điền đầy đủ thông tin');
+    }
+
+    // Validate date format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(birthDate)) {
+      return Alert.alert('⚠️', 'Ngày sinh phải có định dạng YYYY-MM-DD (VD: 1999-06-27)');
+    }
+
+    // Validate time format (HH:MM)
+    const timeRegex = /^\d{2}:\d{2}$/;
+    if (!timeRegex.test(birthTime)) {
+      return Alert.alert('⚠️', 'Giờ sinh phải có định dạng HH:MM (VD: 03:20)');
+    }
+
     setLoading(true);
     try {
+      // Step 1: Fetch astrology data
+      console.log('📡 Fetching astrology data...');
       setLoadingMessage('Đang tính toán biểu đồ chiêm tinh...');
       const astrologyData = await fetchAstrologyData(birthDate, birthTime, birthPlace);
+      console.log('✅ Astrology data received:', astrologyData);
       
-      // Step 2: Save to Firestore
-      setLoadingMessage('Đang lưu thông tin...');
-      await setDoc(doc(db, 'users', uid), {
+      // Step 2: Prepare user data
+      const userData = {
         // Basic info
         name: fullName,
         age: astrologyData.age || 0,
@@ -110,19 +127,34 @@ export default function RegisterScreen2({ route, navigation }) {
         job: '',
         relationshipStatus: 'Độc thân',
         
+        // IMPORTANT: Mark profile as complete
+        profileComplete: true,
+        
         // Metadata
-        createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      });
+      };
 
-
-      Alert.alert('Đăng ký hoàn tất!');
-      navigation.replace('Main');
+      // Step 3: Save to Firestore with MERGE option
+      console.log('💾 Saving to Firestore...');
+      setLoadingMessage('Đang lưu thông tin...');
+      
+      await setDoc(doc(db, 'users', uid), userData, { merge: true }); // ⭐ KEY FIX: Added merge option
+      
+      console.log('✅ Data saved successfully to Firestore');
+      Alert.alert('✅ Thành công!', 'Đăng ký hoàn tất!', [
+        { text: 'OK', onPress: () => navigation.replace('Main') }
+      ]);
     } catch (err) {
-      console.log(err);
-      Alert.alert('Không thể lưu dữ liệu');
+      console.error('❌ Error in handleSubmit:', err);
+      console.error('Error details:', err.message);
+      Alert.alert(
+        '❌ Lỗi', 
+        `Không thể lưu dữ liệu: ${err.message}`,
+        [{ text: 'OK' }]
+      );
     } finally {
       setLoading(false);
+      setLoadingMessage('');
     }
   };
 
@@ -136,17 +168,48 @@ export default function RegisterScreen2({ route, navigation }) {
       <View style={styles.card}>
         <Text style={styles.title}>Thông tin bổ sung</Text>
         <View style={styles.formContainer}>
-          <TextInput style={styles.input} placeholder="Họ và tên" value={fullName} onChangeText={setFullName} />
-          <TextInput style={styles.input} placeholder="Ngày sinh (YYYY-MM-DD)" value={birthDate} onChangeText={setBirthDate} />
-          <TextInput style={styles.input} placeholder="Giờ sinh (HH:MM)" value={birthTime} onChangeText={setBirthTime} />
-          <TextInput style={styles.input} placeholder="Nơi sinh" value={birthPlace} onChangeText={setBirthPlace} />
+          <TextInput 
+            style={styles.input} 
+            placeholder="Họ và tên" 
+            placeholderTextColor="#999" 
+            value={fullName} 
+            onChangeText={setFullName} 
+          />
+          <TextInput 
+            style={styles.input} 
+            placeholder="Ngày sinh (YYYY-MM-DD)" 
+            placeholderTextColor="#999" 
+            value={birthDate} 
+            onChangeText={setBirthDate} 
+          />
+          <TextInput 
+            style={styles.input} 
+            placeholder="Giờ sinh (HH:MM)" 
+            placeholderTextColor="#999" 
+            value={birthTime} 
+            onChangeText={setBirthTime} 
+          />
+          <TextInput 
+            style={styles.input} 
+            placeholder="Nơi sinh" 
+            placeholderTextColor="#999" 
+            value={birthPlace} 
+            onChangeText={setBirthPlace} 
+          />
         </View>
-        <Pressable onPress={handleSubmit} style={styles.button}>
+
+        {loadingMessage ? (
+          <Text style={{ color: '#fff', marginBottom: 10, fontSize: 14 }}>
+            {loadingMessage}
+          </Text>
+        ) : null}
+
+        <Pressable onPress={handleSubmit} style={styles.button} disabled={loading}>
           {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Hoàn tất</Text>}
         </Pressable>
 
         {from !== 'login' && (
-          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.backButton} disabled={loading}>
             <Text style={styles.backButtonText}>⬅ Quay lại</Text>
           </Pressable>
         )}

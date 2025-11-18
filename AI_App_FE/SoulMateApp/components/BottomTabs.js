@@ -9,7 +9,7 @@ import {
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { CommonActions, useNavigation } from '@react-navigation/native';
+import { CommonActions, useNavigation, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,9 +18,22 @@ import { LinearGradient } from 'expo-linear-gradient';
 import HomeScreen from '../screens/home/MainHome';
 import PredictionScreen from '../screens/home/PredictionScreen';
 import ProfileScreen from '../screens/my_profile/ProfileScreen';
+
+
 import NotificationScreen from '../screens/notification/NotificationScreen';
 import LoveMatchSelectScreen from '../screens/match/LoveMatchSelectScreen'
-// ⚙️ Tạo các màn hình tạm
+
+
+// 📌 Chat Screens (THẬT)
+// import ChatListScreen from '../screens/conversation/ChatListScreen';
+// import ChatScreen from '../screens/conversation/ChatScreen';
+// 💬 Chat Screens
+import ChatListScreen from '../screens/chat/ChatListScreen';
+import ChatRoomScreen from '../screens/chat/ChatRoomScreen';
+import ConnectionActionsScreen from '../screens/conversation/ConnectionActionsScreen';
+import IceBreakerScreen from '../screens/conversation/IceBreakerScreen';
+
+// ⚙️ Màn giả
 function DummyScreen({ title }) {
   return (
     <View style={styles.screen}>
@@ -29,16 +42,35 @@ function DummyScreen({ title }) {
   );
 }
 
-const ChatScreen = () => <DummyScreen title="💬 Trò chuyện" />;
+// const NotificationScreen = () => <DummyScreen title="🔔 Thông báo" />;
+
+// ❌ KHÔNG GHI ĐÈ CHATSCREEN NỮA
+// → ĐỔI TÊN MÀN GIẢ
+const DummyChat = () => <DummyScreen title="💬 Trò chuyện" />;
+
+// Tab + Stack
 const Tab = createBottomTabNavigator();
 const HomeStack = createStackNavigator();
+const ChatStack = createStackNavigator();
 
-/* 🏠 Stack riêng cho tab Home */
+// 🧡 Chat stack
+function ChatStackScreen() {
+  return (
+    <ChatStack.Navigator screenOptions={{ headerShown: false }}>
+      <ChatStack.Screen name="ChatList" component={ChatListScreen} />
+      <ChatStack.Screen name="ChatDetail" component={ChatScreen} />
+      <ChatStack.Screen name="ConnectionActions" component={ConnectionActionsScreen} />
+      <ChatStack.Screen name="IceBreaker" component={IceBreakerScreen} />
+    </ChatStack.Navigator>
+  );
+}
+
+/* 🏠 Home stack */
 function HomeStackScreen() {
   return (
     <HomeStack.Navigator>
       <HomeStack.Screen
-        name="Trang chủ"
+        name="HomeMain"
         component={HomeScreen}
         options={{ headerShown: false }}
       />
@@ -96,6 +128,45 @@ function MatchTabButton(props) {
 
 
 
+/* 💬 Stack riêng cho tab Chat */
+function ChatNavigator() {
+  return (
+    <ChatStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#000',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: '700',
+          fontSize: 22,
+        },
+      }}
+    >
+      <ChatStack.Screen 
+        name="ChatList" 
+        component={ChatListScreen}
+        options={{
+          title: 'Trò chuyện',
+          headerLeft: null,
+          headerTitleStyle: {
+            fontWeight: '700',
+            fontSize: 24,
+          },
+        }}
+      />
+      <ChatStack.Screen 
+        name="ChatRoom" 
+        component={ChatRoomScreen}
+        options={({ route }) => ({
+          title: route.params?.chatName || 'Chat',
+          headerBackTitleVisible: false,
+        })}
+      />
+    </ChatStack.Navigator>
+  );
+}
+
 export default function BottomTabs() {
   return (
     <Tab.Navigator
@@ -105,7 +176,7 @@ export default function BottomTabs() {
         tabBarStyle: styles.tabBar,
       }}
     >
-      {/* Trang chủ  */}
+      {/* HOME */}
       <Tab.Screen
         name="Home"
         component={HomeStackScreen}
@@ -133,7 +204,6 @@ export default function BottomTabs() {
         })}
       />
 
-
       {/* 🔔 Thông báo */}
       <Tab.Screen
         name="Notifications"
@@ -149,10 +219,11 @@ export default function BottomTabs() {
         }}
       />
 
-      {/* ❤️ Nút giữa */}
+      {/* CENTER HEART - Match */}
       <Tab.Screen
         name="Match"
         component={MatchStackScreen}
+        // component={DummyChat}
         options={{
           tabBarButton: (props) => <MatchTabButton {...props} />,
         }}
@@ -160,11 +231,11 @@ export default function BottomTabs() {
 
 
 
-      {/* 💬 Chat */}
+      {/* CHAT REAL */}
       <Tab.Screen
         name="Chat"
-        component={ChatScreen}
-        options={{
+        component={ChatNavigator}
+        options={({ route }) => ({
           tabBarIcon: ({ focused }) => (
             <Ionicons
               name="chatbubble-ellipses-outline"
@@ -172,10 +243,18 @@ export default function BottomTabs() {
               color={focused ? '#ffb6d9' : '#ccc'}
             />
           ),
-        }}
+          // ⭐ Ẩn tab bar khi vào ChatRoom
+          tabBarStyle: ((route) => {
+            const routeName = getFocusedRouteNameFromRoute(route) ?? 'ChatList';
+            if (routeName === 'ChatRoom') {
+              return { display: 'none' }; // Ẩn bottom tab
+            }
+            return styles.tabBar; // Hiện bottom tab
+          })(route),
+        })}
       />
 
-      {/* 👤 Profile */}
+      {/* PROFILE */}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
@@ -193,7 +272,7 @@ export default function BottomTabs() {
   );
 }
 
-/* 🎨 Styles */
+/* STYLE */
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
@@ -208,7 +287,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: -2 },
-    backdropFilter: Platform.OS === 'ios' ? 'blur(20px)' : undefined,
   },
   centerButton: {
     top: -15,
@@ -221,10 +299,6 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#ff7acb',
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
-    elevation: 10,
   },
   screen: {
     flex: 1,
