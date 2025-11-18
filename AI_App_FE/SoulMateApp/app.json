@@ -21,19 +21,24 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.nganlinh.SoulMateApp"
+      "package": "com.nganlinh.SoulMateApp",
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-font"
-    ]
-    },
+    ],
     "extra": {
       "eas": {
         "projectId": "b7478253-fd21-40e3-bacb-c67771d0d65e"
       }
     }
-    
+  },
+  "extra": {
+    "eas": {
+      "projectId": "b7478253-fd21-40e3-bacb-c67771d0d65e"
+    }
   }
+}

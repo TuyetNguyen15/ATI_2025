@@ -41,19 +41,19 @@ export const loadUserProfile = () => {
       return null;
     }
 
-    try {
-      dispatch(setStatus('loading'));
+      try {
+          dispatch(setStatus('loading'));
 
-      const userRef = doc(db, 'users', userId);
-      const userSnap = await getDoc(userRef);
+          const userRef = doc(db, 'users', userId);
+        const userSnap = await getDoc(userRef);
 
-      if (!userSnap.exists()) {
-        console.error('User not found in Firestore');
-        dispatch(setStatus('error'));
-        return null;
-      }
+        if (!userSnap.exists()) {
+          console.error('User not found in Firestore');
+          dispatch(setStatus('error'));
+          return null;
+        }
 
-      const rawData = userSnap.data();
+        const rawData = userSnap.data();
 
       // ⭐ Làm sạch toàn bộ Timestamp
       const cleanedData = deepClean(rawData);
@@ -65,18 +65,21 @@ export const loadUserProfile = () => {
         status: 'success',
       };
 
-      dispatch(setProfileData(profileData));
+          dispatch(setProfileData(profileData));
       dispatch(setStatus('success'));
+  
+        console.log("✔ Profile loaded:", profileData.name);
+        return profileData;
 
-      console.log("✔ Profile loaded:", profileData.name);
-      return profileData;
-
-    } catch (error) {
-      console.error("❌ Error loading profile:", error);
-      dispatch(setStatus('error'));
-      return null;
-    }
+      } catch (error) {
+        console.error("❌ Error loading profile:", error);
+        dispatch(setStatus('error'));
+        return null;
+      }
   };
-};
+  };
 
-export const refreshUserProfile = loadUserProfile;
+  /**
+   * Refresh profile - alias cho loadUserProfile
+   */
+  export const refreshUserProfile = (userId, dispatch) => loadUserProfile(userId, dispatch);

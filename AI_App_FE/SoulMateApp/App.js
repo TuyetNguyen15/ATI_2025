@@ -11,13 +11,16 @@ import { auth } from './config/firebaseConfig';
 import { loadUserProfile } from './services/profileLoader';
 import * as SplashScreen from 'expo-splash-screen';
 
-// AUTH
+// --- IMPORT TẤT CẢ MÀN HÌNH (Chỉ 1 lần) ---
+// (LƯU Ý: Tôi đã gộp cả hai bộ màn hình, bạn hãy kiểm tra lại đường dẫn!)
+
+// Màn hình Onboarding
 import OnboardingScreen from './onboardingScreen/OnboardingScreen';
 import LoginScreen from './screens/auth/LoginScreen';
 import RegisterScreen1 from './screens/auth/Register1';
 import RegisterScreen2 from './screens/auth/Register2';
 
-// MAIN
+// Màn hình chính
 import BottomTabs from './components/BottomTabs';
 import UpdateAvatar from './screens/avatar/UpdateAvatar';
 import EditProfile from './screens/edit_profile/EditProfile';
@@ -48,11 +51,13 @@ function AppContent() {
     prepare();
   }, []);
 
+  // 2. Logic kiểm tra Đăng nhập
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          await loadUserProfile(user.uid);
+          await loadUserProfile(user.uid, dispatch);
+          console.log('Auth: Profile loaded globally');
         } catch (err) {
           console.error('Auth: Failed to load profile:', err);
         }
@@ -91,8 +96,6 @@ function AppContent() {
           initialRouteName="Onboarding"
           screenOptions={{ headerShown: false }}
         >
-
-          {/* AUTH */}
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="RegisterScreen1" component={RegisterScreen1} />
