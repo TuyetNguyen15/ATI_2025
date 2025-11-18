@@ -25,6 +25,7 @@ import NatalChartAnalysis from './screens/astrology_analysis/NatalChartAnalysis'
 import ProfileScreen from './screens/my_profile/ProfileScreen';
 import UserProfileScreen from './screens/user_profile/UserProfileScreen';
 import LoveMatchSelectScreen from './screens/match/LoveMatchSelectScreen';
+import MatchRequestDetailScreen from './screens/match_request/MatchRequestDetailScreen';
 
 // CONNECTION
 import ConnectionActionsScreen from './screens/conversation/ConnectionActionsScreen';
@@ -115,6 +116,7 @@ function AppContent() {
           <Stack.Screen name="EditProfile" component={EditProfile} />
           <Stack.Screen name="NatalChartAnalysis" component={NatalChartAnalysis} />
           <Stack.Screen name="LoveMatchSelectScreen" component={LoveMatchSelectScreen} />
+          <Stack.Screen name="MatchRequestDetailScreen" component={MatchRequestDetailScreen} />
 
           {/* CONNECTION */}
           <Stack.Screen name="ConnectionActionsScreen" component={ConnectionActionsScreen} />

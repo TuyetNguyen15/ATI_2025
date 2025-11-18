@@ -1,99 +1,217 @@
 // src/components/NotificationsScreen.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  RefreshControl 
+  RefreshControl,
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRefresh } from '../../hook/useRefresh';
 import SwipeableNotification from './components/SwipeableNotification';
+import { 
+  getNotifications, 
+  markNotificationRead, 
+  deleteNotification 
+} from '../../services/notificationService';
+import { auth } from '../../config/firebaseConfig';
 
 const NotificationsScreen = ({ navigation }) => {
-  const [notifications, setNotifications] = useState([
-    {
-      id: '1',
-      type: 'match_request', // Loại thông báo ghép đôi
-      title: 'Lời mời ghép đôi từ Nguyễn Văn A',
-      message: 'Xin chào! Tôi thấy chúng ta có nhiều điểm chung...',
-      time: '2 giờ trước',
-      read: false,
-      icon: 'favorite',
-      navigable: true, // Có thể nhấn để điều hướng
-      navigationData: {
-        screen: 'MatchRequestDetail',
-        params: {
-          requestId: 'req_001',
-          senderId: 'user_123',
-          senderName: 'Nguyễn Văn A',
-          senderAvatar: 'https://...',
-          message: 'Xin chào! Tôi thấy chúng ta có nhiều điểm chung...',
-          senderAge: 25,
-          senderJob: 'Kỹ sư phần mềm'
-        }
-      }
-    },
-    {
-      id: '2',
-      type: 'prediction',
-      title: 'Dự đoán hàng ngày đã sẵn sàng',
-      message: 'Xem ngay dự đoán chiêm tinh cho hôm nay của bạn',
-      time: '5 giờ trước',
-      read: false,
-      icon: 'stars',
-      navigable: false // Không điều hướng, chỉ đánh dấu đã đọc
-    },
-    {
-      id: '3',
-      type: 'love',
-      title: 'Chỉ số tình duyên cao',
-      message: 'Hôm nay là ngày tốt để gặp gỡ người mới',
-      time: '1 ngày trước',
-      read: true,
-      icon: 'favorite',
-      navigable: false
-    },
-    {
-      id: '4',
-      type: 'match_accepted', // Thông báo đã được chấp nhận
-      title: 'Nguyễn Thị B đã chấp nhận ghép đôi',
-      message: 'Hãy bắt đầu trò chuyện ngay!',
-      time: '2 ngày trước',
-      read: true,
-      icon: 'check-circle',
-      navigable: true,
-      navigationData: {
-        screen: 'Chat',
-        params: {
-          matchId: 'match_001',
-          partnerId: 'user_456',
-          partnerName: 'Nguyễn Thị B'
-        }
-      }
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
+  const [error, setError] = useState(null);
+
+  // Load notifications khi component mount
+  useEffect(() => {
+    const currentUserId = auth.currentUser?.uid;
+    
+    if (currentUserId) {
+      console.log('Found userId from Firebase Auth:', currentUserId);
+      setUserId(currentUserId);
+      loadNotifications(currentUserId);
+    } else {
+      console.error('No authenticated user found');
+      setError('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+      setLoading(false);
     }
-  ]);
+  }, []);
 
-  const markAsRead = (id) => {
-    setNotifications(prev =>
-      prev.map(notif =>
-        notif.id === id ? { ...notif, read: true } : notif
-      )
-    );
+  // Hàm load thông báo từ API
+  const loadNotifications = async (userIdParam) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const currentUserId = userIdParam || userId;
+      
+      if (!currentUserId) {
+        console.error('No userId available');
+        setError('Không tìm thấy thông tin người dùng.');
+        return;
+      }
+
+      const response = await getNotifications(currentUserId);
+      
+      if (response.success) {
+        // Thêm thông tin navigable và navigationData cho mỗi thông báo
+        const processedNotifications = response.notifications.map(notif => ({
+          ...notif,
+          navigable: notif.type === 'match_request' || notif.type === 'match_accepted',
+          navigationData: getNavigationData(notif)
+        }));
+        
+        setNotifications(processedNotifications);
+      } else {
+        setError(response.message || 'Không thể tải thông báo.');
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      setError('Không thể tải thông báo. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(notif => ({ ...notif, read: true }))
-    );
+  // ✅ Callback để xóa notification khi accept/reject
+  const handleMatchRequestResponse = (requestId) => {
+    // Tìm notification dựa trên requestId
+    const notifToRemove = notifications.find(n => n.requestId === requestId);
+    
+    if (notifToRemove) {
+      // Xóa khỏi UI
+      setNotifications(prev => prev.filter(n => n.id !== notifToRemove.id));
+      
+      // Gọi API xóa (optional, có thể backend tự động xóa khi accept/reject)
+      deleteNotification(notifToRemove.id).catch(err => {
+        console.error('Error deleting notification:', err);
+      });
+    }
   };
 
-  const deleteNotification = (id) => {
-    setNotifications(prev =>
-      prev.filter(notif => notif.id !== id)
-    );
+  // Xác định navigationData dựa trên type của notification
+  const getNavigationData = (notif) => {
+    switch (notif.type) {
+      case 'match_request':
+        // ✅ Kiểm tra xem backend đã lưu navigationData chưa
+        if (notif.navigationData && notif.navigationData.params) {
+          // Lấy từ navigationData.params (cách backend lưu)
+          return {
+            screen: 'MatchRequestDetailScreen',
+            params: {
+              ...notif.navigationData.params, // Spread tất cả params
+              // Truyền thêm callbacks
+              onAccept: handleMatchRequestResponse,
+              onReject: handleMatchRequestResponse
+            }
+          };
+        }
+        
+        // Fallback nếu không có navigationData
+        return {
+          screen: 'MatchRequestDetailScreen',
+          params: {
+            requestId: notif.requestId,
+            senderId: notif.senderId,
+            senderName: notif.senderName || notif.title || 'Người dùng',
+            senderAvatar: notif.senderAvatar || notif.avatar,
+            message: notif.message || notif.body,
+            senderAge: notif.senderAge,
+            senderJob: notif.senderJob,
+            onAccept: handleMatchRequestResponse,
+            onReject: handleMatchRequestResponse
+          }
+        };
+        
+      case 'match_accepted':
+        // Tương tự cho match_accepted
+        if (notif.navigationData && notif.navigationData.params) {
+          return {
+            screen: 'Chat',
+            params: notif.navigationData.params
+          };
+        }
+        
+        return {
+          screen: 'Chat',
+          params: {
+            matchId: notif.matchId,
+            partnerId: notif.partnerId,
+            partnerName: notif.partnerName
+          }
+        };
+        
+      default:
+        return null;
+    }
+  };
+
+  // Đánh dấu một thông báo đã đọc
+  const markAsRead = async (id) => {
+    try {
+      // Cập nhật UI ngay lập tức
+      setNotifications(prev =>
+        prev.map(notif =>
+          notif.id === id ? { ...notif, read: true } : notif
+        )
+      );
+
+      // Gọi API để cập nhật backend
+      await markNotificationRead([id]);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      // Revert lại UI nếu API call thất bại
+      setNotifications(prev =>
+        prev.map(notif =>
+          notif.id === id ? { ...notif, read: false } : notif
+        )
+      );
+    }
+  };
+
+  // Đánh dấu tất cả đã đọc
+  const markAllAsRead = async () => {
+    try {
+      const unreadIds = notifications
+        .filter(n => !n.read)
+        .map(n => n.id);
+
+      if (unreadIds.length === 0) return;
+
+      // Cập nhật UI ngay lập tức
+      setNotifications(prev =>
+        prev.map(notif => ({ ...notif, read: true }))
+      );
+
+      // Gọi API
+      await markNotificationRead(unreadIds);
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+      Alert.alert('Lỗi', 'Không thể đánh dấu đã đọc. Vui lòng thử lại.');
+      // Reload lại notifications nếu thất bại
+      loadNotifications();
+    }
+  };
+
+  // Xóa thông báo
+  const handleDeleteNotification = async (id) => {
+    try {
+      // Xóa khỏi UI ngay lập tức
+      setNotifications(prev =>
+        prev.filter(notif => notif.id !== id)
+      );
+
+      // Gọi API để xóa từ backend
+      await deleteNotification(id);
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      Alert.alert('Lỗi', 'Không thể xóa thông báo. Vui lòng thử lại.');
+      // Reload lại notifications nếu thất bại
+      loadNotifications();
+    }
   };
 
   // Xử lý khi nhấn vào thông báo
@@ -107,16 +225,63 @@ const NotificationsScreen = ({ navigation }) => {
     }
   };
 
-  // Pull-to-refresh để load lại thông báo
-  const loadNotifications = async () => {
-    // TODO: Gọi API để load thông báo mới từ Firebase/Backend
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    console.log('Đã load lại thông báo');
+  // Retry function
+  const handleRetry = () => {
+    setError(null);
+    if (userId) {
+      loadNotifications(userId);
+    } else {
+      // Thử lấy lại userId
+      const currentUserId = auth.currentUser?.uid;
+      if (currentUserId) {
+        setUserId(currentUserId);
+        loadNotifications(currentUserId);
+      }
+    }
   };
 
-  const { refreshing, onRefresh } = useRefresh(loadNotifications);
+  // Pull-to-refresh
+  const { refreshing, onRefresh } = useRefresh(() => {
+    if (userId) {
+      return loadNotifications(userId);
+    }
+  });
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  // Hiển thị error state
+  if (error && !loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <MaterialIcons name="error-outline" size={80} color="#ff5c8d" />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={handleRetry}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.retryButtonText}>Thử lại</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.loginButton}
+          onPress={() => navigation.navigate('Login')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.loginButtonText}>Đăng nhập lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Hiển thị loading khi đang tải lần đầu
+  if (loading && notifications.length === 0) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#b36dff" />
+        <Text style={styles.loadingText}>Đang tải thông báo...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -166,7 +331,7 @@ const NotificationsScreen = ({ navigation }) => {
               notif={notif}
               onPress={() => handleNotificationPress(notif)}
               onMarkAsRead={markAsRead}
-              onDelete={deleteNotification}
+              onDelete={handleDeleteNotification}
             />
           ))
         )}
@@ -180,6 +345,48 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
     paddingHorizontal: 32,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 16,
+  },
+  errorText: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 16,
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+  retryButton: {
+    marginTop: 24,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    backgroundColor: '#b36dff',
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loginButton: {
+    marginTop: 12,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#b36dff',
+    borderRadius: 8,
+  },
+  loginButtonText: {
+    color: '#b36dff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   header: {
     flexDirection: 'row',

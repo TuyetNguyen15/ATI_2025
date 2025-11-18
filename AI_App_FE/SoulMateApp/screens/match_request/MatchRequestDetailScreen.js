@@ -1,5 +1,5 @@
 // src/screens/MatchRequestDetailScreen.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,8 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,41 +25,71 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
   } = route.params;
 
   const [responding, setResponding] = useState(false);
+  const [hasResponded, setHasResponded] = useState(false);
+  const [requestStatus, setRequestStatus] = useState('pending'); // ✅ Track status từ backend
+  const [loading, setLoading] = useState(true);
+
+  // ✅ Load request status từ backend khi component mount
+  useEffect(() => {
+    checkRequestStatus();
+  }, []);
+
+  // ✅ Hàm kiểm tra status của request
+  const checkRequestStatus = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`http://127.0.0.1:5000/match-request/${requestId}`);
+      const data = await response.json();
+      
+      // Giả lập API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Giả sử API trả về { status: 'pending' | 'accepted' | 'rejected' }
+      setRequestStatus(data.status);
+      
+      // Nếu đã xử lý rồi thì disable buttons
+      if (data.status !== 'pending') {
+         setHasResponded(true);
+      }
+      
+    } catch (error) {
+      console.error('Error checking request status:', error);
+      Alert.alert('Lỗi', 'Không thể tải thông tin lời mời. Vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Xử lý đồng ý ghép đôi
   const handleAccept = async () => {
+    if (hasResponded || requestStatus !== 'pending') return;
+    
     setResponding(true);
+    setHasResponded(true);
 
     try {
-      // TODO: Gọi API để chấp nhận lời mời ghép đôi
-      // await acceptMatchRequest(requestId, senderId);
-      
-      // Giả lập API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('http://127.0.0.1:5000/accept-match-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          requestId, 
+          receiverId: 'CURRENT_USER_ID' // Lấy từ auth
+        })
+      });
 
-      Alert.alert(
-        'Thành công!',
-        'Bạn đã chấp nhận ghép đôi. Hãy bắt đầu trò chuyện!',
-        [
-          {
-            text: 'Trò chuyện ngay',
-            onPress: () => {
-              // Điều hướng đến màn hình chat
-              navigation.navigate('Chat', {
-                matchId: `match_${requestId}`,
-                partnerId: senderId,
-                partnerName: senderName
-              });
-            }
-          },
-          {
-            text: 'Để sau',
-            onPress: () => navigation.goBack(),
-            style: 'cancel'
-          }
-        ]
-      );
+      // Navigate back
+      navigation.goBack();
+      
+      // Show alert
+      setTimeout(() => {
+        Alert.alert(
+          'Thành công!',
+          'Bạn đã chấp nhận ghép đôi!'
+        );
+      }, 300);
+      
     } catch (error) {
+      setHasResponded(false);
       Alert.alert('Lỗi', 'Không thể chấp nhận lời mời. Vui lòng thử lại.');
       console.error('Accept match error:', error);
     } finally {
@@ -68,6 +99,8 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
 
   // Xử lý từ chối ghép đôi
   const handleReject = async () => {
+    if (hasResponded || requestStatus !== 'pending') return;
+    
     Alert.alert(
       'Xác nhận từ chối',
       'Bạn có chắc muốn từ chối lời mời ghép đôi này?',
@@ -81,18 +114,29 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
           style: 'destructive',
           onPress: async () => {
             setResponding(true);
+            setHasResponded(true);
 
             try {
               // TODO: Gọi API để từ chối lời mời ghép đôi
-              // await rejectMatchRequest(requestId, senderId);
-              
-              // Giả lập API call
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              const response = await fetch('http://127.0.0.1:5000/reject-match-request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  requestId, 
+                  receiverId: 'CURRENT_USER_ID' 
+                })
+              });
 
-              Alert.alert('Đã từ chối', 'Bạn đã từ chối lời mời ghép đôi.', [
-                { text: 'OK', onPress: () => navigation.goBack() }
-              ]);
+              // Navigate back
+              navigation.goBack();
+              
+              // Show alert
+              setTimeout(() => {
+                Alert.alert('Đã từ chối', 'Bạn đã từ chối lời mời ghép đôi.');
+              }, 300);
+              
             } catch (error) {
+              setHasResponded(false);
               Alert.alert('Lỗi', 'Không thể từ chối lời mời. Vui lòng thử lại.');
               console.error('Reject match error:', error);
             } finally {
@@ -102,6 +146,37 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
         }
       ]
     );
+  };
+
+  // ✅ Hiển thị loading khi đang check status
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#b36dff" />
+        <Text style={styles.loadingText}>Đang tải...</Text>
+      </View>
+    );
+  }
+
+  // ✅ Hiển thị thông báo nếu đã xử lý
+  const showStatusMessage = () => {
+    if (requestStatus === 'accepted') {
+      return (
+        <View style={styles.statusBanner}>
+          <MaterialIcons name="check-circle" size={24} color="#4CAF50" />
+          <Text style={styles.statusText}>Đã chấp nhận lời mời này</Text>
+        </View>
+      );
+    }
+    if (requestStatus === 'rejected') {
+      return (
+        <View style={[styles.statusBanner, styles.rejectedBanner]}>
+          <MaterialIcons name="cancel" size={24} color="#ff3b30" />
+          <Text style={styles.statusText}>Đã từ chối lời mời này</Text>
+        </View>
+      );
+    }
+    return null;
   };
 
   return (
@@ -123,6 +198,9 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
+        {/* ✅ Status banner */}
+        {showStatusMessage()}
+
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <LinearGradient
@@ -143,20 +221,23 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
                 )}
               </View>
 
-              {/* Info */}
-              <Text style={styles.name}>{senderName}</Text>
+              {/* Name */}
+              <Text style={styles.name}>{senderName || 'Người dùng'}</Text>
               
-              <View style={styles.infoRow}>
-                <View style={styles.infoItem}>
-                  <MaterialIcons name="cake" size={18} color="#ff7bbf" />
-                  <Text style={styles.infoText}>{senderAge} tuổi</Text>
+              {/* Thông tin thêm */}
+              {(senderAge || senderJob) && (
+                <View style={styles.infoRow}>
+                  {senderAge && (
+                    <Text style={styles.infoText}>{senderAge} tuổi</Text>
+                  )}
+                  {senderAge && senderJob && (
+                    <Text style={styles.infoDivider}>•</Text>
+                  )}
+                  {senderJob && (
+                    <Text style={styles.infoText}>{senderJob}</Text>
+                  )}
                 </View>
-                <View style={styles.infoDivider} />
-                <View style={styles.infoItem}>
-                  <MaterialIcons name="work" size={18} color="#b36dff" />
-                  <Text style={styles.infoText}>{senderJob}</Text>
-                </View>
-              </View>
+              )}
             </View>
           </LinearGradient>
         </View>
@@ -174,48 +255,53 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
             </Text>
           </View>
         </View>
-
-        {/* Buttons */}
-        <View style={styles.buttonContainer}>
-          {/* Nút từ chối */}
-          <TouchableOpacity
-            style={styles.rejectButtonWrapper}
-            onPress={handleReject}
-            disabled={responding}
-            activeOpacity={0.8}
-          >
-            <View style={styles.rejectButton}>
-              <MaterialIcons name="close" size={24} color="#ff3b30" />
-              <Text style={styles.rejectButtonText}>Từ chối</Text>
-            </View>
-          </TouchableOpacity>
-
-          {/* Nút chấp nhận */}
-          <TouchableOpacity
-            style={styles.acceptButtonWrapper}
-            onPress={handleAccept}
-            disabled={responding}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={['#ff6b9d', '#c44dff']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.acceptButton}
-            >
-              <MaterialIcons name="favorite" size={24} color="#fff" />
-              <Text style={styles.acceptButtonText}>
-                {responding ? 'Đang xử lý...' : 'Đồng ý'}
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-
-        {/* Footer note */}
-        <Text style={styles.footerNote}>
-          Khi đồng ý ghép đôi, cả hai bên sẽ có thể bắt đầu trò chuyện với nhau
-        </Text>
       </ScrollView>
+
+      {/* ✅ Buttons - Chỉ hiển thị khi status là pending */}
+      {requestStatus === 'pending' && (
+        <View style={styles.fixedButton}>
+          <View style={styles.buttonContainer}>
+            {/* Nút từ chối */}
+            <TouchableOpacity
+              style={[
+                styles.rejectButtonWrapper,
+                hasResponded && styles.disabledButton
+              ]}
+              onPress={handleReject}
+              disabled={responding || hasResponded}
+              activeOpacity={0.8}
+            >
+              <View style={styles.rejectButton}>
+                <MaterialIcons name="close" size={24} color="#ff3b30" />
+                <Text style={styles.rejectButtonText}>Từ chối</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Nút chấp nhận */}
+            <TouchableOpacity
+              style={[
+                styles.acceptButtonWrapper,
+                hasResponded && styles.disabledButton
+              ]}
+              onPress={handleAccept}
+              disabled={responding || hasResponded}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#ff6b9d', '#c44dff']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.acceptButton}
+              >
+                <MaterialIcons name="favorite" size={24} color="#fff" />
+                <Text style={styles.acceptButtonText}>
+                  {responding ? 'Đang xử lý...' : 'Đồng ý'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
@@ -224,6 +310,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 16,
   },
   header: {
     flexDirection: 'row',
@@ -251,6 +346,28 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
+    paddingBottom: 120
+  },
+  // ✅ Status banner styles
+  statusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(76, 175, 80, 0.3)',
+  },
+  rejectedBanner: {
+    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+    borderColor: 'rgba(255, 59, 48, 0.3)',
+  },
+  statusText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 12,
   },
   profileCard: {
     marginBottom: 24,
@@ -285,28 +402,24 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+    marginTop: 4,
   },
   infoText: {
-    fontSize: 14,
-    color: '#aaa',
+    fontSize: 15,
+    color: '#999',
   },
   infoDivider: {
-    width: 1,
-    height: 16,
-    backgroundColor: '#333',
+    fontSize: 15,
+    color: '#999',
+    marginHorizontal: 8,
   },
   messageSection: {
+    marginTop: 16,
     marginBottom: 24,
   },
   messageSectionHeader: {
@@ -332,10 +445,15 @@ const styles = StyleSheet.create({
     color: '#ccc',
     lineHeight: 22,
   },
+  fixedButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+  },
   buttonContainer: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 16,
   },
   rejectButtonWrapper: {
     flex: 1,
@@ -377,12 +495,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
   },
-  footerNote: {
-    fontSize: 13,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 18,
-    paddingHorizontal: 20,
+  disabledButton: {
+    opacity: 0.5,
   },
 });
 
