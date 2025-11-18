@@ -1,5 +1,4 @@
-// 📄 App.js — Bản chuẩn nhất (2025) ✔
-// Đã fix đầy đủ đường dẫn + đăng ký Navigator
+// 📄 App.js — Bản chuẩn nhất (2025)
 
 import * as React from 'react';
 import { View, ActivityIndicator } from 'react-native';
@@ -12,23 +11,26 @@ import { auth } from './config/firebaseConfig';
 import { loadUserProfile } from './services/profileLoader';
 import * as SplashScreen from 'expo-splash-screen';
 
-// Onboarding + Auth
+// AUTH
 import OnboardingScreen from './onboardingScreen/OnboardingScreen';
 import LoginScreen from './screens/auth/LoginScreen';
 import RegisterScreen1 from './screens/auth/Register1';
 import RegisterScreen2 from './screens/auth/Register2';
 
-// Main app
+// MAIN
 import BottomTabs from './components/BottomTabs';
 import UpdateAvatar from './screens/avatar/UpdateAvatar';
 import EditProfile from './screens/edit_profile/EditProfile';
 import NatalChartAnalysis from './screens/astrology_analysis/NatalChartAnalysis';
 import LoveMatchSelectScreen from './screens/match/LoveMatchSelectScreen';
-// Giữ Splash Screen hiển thị
 
-// ⭐ ĐÚNG ĐƯỜNG DẪN (có src/)
+// CONNECTION
 import ConnectionActionsScreen from './screens/conversation/ConnectionActionsScreen';
 import IceBreakerScreen from './screens/conversation/IceBreakerScreen';
+
+// ⭐ PROFILE (THÊM MỚI)
+import UserProfileScreen from './screens/user_profile/UserProfileScreen';
+
 
 SplashScreen.preventAutoHideAsync();
 const Stack = createStackNavigator();
@@ -71,14 +73,12 @@ function AppContent() {
 
   if (isInitializing) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#000',
-        }}
-      >
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#000',
+      }}>
         <ActivityIndicator size="large" color="#ff77a9" />
       </View>
     );
@@ -92,7 +92,7 @@ function AppContent() {
           screenOptions={{ headerShown: false }}
         >
 
-          {/* AUTH FLOW */}
+          {/* AUTH */}
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="RegisterScreen1" component={RegisterScreen1} />
@@ -105,17 +105,13 @@ function AppContent() {
           <Stack.Screen name="NatalChartAnalysis" component={NatalChartAnalysis} />
           <Stack.Screen name="LoveMatchSelectScreen" component={LoveMatchSelectScreen} />
 
-          {/* ⭐ MÀN KẾT NỐI — BẮT BUỘC PHẢI CÓ */}
-          <Stack.Screen
-            name="ConnectionActionsScreen"
-            component={ConnectionActionsScreen}
-          />
+          {/* CONNECTION */}
+          <Stack.Screen name="ConnectionActionsScreen" component={ConnectionActionsScreen} />
+          <Stack.Screen name="IceBreakerScreen" component={IceBreakerScreen} />
 
-          {/* ⭐ MÀN ICE BREAKER — CHÍNH MÀN GÂY LỖI */}
-          <Stack.Screen
-            name="IceBreakerScreen"
-            component={IceBreakerScreen}
-          />
+          {/* ⭐ PROFILE */}
+          <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} />
+          
 
         </Stack.Navigator>
       </NavigationContainer>

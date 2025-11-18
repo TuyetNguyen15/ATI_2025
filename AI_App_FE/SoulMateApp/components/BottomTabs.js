@@ -37,7 +37,7 @@ function DummyScreen({ title }) {
   );
 }
 
-const NotificationScreen = () => <DummyScreen title="🔔 Thông báo" />;
+// const NotificationScreen = () => <DummyScreen title="🔔 Thông báo" />;
 
 // ❌ KHÔNG GHI ĐÈ CHATSCREEN NỮA
 // → ĐỔI TÊN MÀN GIẢ

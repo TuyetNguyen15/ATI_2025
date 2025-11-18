@@ -1,4 +1,3 @@
-// 📄 src/screens/ConnectionActionsScreen.jsx
 import React from "react";
 import {
   View,
@@ -6,31 +5,74 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { blockUser } from "../../services/blockService";
+import { auth } from "../../config/firebaseConfig";
 
 const actions = [
   { id: "icebreaker", label: "Ice-breaker", color: "#ffb6d5" },
   { id: "profile", label: "Xem trang cá nhân", color: "#ffb6d5" },
   { id: "compat", label: "Xem báo cáo tương thích chi tiết", color: "#ffb6d5" },
-  { id: "match", label: "Kết duyên", color: "#ffb6d5" },
   { id: "block", label: "Block người này", color: "#ff6b6b", danger: true },
 ];
 
 export default function ConnectionActionsScreen({ navigation, route }) {
-  // Có thể nhận info người kia từ route.params nếu cần
-  const partnerName = route?.params?.partnerName ?? "Đối tượng của bạn";
+  const partner = route?.params?.partner || {};
+  const partnerUid = partner?.uid;
+  const partnerName = partner?.name ?? "Đối tượng của bạn";
 
   const handlePress = (action) => {
     switch (action.id) {
       case "icebreaker":
-        navigation.navigate("IceBreakerScreen", { partnerName });
+        navigation.navigate("IceBreakerScreen", { partner });
         break;
-      // TODO: thêm navigate cho các case còn lại nếu sau này có màn
+
+      case "profile":
+        navigation.navigate("UserProfileScreen", { partner });
+        break;
+
+      case "compat":
+        navigation.navigate("DetailedCompatScreen", { partner });
+        break;
+
+      case "block":
+        handleBlockUser();
+        break;
+
       default:
         break;
     }
+  };
+
+  // ⭐ Xử lý block user
+  const handleBlockUser = () => {
+    Alert.alert(
+      "Block người này?",
+      `Bạn có chắc chắn muốn block ${partnerName}?`,
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Block",
+          style: "destructive",
+          onPress: async () => {
+            const myUid = auth.currentUser?.uid;
+
+            if (!myUid || !partnerUid) {
+              Alert.alert("Lỗi", "Không xác định được người dùng.");
+              return;
+            }
+
+            await blockUser(myUid, partnerUid);
+
+            Alert.alert("Đã block thành công!");
+            navigation.goBack();
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -46,14 +88,13 @@ export default function ConnectionActionsScreen({ navigation, route }) {
           <Ionicons name="chevron-back" size={26} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.title}>Tính năng</Text>
-        <View style={{ width: 26 }} />{/* để cân với icon back */}
+        <View style={{ width: 26 }} />
       </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Vùng glow tròn giống design */}
         <View style={styles.glowWrapper}>
           <LinearGradient
             colors={["rgba(255, 105, 180,0.7)", "rgba(0,0,0,0.9)"]}
@@ -79,13 +120,14 @@ export default function ConnectionActionsScreen({ navigation, route }) {
                       styles.actionText,
                       action.danger && styles.dangerText,
                     ]}
-                    numberOfLines={1}
                   >
                     {action.label}
                   </Text>
                 </TouchableOpacity>
-                {/* line ngăn cách */}
-                {index !== actions.length - 1 && <View style={styles.divider} />}
+
+                {index !== actions.length - 1 && (
+                  <View style={styles.divider} />
+                )}
               </View>
             ))}
           </LinearGradient>
@@ -96,9 +138,7 @@ export default function ConnectionActionsScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     paddingTop: 50,
     paddingHorizontal: 20,
@@ -111,44 +151,23 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#ffffff",
     fontWeight: "600",
-    letterSpacing: 0.5,
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 20,
     paddingBottom: 40,
   },
-  glowWrapper: {
-    flex: 1,
-    marginTop: 20,
-    alignItems: "center",
-  },
+  glowWrapper: { flex: 1, marginTop: 20, alignItems: "center" },
   glowArea: {
     width: "100%",
     borderRadius: 40,
     paddingVertical: 30,
     paddingHorizontal: 24,
-    shadowColor: "#ff6fae",
-    shadowOpacity: 0.6,
-    shadowRadius: 40,
-    shadowOffset: { width: 0, height: 0 },
   },
-  actionRowWrapper: {
-    marginVertical: 6,
-  },
-  actionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  actionText: {
-    fontSize: 16,
-    color: "#ffe9ff",
-    flexShrink: 1,
-  },
-  dangerText: {
-    color: "#ff8080",
-  },
+  actionRowWrapper: { marginVertical: 6 },
+  actionRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10 },
+  actionText: { fontSize: 16, color: "#ffe9ff", flexShrink: 1 },
+  dangerText: { color: "#ff8080" },
   divider: {
     marginTop: 8,
     height: 1,
