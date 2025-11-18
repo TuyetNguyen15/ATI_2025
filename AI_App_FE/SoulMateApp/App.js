@@ -25,6 +25,8 @@ import BottomTabs from './components/BottomTabs';
 import UpdateAvatar from './screens/avatar/UpdateAvatar';
 import EditProfile from './screens/edit_profile/EditProfile';
 import NatalChartAnalysis from './screens/astrology_analysis/NatalChartAnalysis';
+import ProfileScreen from './screens/my_profile/ProfileScreen';
+import UserProfileScreen from './screens/user_profile/UserProfileScreen';
 import LoveMatchSelectScreen from './screens/match/LoveMatchSelectScreen';
 
 // CONNECTION
@@ -32,9 +34,6 @@ import ConnectionActionsScreen from './screens/conversation/ConnectionActionsScr
 import IceBreakerScreen from './screens/conversation/IceBreakerScreen';
 
 // ⭐ PROFILE (THÊM MỚI)
-import UserProfileScreen from './screens/user_profile/UserProfileScreen';
-
-
 SplashScreen.preventAutoHideAsync();
 const Stack = createStackNavigator();
 
@@ -113,6 +112,7 @@ function AppContent() {
           <Stack.Screen name="IceBreakerScreen" component={IceBreakerScreen} />
 
           {/* ⭐ PROFILE */}
+          <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
           <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} />
           
 
