@@ -1,4 +1,3 @@
-// 📄 App.js (Đã được dọn dẹp và gộp code)
 import * as React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
