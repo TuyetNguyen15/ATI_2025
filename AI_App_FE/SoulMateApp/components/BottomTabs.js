@@ -26,7 +26,7 @@ import LoveMatchSelectScreen from '../screens/match/LoveMatchSelectScreen'
 
 // 📌 Chat Screens (THẬT)
 // import ChatListScreen from '../screens/conversation/ChatListScreen';
-// import ChatScreen from '../screens/conversation/ChatScreen';
+import ChatScreen from '../screens/conversation/ChatScreen';
 // 💬 Chat Screens
 import ChatListScreen from '../screens/chat/ChatListScreen';
 import ChatRoomScreen from '../screens/chat/ChatRoomScreen';

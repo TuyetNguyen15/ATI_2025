@@ -1,4 +1,4 @@
-export const BASE_URL = "http://127.0.0.1:5000";
+export const BASE_URL = "http://172.168.1.24:5000";
 
 export const API = {
   generate: `${BASE_URL}/generate`,

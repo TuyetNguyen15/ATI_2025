@@ -15,11 +15,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import LoveMatchResultScreen from "../match/LoveMatchResultScreen";
-// import { getMatchResult } from "../../services/matchService";
+import { BASE_URL } from "../../config/api";
 const { width } = Dimensions.get("window");
 
-// ⚠️ ĐỔI THÀNH IP CỦA EM
-const API_URL = "http://127.0.0.1:5000";
 
 const CATEGORIES = [
   { key: "redflag", title: "Red Flag", img: require("../../assets/type/redflag.png") },
@@ -51,7 +49,7 @@ export default function LoveMatchSelectScreen() {
   
       // 1️⃣ CHECK FIRESTORE TRƯỚC
       const cached = await fetch(
-        `${API_URL}/love-matching/history/${user.uid}/${type}`
+        `${BASE_URL}/love-matching/history/${user.uid}/${type}`
       ).then(res => res.json());
   
       console.log("📌 CACHE CHECK:", cached);
@@ -65,7 +63,7 @@ export default function LoveMatchSelectScreen() {
   
       // 2️⃣ KHÔNG CÓ CACHE → GỌI AI
       console.log("🤖 CALL AI:", type);
-      const res = await axios.post(`${API_URL}/love-matching/${type}`, {
+      const res = await axios.post(`${BASE_URL}/love-matching/${type}`, {
         uid: user.uid,
       });
   

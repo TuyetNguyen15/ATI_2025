@@ -17,12 +17,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import { getVietnameseDate } from "../../utils/date";
 import { ELEMENT_MAP, ELEMENT_COLORS, ZODIAC_ICONS } from '../../constants/astrologyMap';
 import useAstroAPI from '../../hook/useAstroAPI';
+import { BASE_URL } from '../../config/api';
 import { loadUserProfile } from "../../services/profileLoader";
 
 const { width } = Dimensions.get('window');
 
-// ⭐ ĐỔI IP BACKEND Ở ĐÂY
-const API_URL = "http://127.0.0.1:5000";
 
 export default function HomeScreen({ navigation }) {
   const [scope, setScope] = useState('astro');
@@ -89,34 +88,64 @@ export default function HomeScreen({ navigation }) {
 
 
   // ⭐ LOAD 5 NGƯỜI TƯƠNG HỢP ĐÃ LƯU TRONG FIRESTORE
+  // ⭐ LOAD 5 NGƯỜI GREENFLAG – nếu không có thì gọi AI để tạo luôn
   const [fiveMatches, setFiveMatches] = useState([]);
+  const [loadingMatches, setLoadingMatches] = useState(false);
 
   useEffect(() => {
-    async function load() {
+    async function loadGreenFlag() {
       if (!profile.uid) return;
 
       try {
-        // ⭐ API đúng để lấy Green Flag
-        const res = await fetch(
-          `${API_URL}/love-matching/history/${profile.uid}/greenflag`
+        setLoadingMatches(true);
+
+        // ⭐ 1. CHECK DB
+        const cachedRes = await fetch(
+          `${BASE_URL}/love-matching/history/${profile.uid}/greenflag`
+        );
+        const cached = await cachedRes.json();
+
+        console.log("💚 GREENFLAG HISTORY:", cached);
+
+        // ⭐ Nếu có users → dùng DB
+        if (cached.success && cached.users && cached.users.length > 0) {
+          console.log("⚡ Dùng dữ liệu DB (GreenFlag)");
+          setFiveMatches(cached.users);
+          setLoadingMatches(false);
+          return;
+        }
+
+        // ⭐ 2. KHÔNG CÓ DB → GỌI AI
+        console.log("🤖 Không có DB → Gọi AI để tạo GreenFlag");
+
+        const aiRes = await fetch(
+          `${BASE_URL}/love-matching/greenflag`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ uid: profile.uid })
+          }
         );
 
-        const json = await res.json();
-        console.log("💚 GREENFLAG HISTORY:", json);
+        const aiJson = await aiRes.json();
+        console.log("🤖 AI RESULT:", aiJson);
 
-        if (json.success && json.users.length > 0) {
-          setFiveMatches(json.users);
+        if (aiJson.success && aiJson.users) {
+          setFiveMatches(aiJson.users);
         } else {
           setFiveMatches([]);
         }
 
       } catch (err) {
-        console.log("💥 Lỗi load matching:", err);
+        console.log("💥 Lỗi load greenflag:", err);
+      } finally {
+        setLoadingMatches(false);
       }
     }
 
-    load();
+    loadGreenFlag();
   }, [profile.uid]);
+
 
   return (
     <ImageBackground
@@ -304,7 +333,13 @@ export default function HomeScreen({ navigation }) {
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
 
-            {fiveMatches && fiveMatches.length > 0 ? (
+            {loadingMatches ? (
+              <View style={{ justifyContent: 'center', alignItems: 'center', marginRight: 20 }}>
+                <ActivityIndicator size="large" color="#fff" />
+                <Text style={{ color: '#fff', marginTop: 10 }}>Đang tải dữ liệu...</Text>
+              </View>
+            ) : fiveMatches && fiveMatches.length > 0 ? (
+
               fiveMatches.map((item, index) => (
                 <View key={index} style={styles.glassBox}>
 
@@ -313,7 +348,7 @@ export default function HomeScreen({ navigation }) {
                     source={
                       item.avatar
                         ? { uri: item.avatar }
-                        : require("../../assets/default_avatar.jpg")   
+                        : require("../../assets/default_avatar.jpg")
                     }
                     style={styles.glassImage}
                   />
