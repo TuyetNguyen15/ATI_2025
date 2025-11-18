@@ -18,8 +18,9 @@ import { getVietnameseDate } from "../../utils/date";
 import { ELEMENT_MAP, ELEMENT_COLORS, ZODIAC_ICONS } from '../../constants/astrologyMap';
 import useAstroAPI from '../../hook/useAstroAPI';
 import { BASE_URL } from '../../config/api';
+import { auth } from "../../config/firebaseConfig";
 import { loadUserProfile } from "../../services/profileLoader";
-
+import { openDirectChat } from "../../services/chatService";
 const { width } = Dimensions.get('window');
 
 
@@ -53,6 +54,17 @@ export default function HomeScreen({ navigation }) {
     }
   }, [profile]);
 
+  const openChatRoom = async (person) => {
+    const result = await openDirectChat(profile.uid, profile.name, person);
+    if (!result) return;
+  
+    navigation.navigate("ChatRoomScreen", {
+      chatId: result.id,
+      chatName: result.chatName,
+    });
+  };
+  
+
   const [currentDate, setCurrentDate] = useState(getVietnameseDate("today"));
   useEffect(() => {
     const interval = setInterval(() => {
@@ -85,6 +97,8 @@ export default function HomeScreen({ navigation }) {
     if (data) setLoveMetrics(data);
     setLoading(false);
   };
+  console.log("🔥 Firebase UID:", auth.currentUser?.uid);
+
 
 
   // ⭐ LOAD 5 NGƯỜI TƯƠNG HỢP ĐÃ LƯU TRONG FIRESTORE
@@ -341,25 +355,25 @@ export default function HomeScreen({ navigation }) {
             ) : fiveMatches && fiveMatches.length > 0 ? (
 
               fiveMatches.map((item, index) => (
-                <View key={index} style={styles.glassBox}>
+                <TouchableOpacity
+                key={index}
+                style={styles.glassBox}
+                onPress={() => openChatRoom(item)}
+              >
+                <Image
+                  source={
+                    item.avatar
+                      ? { uri: item.avatar }
+                      : require("../../assets/default_avatar.jpg")
+                  }
+                  style={styles.glassImage}
+                />
 
-                  {/* Avatar hoặc Icon zodiac */}
-                  <Image
-                    source={
-                      item.avatar
-                        ? { uri: item.avatar }
-                        : require("../../assets/default_avatar.jpg")
-                    }
-                    style={styles.glassImage}
-                  />
-
-
-                  <View style={styles.glassInfo}>
-                    <Text style={styles.glassName}>{item.name}</Text>
-                    <Text style={styles.glassZodiac}>{item.zodiac}</Text>
-                  </View>
-
+                <View style={styles.glassInfo}>
+                  <Text style={styles.glassName}>{item.name}</Text>
+                  <Text style={styles.glassZodiac}>{item.zodiac}</Text>
                 </View>
+              </TouchableOpacity>
               ))
             ) : (
               <View style={{ justifyContent: "center", alignItems: "center", marginRight: 20 }}>

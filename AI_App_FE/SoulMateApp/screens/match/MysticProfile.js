@@ -3,6 +3,8 @@ import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity } from "rea
 import { ELEMENT_MAP, ELEMENT_COLORS, ZODIAC_ICONS } from '../../constants/astrologyMap';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from "@react-navigation/native";
+import { openDirectChat } from "../../services/chatService";
+import { useSelector } from "react-redux";
 
 const { width } = Dimensions.get("window");
 
@@ -12,8 +14,9 @@ const CENTER_IMAGE_SIZE = width * 0.45;
 // BÁN KÍNH INFO XOAY QUANH
 const RADIUS = CENTER_IMAGE_SIZE * 0.75;
 
-export default function MysticProfile({ info}) {
+export default function MysticProfile({ info }) {
   const navigation = useNavigation();
+
   const infoItems = [
     { label: `Tên: ${info.name || "Không rõ"}`, row: 1, col: 1 },
     { label: `Cung: ${info.zodiac || info.planets?.sun || "Không rõ"}`, row: 1, col: 2 },
@@ -25,7 +28,25 @@ export default function MysticProfile({ info}) {
     { label: `Tính cách: ${info.personality || "Không rõ"}`, row: 3, col: 2 },
   ];
 
-
+  const angleMap = {
+    2: 300,
+    5: 60,
+    0: 240,
+    4: 120,
+    3: 180,
+    1: 0,
+  };
+  const openChatWith = async (person) => {
+    const result = await openDirectChat(myUid, myName, person);
+    if (!result) return;
+  
+    navigation.navigate("ChatRoomScreen", {
+      chatId: result.id,
+      chatName: result.chatName,
+    });
+  };
+  
+  
   return (
     <View style={styles.wrapper}>
       <View style={styles.container}>
@@ -40,17 +61,6 @@ export default function MysticProfile({ info}) {
 
         {/* 🔵 INFO XOAY QUANH */}
         {infoItems.map((item, i) => {
-          const angleMap = {
-            2: 300, // Tên
-            5: 60,  // Cung
-
-            0: 240, // Tuổi
-            4: 120, // Hợp
-
-            3: 180, // Nguyên tố
-            1: 0,   // Tính cách
-          };
-
           const deg = angleMap[i];
           const rad = (deg * Math.PI) / 180;
 
@@ -62,12 +72,7 @@ export default function MysticProfile({ info}) {
               key={i}
               style={[
                 styles.infoDot,
-                {
-                  transform: [
-                    { translateX: x },
-                    { translateY: y }
-                  ],
-                },
+                { transform: [{ translateX: x }, { translateY: y }] }
               ]}
             >
               <Text style={styles.infoText}>{item.label}</Text>
@@ -84,7 +89,6 @@ export default function MysticProfile({ info}) {
 
         {/* ⭐ ICON 2 CUNG ⭐ */}
         <View style={styles.zodiacCircleBox}>
-
           {/* Icon cung của bạn */}
           <View style={[styles.zodiacItem, { left: width * 0.10 }]}>
             <View style={styles.iconBg}>
@@ -111,7 +115,6 @@ export default function MysticProfile({ info}) {
               {info.compatibility_score || info.compatScore || 0}%
             </Text>
           </View>
-
         </View>
 
         {/* 4 Chỉ số */}
@@ -128,17 +131,18 @@ export default function MysticProfile({ info}) {
         </View>
       </View>
 
+
       <TouchableOpacity
-        onPress={() => navigation.navigate("UserProfileScreen", { userId: info.uid })}
+        onPress={() => openChatWith(info)}
         style={{ marginTop: 25 }}
       >
         <LinearGradient
-          colors={["#ffb6d9", "#b36dff"]}   // 💗 gradient giống nút dự đoán
+          colors={["#ffb6d9", "#b36dff"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.detailGradient}
         >
-          <Text style={styles.detailText}>Xem chi tiết</Text>
+          <Text style={styles.detailText}>Kết nối</Text>
         </LinearGradient>
       </TouchableOpacity>
 
@@ -147,7 +151,7 @@ export default function MysticProfile({ info}) {
   );
 }
 
-function Metric({ label, value, color }) {
+function Metric({ label, value = 0, color }) {
   return (
     <View style={{ marginBottom: 14 }}>
       <Text style={styles.metricLabel}>{label}</Text>
@@ -159,10 +163,8 @@ function Metric({ label, value, color }) {
   );
 }
 
-
 const styles = StyleSheet.create({
   wrapper: { alignItems: "center", width: "100%" },
-
   container: {
     marginTop: 50,
     width: width * 0.9,
@@ -171,7 +173,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     position: "relative",
   },
-
   title: {
     position: "absolute",
     top: -10,
@@ -180,14 +181,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontFamily: "Georgia",
   },
-
   centerImage: {
     width: CENTER_IMAGE_SIZE,
     height: CENTER_IMAGE_SIZE,
     resizeMode: "contain",
     position: "absolute",
   },
-
   infoDot: {
     position: "absolute",
     paddingVertical: 6,
@@ -196,7 +195,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     maxWidth: width * 0.35,
   },
-
   infoText: {
     color: "#fff",
     fontSize: 14,
@@ -204,9 +202,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 20,
     flexWrap: "wrap",
-    maxWidth: width * 0.33
+    maxWidth: width * 0.33,
   },
-
   compatBox: {
     width: width * 0.92,
     marginTop: 10,
@@ -214,7 +211,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     borderRadius: 20,
   },
-
   compatTitle: {
     color: "#e6dfd0",
     fontSize: 26,
@@ -222,25 +218,20 @@ const styles = StyleSheet.create({
     fontFamily: "Georgia",
     textAlign: "center",
   },
-
   compatSub: {
     textAlign: "center",
     color: "#ccc",
     fontSize: 18,
     marginTop: 4,
   },
-
   metricsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
     marginTop: 20,
   },
-
   metricColumn: { width: "48%" },
-
   metricLabel: { color: "#fff", fontSize: 16, marginBottom: 4 },
-
   metricLine: {
     width: "100%",
     height: 6,
@@ -248,11 +239,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     overflow: "hidden",
   },
-
   metricFill: { height: 6, borderRadius: 10 },
-
   metricValue: { color: "#fff", fontSize: 18, marginTop: 2 },
-
   zodiacCircleBox: {
     width: width * 0.9,
     height: width * 0.42,
@@ -260,25 +248,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     position: "relative",
   },
-
   zodiacItem: {
     position: "absolute",
     top: "30%",
     alignItems: "center",
   },
-
   zodiacIcon: {
     width: 60,
     height: 60,
     resizeMode: "contain",
   },
-
   scoreCenter: {
     position: "absolute",
     justifyContent: "center",
     alignItems: "center",
   },
-
   scoreNumber: {
     fontSize: 26,
     color: "#fff",
@@ -287,7 +271,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 6,
   },
-
   iconBg: {
     width: 90,
     height: 90,
@@ -300,28 +283,21 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 12,
   },
-
   detailGradient: {
     paddingVertical: 12,
     paddingHorizontal: 35,
     borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
-  
-    // Glow giống nút dự đoán
     shadowColor: "#ffb6d9",
     shadowOpacity: 0.45,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 8,
   },
-  
   detailText: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "700",
     textAlign: "center",
   },
-  
-
 });
-

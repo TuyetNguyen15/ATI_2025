@@ -32,7 +32,7 @@ import LoveMatchSelectScreen from './screens/match/LoveMatchSelectScreen';
 // CONNECTION
 import ConnectionActionsScreen from './screens/conversation/ConnectionActionsScreen';
 import IceBreakerScreen from './screens/conversation/IceBreakerScreen';
-
+import ChatRoomScreen from './screens/chat/ChatRoomScreen';
 
 
 
@@ -57,7 +57,7 @@ function AppContent() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          await loadUserProfile(user.uid, dispatch);
+          await dispatch(loadUserProfile(user.uid));
           console.log('Auth: Profile loaded globally');
         } catch (err) {
           console.error('Auth: Failed to load profile:', err);
@@ -116,7 +116,8 @@ function AppContent() {
           {/* ⭐ PROFILE */}
           <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
           <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} />
-          
+          {/* Chat */}
+          <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen}  />
 
         </Stack.Navigator>
       </NavigationContainer>

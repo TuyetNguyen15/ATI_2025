@@ -205,7 +205,7 @@ export default function ChatListScreen({ navigation }) {
       if (existingChat) {
         // Chat đã tồn tại -> Điều hướng đến đó
         console.log('ChatList - Chat already exists:', existingChat.id);
-        navigation.navigate('ChatRoom', {
+        navigation.navigate('ChatRoomScreen', {
           chatId: existingChat.id,
           chatName: recipientUser.name,
         });
@@ -223,7 +223,7 @@ export default function ChatListScreen({ navigation }) {
         const newChatRef = await addDoc(collection(db, 'chats'), newChatData);
         console.log('ChatList - New chat created:', newChatRef.id);
         
-        navigation.navigate('ChatRoom', {
+        navigation.navigate('ChatRoomScreen', {
           chatId: newChatRef.id,
           chatName: recipientUser.name,
         });
@@ -250,7 +250,7 @@ export default function ChatListScreen({ navigation }) {
 
   // Hàm mở một chat đã có
   const handleOpenChat = (item) => {
-    navigation.navigate('ChatRoom', {
+    navigation.navigate('ChatRoomScreen', {
       chatId: item.id,
       chatName: item.recipientName,
     });

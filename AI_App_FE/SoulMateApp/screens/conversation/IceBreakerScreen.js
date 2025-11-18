@@ -10,8 +10,6 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-
-// ⭐ Bé đã có file này rồi
 import aiClient from "../../services/aiClient";
 
 

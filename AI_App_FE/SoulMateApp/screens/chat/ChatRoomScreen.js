@@ -93,6 +93,7 @@ useEffect(() => {
 
   useEffect(() => {
     navigation.setOptions({
+      headerTitle: chatName,
       headerRight: () => (
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.headerButton} onPress={handleCall}>

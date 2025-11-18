@@ -23,10 +23,6 @@ import ProfileScreen from '../screens/my_profile/ProfileScreen';
 import NotificationScreen from '../screens/notification/NotificationScreen';
 import LoveMatchSelectScreen from '../screens/match/LoveMatchSelectScreen'
 
-
-// 📌 Chat Screens (THẬT)
-// import ChatListScreen from '../screens/conversation/ChatListScreen';
-import ChatScreen from '../screens/conversation/ChatScreen';
 // 💬 Chat Screens
 import ChatListScreen from '../screens/chat/ChatListScreen';
 import ChatRoomScreen from '../screens/chat/ChatRoomScreen';
@@ -58,7 +54,7 @@ function ChatStackScreen() {
   return (
     <ChatStack.Navigator screenOptions={{ headerShown: false }}>
       <ChatStack.Screen name="ChatList" component={ChatListScreen} />
-      <ChatStack.Screen name="ChatDetail" component={ChatScreen} />
+      {/* <ChatStack.Screen name="ChatDetail" component={ChatScreen} /> */}
       <ChatStack.Screen name="ConnectionActions" component={ConnectionActionsScreen} />
       <ChatStack.Screen name="IceBreaker" component={IceBreakerScreen} />
     </ChatStack.Navigator>
@@ -93,7 +89,7 @@ const MatchStack = createStackNavigator();
 function MatchStackScreen() {
   return (
     <MatchStack.Navigator screenOptions={{ headerShown: false }}>
-      <MatchStack.Screen name="MatchMain" component={ChatScreen} />
+      {/* <MatchStack.Screen name="MatchMain" component={ChatScreen} /> */}
       <MatchStack.Screen name="LoveMatchSelectScreen" component={LoveMatchSelectScreen} />
       {/* <MatchStack.Screen name="MatchingListScreen" component={MatchingListScreen} /> */}
     </MatchStack.Navigator>
