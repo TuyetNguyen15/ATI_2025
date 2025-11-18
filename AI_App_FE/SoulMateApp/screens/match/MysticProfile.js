@@ -1,7 +1,8 @@
-
 import React from "react";
-import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity } from "react-native";
 import { ELEMENT_MAP, ELEMENT_COLORS, ZODIAC_ICONS } from '../../constants/astrologyMap';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 
@@ -11,7 +12,8 @@ const CENTER_IMAGE_SIZE = width * 0.45;
 // BÁN KÍNH INFO XOAY QUANH
 const RADIUS = CENTER_IMAGE_SIZE * 0.75;
 
-export default function MysticProfile({ info }) {
+export default function MysticProfile({ info}) {
+  const navigation = useNavigation();
   const infoItems = [
     { label: `Tên: ${info.name || "Không rõ"}`, row: 1, col: 1 },
     { label: `Cung: ${info.zodiac || info.planets?.sun || "Không rõ"}`, row: 1, col: 2 },
@@ -22,8 +24,6 @@ export default function MysticProfile({ info }) {
     { label: `Nguyên tố: ${info.element || "Không rõ"}`, row: 3, col: 1 },
     { label: `Tính cách: ${info.personality || "Không rõ"}`, row: 3, col: 2 },
   ];
-
-
 
 
   return (
@@ -40,7 +40,6 @@ export default function MysticProfile({ info }) {
 
         {/* 🔵 INFO XOAY QUANH */}
         {infoItems.map((item, i) => {
-          // Set góc theo layout 3x2 của em
           const angleMap = {
             2: 300, // Tên
             5: 60,  // Cung
@@ -49,9 +48,8 @@ export default function MysticProfile({ info }) {
             4: 120, // Hợp
 
             3: 180, // Nguyên tố
-            1: 0,   // Tính cách (hàng cuối bên phải)
+            1: 0,   // Tính cách
           };
-
 
           const deg = angleMap[i];
           const rad = (deg * Math.PI) / 180;
@@ -83,7 +81,8 @@ export default function MysticProfile({ info }) {
       <View style={styles.compatBox}>
         <Text style={styles.compatTitle}>Hòa hợp chiêm tinh</Text>
         <Text style={styles.compatSub}>Dựa trên phân tích chiêm tinh từ hệ thống</Text>
-        {/* ⭐ ICON 2 CUNG TRÊN VÒNG TRÒN ⭐ */}
+
+        {/* ⭐ ICON 2 CUNG ⭐ */}
         <View style={styles.zodiacCircleBox}>
 
           {/* Icon cung của bạn */}
@@ -106,7 +105,7 @@ export default function MysticProfile({ info }) {
             </View>
           </View>
 
-          {/* Điểm hợp nằm chính giữa */}
+          {/* Điểm hợp ở giữa */}
           <View style={styles.scoreCenter}>
             <Text style={styles.scoreNumber}>
               {info.compatibility_score || info.compatScore || 0}%
@@ -114,7 +113,6 @@ export default function MysticProfile({ info }) {
           </View>
 
         </View>
-
 
         {/* 4 Chỉ số */}
         <View style={styles.metricsContainer}>
@@ -128,8 +126,23 @@ export default function MysticProfile({ info }) {
             <Metric label="Marriage" value={info.marriage} color="#5ff7a2" />
           </View>
         </View>
-
       </View>
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate("UserProfileScreen", { userId: info.uid })}
+        style={{ marginTop: 25 }}
+      >
+        <LinearGradient
+          colors={["#ffb6d9", "#b36dff"]}   // 💗 gradient giống nút dự đoán
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.detailGradient}
+        >
+          <Text style={styles.detailText}>Xem chi tiết</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+
+
     </View>
   );
 }
@@ -146,6 +159,7 @@ function Metric({ label, value, color }) {
   );
 }
 
+
 const styles = StyleSheet.create({
   wrapper: { alignItems: "center", width: "100%" },
 
@@ -161,9 +175,10 @@ const styles = StyleSheet.create({
   title: {
     position: "absolute",
     top: -10,
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "700",
+    color: "#e6dfd0",
+    fontSize: 26,
+    fontWeight: "600",
+    fontFamily: "Georgia",
   },
 
   centerImage: {
@@ -181,6 +196,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     maxWidth: width * 0.35,
   },
+
   infoText: {
     color: "#fff",
     fontSize: 14,
@@ -200,15 +216,17 @@ const styles = StyleSheet.create({
   },
 
   compatTitle: {
-    fontSize: 20,
-    color: "#fff",
-    fontWeight: "700",
+    color: "#e6dfd0",
+    fontSize: 26,
+    fontWeight: "600",
+    fontFamily: "Georgia",
     textAlign: "center",
   },
+
   compatSub: {
     textAlign: "center",
     color: "#ccc",
-    fontSize: 12,
+    fontSize: 18,
     marginTop: 4,
   },
 
@@ -242,6 +260,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     position: "relative",
   },
+
   zodiacItem: {
     position: "absolute",
     top: "30%",
@@ -252,18 +271,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     resizeMode: "contain",
-  },
-
-  zLabel: {
-    color: "#fff",
-    marginTop: 6,
-    fontSize: 15,
-    fontWeight: "700",
-  },
-
-  zElement: {
-    color: "#bbb",
-    fontSize: 12,
   },
 
   scoreCenter: {
@@ -280,11 +287,12 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 6,
   },
+
   iconBg: {
     width: 90,
     height: 90,
     borderRadius: 60,
-    backgroundColor: "rgba(255,255,255,0.12)",  // 🔮 glow mờ
+    backgroundColor: "rgba(255,255,255,0.12)",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#ffffff",
@@ -293,4 +301,27 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
 
+  detailGradient: {
+    paddingVertical: 12,
+    paddingHorizontal: 35,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+  
+    // Glow giống nút dự đoán
+    shadowColor: "#ffb6d9",
+    shadowOpacity: 0.45,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 8,
+  },
+  
+  detailText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  
+
 });
+

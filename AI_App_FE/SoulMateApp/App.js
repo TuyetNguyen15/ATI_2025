@@ -23,6 +23,7 @@ import BottomTabs from './components/BottomTabs';
 import UpdateAvatar from './screens/avatar/UpdateAvatar';
 import EditProfile from './screens/edit_profile/EditProfile';
 import NatalChartAnalysis from './screens/astrology_analysis/NatalChartAnalysis';
+import UserProfileScreen from './screens/user_profile/UserProfileScreen';
 import LoveMatchSelectScreen from './screens/match/LoveMatchSelectScreen';
 // Giữ Splash Screen hiển thị
 SplashScreen.preventAutoHideAsync();
@@ -61,7 +62,7 @@ function AppContent() {
         console.log('Auth: User detected → Loading Firestore profile...');
         try {
           // Tải profile của user vào Redux store
-          await loadUserProfile(user.uid); 
+          await loadUserProfile(user.uid);
           console.log('Auth: Profile loaded globally');
         } catch (err) {
           console.error('Auth: Failed to load profile:', err);
@@ -106,7 +107,7 @@ function AppContent() {
       <NavigationContainer>
         <Stack.Navigator
           // Bắt đầu bằng Onboarding (logic từ nhánh của bạn)
-          initialRouteName="Onboarding" 
+          initialRouteName="Onboarding"
           screenOptions={{ headerShown: false }}
         >
           {/* Gộp TẤT CẢ các màn hình từ cả 2 nhánh */}
@@ -119,6 +120,10 @@ function AppContent() {
           <Stack.Screen name="EditProfile" component={EditProfile} />
           <Stack.Screen name="NatalChartAnalysis" component={NatalChartAnalysis} />
           <Stack.Screen name="LoveMatchSelectScreen" component={LoveMatchSelectScreen} />
+          <Stack.Screen
+            name="UserProfileScreen"
+            component={UserProfileScreen}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </View>

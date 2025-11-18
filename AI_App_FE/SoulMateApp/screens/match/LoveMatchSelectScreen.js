@@ -15,18 +15,18 @@ import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import LoveMatchResultScreen from "../match/LoveMatchResultScreen";
-
+// import { getMatchResult } from "../../services/matchService";
 const { width } = Dimensions.get("window");
 
 // ⚠️ ĐỔI THÀNH IP CỦA EM
 const API_URL = "http://172.168.1.24:5000";
 
 const CATEGORIES = [
-  { key: "redflag", title: "Red Flag", img: require("../../assets/zodiacsigns/cugiai.png") },
-  { key: "greenflag", title: "Green Flag", img: require("../../assets/zodiacsigns/cugiai.png") },
-  { key: "karmic", title: "Karmic", img: require("../../assets/zodiacsigns/cugiai.png") },
-  { key: "destiny", title: "Destiny", img: require("../../assets/zodiacsigns/cugiai.png") },
-  { key: "twinflame", title: "Twin Flame", img: require("../../assets/zodiacsigns/cugiai.png") },
+  { key: "redflag", title: "Red Flag", img: require("../../assets/type/redflag.png") },
+  { key: "greenflag", title: "Green Flag", img: require("../../assets/type/greenflag.png") },
+  { key: "karmic", title: "Karmic", img: require("../../assets/type/karmic.png") },
+  { key: "destiny", title: "Destiny", img: require("../../assets/type/destiny.png") },
+  { key: "twinflame", title: "Twin Flame", img: require("../../assets/type/twin.png") },
 ];
 const DESC_MAP = {
   redflag: "Năng lượng mạnh nhưng khó kiểm soát. Hai người dễ kích hoạt điểm yếu của nhau, tạo ra va chạm và thử thách liên tục.",
@@ -48,28 +48,49 @@ export default function LoveMatchSelectScreen() {
     try {
       setLoading(true);
       setSingleMatchData(null);
-
+  
+      // 1️⃣ CHECK FIRESTORE TRƯỚC
+      const cached = await fetch(
+        `${API_URL}/love-matching/history/${user.uid}/${type}`
+      ).then(res => res.json());
+  
+      console.log("📌 CACHE CHECK:", cached);
+  
+      if (cached.success && cached.cached && cached.users.length > 0) {
+        console.log("⚡ LOAD FROM DB:", type);
+        setSingleMatchData(cached.users);
+        setLoading(false);
+        return;
+      }
+  
+      // 2️⃣ KHÔNG CÓ CACHE → GỌI AI
+      console.log("🤖 CALL AI:", type);
       const res = await axios.post(`${API_URL}/love-matching/${type}`, {
         uid: user.uid,
       });
-
+  
       if (res.data?.users) {
         setSingleMatchData(res.data.users);
       } else {
         setSingleMatchData([]);
       }
-
+  
     } catch (err) {
       console.log("LOAD MATCH ERROR:", err);
     } finally {
       setLoading(false);
     }
   };
-
+  
   // ⭐ AUTO LOAD GREEN FLAG NGAY KHI VÀO
   React.useEffect(() => {
-    loadSingleMatching("greenflag");
+    const timer = setTimeout(() => {
+      handleSelect("greenflag");
+    }, 200);
+  
+    return () => clearTimeout(timer);
   }, []);
+  
 
   // ⭐ Khi chọn loại khác
   const handleSelect = (type) => {
@@ -91,7 +112,7 @@ export default function LoveMatchSelectScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.scroll}>
-      <Text style={styles.title}>Chọn lá bài để khám phá</Text>
+      <Text style={styles.title}>Chọn Năng Lượng Giữa Hai Bạn</Text>
         {/* ⭐ 2 BOX TRÊN */}
         <View style={styles.row2}>
           {CATEGORIES.slice(0, 2).map((item) => (
@@ -163,9 +184,11 @@ const styles = StyleSheet.create({
   bg: { flex: 1 },
   overlay: { ...StyleSheet.absoluteFillObject },
   title: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "700",
+    color: "#e6dfd0",
+    fontSize: 26,
+    fontWeight: "600",
+    fontFamily: "Georgia",
+    letterSpacing: 1,
     marginBottom: 40,
   },
   scroll: {

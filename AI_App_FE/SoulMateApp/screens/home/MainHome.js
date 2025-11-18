@@ -18,21 +18,31 @@ import { getVietnameseDate } from "../../utils/date";
 import { ELEMENT_MAP, ELEMENT_COLORS, ZODIAC_ICONS } from '../../constants/astrologyMap';
 import useAstroAPI from '../../hook/useAstroAPI';
 import { loadUserProfile } from "../../services/profileLoader";
+
 const { width } = Dimensions.get('window');
+
+// ⭐ ĐỔI IP BACKEND Ở ĐÂY
+const API_URL = "http://172.168.1.24:5000";
+
 export default function HomeScreen({ navigation }) {
   const [scope, setScope] = useState('astro');
   const [loveMetrics, setLoveMetrics] = useState(null);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
-useEffect(() => {
-  dispatch(loadUserProfile());
-}, []);
+
+  // Load user profile
+  useEffect(() => {
+    dispatch(loadUserProfile());
+  }, []);
 
   const profile = useSelector((state) => state.profile);
   const { generatePrediction, generateLoveMetrics } = useAstroAPI();
+
   const element = ELEMENT_MAP[profile.sun] || '...';
   const elementColors = ELEMENT_COLORS[element] || ELEMENT_COLORS['Không xác định'];
   const zodiacIcon = ZODIAC_ICONS[profile.sun] || ZODIAC_ICONS['Không xác định'];
+
+  // Love metrics
   useEffect(() => {
     if (profile.uid && profile.sun && profile.moon) {
       const timer = setTimeout(() => {
@@ -43,12 +53,12 @@ useEffect(() => {
       console.log("Profile chưa sẵn sàng:");
     }
   }, [profile]);
-  
+
   const [currentDate, setCurrentDate] = useState(getVietnameseDate("today"));
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentDate(getVietnameseDate("today"));
-    }, 60000); // Cập nhật mỗi phút
+    }, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -77,24 +87,56 @@ useEffect(() => {
     setLoading(false);
   };
 
+
+  // ⭐ LOAD 5 NGƯỜI TƯƠNG HỢP ĐÃ LƯU TRONG FIRESTORE
+  const [fiveMatches, setFiveMatches] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      if (!profile.uid) return;
+
+      try {
+        // ⭐ API đúng để lấy Green Flag
+        const res = await fetch(
+          `${API_URL}/love-matching/history/${profile.uid}/greenflag`
+        );
+
+        const json = await res.json();
+        console.log("💚 GREENFLAG HISTORY:", json);
+
+        if (json.success && json.users.length > 0) {
+          setFiveMatches(json.users);
+        } else {
+          setFiveMatches([]);
+        }
+
+      } catch (err) {
+        console.log("💥 Lỗi load matching:", err);
+      }
+    }
+
+    load();
+  }, [profile.uid]);
+
   return (
     <ImageBackground
-      source={require('../../assets/sky.jpg')}
+      source={require('../../assets/background/homebg.jpg')}
       style={styles.background}
       resizeMode="cover"
     >
-      <Image source={require('../../assets/Moon.png')} style={styles.moon} />
 
       <ScrollView contentContainerStyle={styles.scroll}>
+
         {/* 🌙 Header */}
         <View style={styles.header}>
           <Text style={styles.date}>{currentDate}</Text>
           <Text style={styles.welcome}>Xin Chào, {profile.name || 'bạn'}</Text>
         </View>
 
-        {/* 🔘 Segment chọn scope */}
+        {/* 🔘 Segment */}
         <View style={styles.segmentContainer}>
           <View style={styles.segmentBg}>
+
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => setScope('astro')}
@@ -114,15 +156,16 @@ useEffect(() => {
                 Tình Duyên
               </Text>
             </TouchableOpacity>
+
           </View>
         </View>
 
-        {/* ---- NỘI DUNG ---- */}
+        {/* Nội dung */}
         {scope === 'astro' ? (
           <>
-            {/* 🔮 Zodiac Info */}
+            {/* 🔮 Zodiac info */}
             <View style={styles.zodiacBox}>
-              {/* Hàng 1 */}
+
               <View style={styles.row}>
                 <Text style={styles.infoText}>
                   <Text style={{ fontSize: 14, color: '#a8a8a8' }}>Mặt trời{'\n'}</Text>
@@ -135,12 +178,12 @@ useEffect(() => {
                 </Text>
               </View>
 
-              {/* 🪐 Hành tinh nằm giữa */}
               <View style={styles.centerCircle}>
                 <View style={styles.outerRing} />
                 <View style={styles.innerRing} />
                 <View style={styles.topinnerRing} />
                 <View style={styles.middleRing} />
+
                 <LinearGradient
                   colors={elementColors}
                   start={{ x: 0, y: 0 }}
@@ -152,7 +195,6 @@ useEffect(() => {
                 </LinearGradient>
               </View>
 
-              {/* Hàng 2 */}
               <View style={styles.row}>
                 <Text style={styles.infoText}>
                   <Text style={{ fontSize: 14, color: '#a8a8a8' }}>Điểm mọc{'\n'}</Text>
@@ -164,9 +206,9 @@ useEffect(() => {
                   <Text style={{ fontSize: 20 }}>{element}</Text>
                 </Text>
               </View>
+
             </View>
 
-            {/* 🔘 Nút dự đoán */}
             <TouchableOpacity style={styles.button} onPress={handleGeneratePrediction}>
               <LinearGradient
                 colors={elementColors}
@@ -180,7 +222,7 @@ useEffect(() => {
           </>
         ) : (
           <>
-            {/* 💞 Widget: Vận may & Cung hợp */}
+            {/* 💞 Widgets */}
             <View style={styles.loveRow}>
               <LinearGradient
                 colors={['rgba(255, 154, 201, 0.2)', 'rgba(179, 109, 255, 0.2)']}
@@ -212,7 +254,6 @@ useEffect(() => {
                 </View>
               </LinearGradient>
 
-              {/* Widget 2: Cung hợp */}
               <LinearGradient
                 colors={['rgba(255, 154, 201, 0.2)', 'rgba(179, 109, 255, 0.2)']}
                 style={styles.matchBox}
@@ -220,10 +261,12 @@ useEffect(() => {
                 <Text style={styles.matchTitle}>Cung hợp</Text>
                 <View style={styles.matchContent}>
                   <Image
-                    source={ZODIAC_ICONS[loveMetrics?.best_match] || ZODIAC_ICONS['Không xác định']}
+                    source={
+                      ZODIAC_ICONS[loveMetrics?.best_match] ||
+                      ZODIAC_ICONS['Không xác định']
+                    }
                     style={styles.matchAvatar}
                   />
-
                   <View>
                     <Text style={styles.matchName}>
                       {loveMetrics?.best_match || '—'}
@@ -254,60 +297,67 @@ useEffect(() => {
             </View>
           </>
         )}
-        {/* 🔮 Tương hợp – Box trong suốt */}
+
+        {/* ⭐ TƯƠNG HỢP */}
         <View style={styles.compatibilitySection}>
           <Text style={styles.sectionTitle}>Tương hợp</Text>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {[
-              {
-                name: 'Hwang Min Hyun',
-                zodiac: 'Ma Kết',
-                avatar: { uri: 'https://i.pinimg.com/1200x/14/53/6e/14536e887f26dfde53d711e8cc6492b5.jpg' },
-              },
-              {
-                name: 'Khánh Linh',
-                zodiac: 'Cự Giải',
-                avatar: { uri: 'https://i.pinimg.com/1200x/e7/2e/0d/e72e0db6ad46eac62c59883c9f49a96e.jpg' },
-              },
-              {
-                name: 'Bảo Nam',
-                zodiac: 'Sư Tử',
-                avatar: { uri: 'https://i.pinimg.com/1200x/e5/38/08/e53808d563550fbf1cf9a46410decfa9.jpg' },
-              },
-            ].map((item, index) => (
-              <View key={index} style={styles.glassBox}>
-                <Image source={item.avatar} style={styles.glassImage} />
-                <View style={styles.glassOverlay} />
-                <View style={styles.glassInfo}>
-                  <Text style={styles.glassName}>{item.name}</Text>
-                  <Text style={styles.glassZodiac}>{item.zodiac}</Text>
-                </View>
-              </View>
-            ))}
 
-            <TouchableOpacity style={styles.exploreButton}>
+            {fiveMatches && fiveMatches.length > 0 ? (
+              fiveMatches.map((item, index) => (
+                <View key={index} style={styles.glassBox}>
+
+                  {/* Avatar hoặc Icon zodiac */}
+                  <Image
+                    source={
+                      item.avatar
+                        ? { uri: item.avatar }
+                        : require("../../assets/default_avatar.jpg")   
+                    }
+                    style={styles.glassImage}
+                  />
+
+
+                  <View style={styles.glassInfo}>
+                    <Text style={styles.glassName}>{item.name}</Text>
+                    <Text style={styles.glassZodiac}>{item.zodiac}</Text>
+                  </View>
+
+                </View>
+              ))
+            ) : (
+              <View style={{ justifyContent: "center", alignItems: "center", marginRight: 20 }}>
+                <Text style={{ color: "#fff", opacity: 0.7 }}>Chưa có dữ liệu tương hợp</Text>
+                <Text style={{ color: "#ccc", fontSize: 12 }}>Hãy thử xem tương hợp trong mục Tình Duyên</Text>
+              </View>
+            )}
+
+            {/* Nút xem thêm */}
+            <TouchableOpacity
+              style={styles.exploreButton}
+              onPress={() => navigation.navigate("LoveMatchSelectScreen")}
+            >
               <LinearGradient
                 colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.05)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
                 style={styles.exploreGradient}
               >
                 <Ionicons name="arrow-forward" size={32} color="#fff" />
               </LinearGradient>
             </TouchableOpacity>
+
           </ScrollView>
+
         </View>
-
-
-
 
       </ScrollView>
     </ImageBackground>
   );
 }
 
-// 🧾 Styles
+
+
+// 📌 Styles (GIỮ NGUYÊN NHƯ CỦA BÉ)
 const styles = StyleSheet.create({
   moon: {
     position: 'absolute',
@@ -320,10 +370,10 @@ const styles = StyleSheet.create({
   background: { flex: 1 },
   scroll: { alignItems: 'center', paddingBottom: 120 },
   header: { bottom: 30, alignItems: 'center', marginTop: 130 },
-  date: { color: '#dcdcdc', fontSize: 20, opacity: 0.8 },
+  date: { color: '#dcdcdc', fontSize: 26, opacity: 0.8 },
   welcome: {
     color: '#fff',
-    fontSize: 32,
+    fontSize: 42,
     fontWeight: '700',
     marginTop: 6,
     textShadowColor: 'rgba(0, 0, 0, 0.7)',
@@ -355,6 +405,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 8,
     elevation: 4,
+    opacity: 0.8,
   },
   segmentText: { color: '#bfb9d9', fontSize: 16, fontWeight: '600' },
   segmentTextActive: { color: '#ffffff' },
@@ -369,6 +420,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   outerRing: {
     position: 'absolute',
     width: 160,
@@ -411,19 +463,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#83d2ff',
     transform: [{ rotate: '-95deg' }],
   },
-  /* --- Tarot Section --- */
-  compatibilitySection: {
-    width: '100%',
-    marginTop: 65,
-    alignItems: 'flex-start',
-    paddingLeft: 20,
-  },
-  sectionTitle: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: '600',
-    marginBottom: 20,
-  },
+
   compatibilitySection: {
     width: '100%',
     marginTop: 60,
@@ -460,7 +500,6 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 15,
     resizeMode: 'cover',
-
   },
 
   glassInfo: {
@@ -472,7 +511,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
-
   },
   glassZodiac: {
     color: '#d8d8d8',
@@ -496,6 +534,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 10,
   },
+
   zodiacIcon: { width: 90, height: 90, tintColor: '#fff', opacity: 0.95 },
   circleGradient: {
     width: 130,
@@ -535,6 +574,7 @@ const styles = StyleSheet.create({
   },
   loveBarFill: { height: '100%', borderRadius: 10 },
   lovePercent: { color: '#fff', fontSize: 16, fontWeight: '600', marginTop: 5, textAlign: 'right' },
+
   matchBox: {
     width: '48%',
     borderRadius: 18,
@@ -547,6 +587,7 @@ const styles = StyleSheet.create({
   matchAvatar: { width: 55, height: 55, borderRadius: 28, marginRight: 15 },
   matchName: { color: '#fff', fontSize: 17, fontWeight: '600' },
   matchPercent: { color: '#ffb6d9', fontSize: 15 },
+
   quoteBox: { width: '90%', alignSelf: 'center', marginTop: 20, marginBottom: 20, alignItems: 'center' },
   quoteGradient: {
     borderRadius: 20,

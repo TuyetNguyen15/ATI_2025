@@ -7,6 +7,8 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+
 
 import { useSelector } from "react-redux";
 import { ELEMENT_MAP } from "../../constants/astrologyMap";
@@ -26,6 +28,7 @@ const cards = [
 
 export default function LoveMatchResultScreen({ type, people }) {
   const [selected, setSelected] = useState(null);
+  const navigation = useNavigation();
 
   // ⭐ Lấy dữ liệu user đang đăng nhập
   const profile = useSelector((state) => state.profile);
@@ -113,14 +116,13 @@ export default function LoveMatchResultScreen({ type, people }) {
           info={{
             ...people[selected],
 
-            // ⭐ CUNG CỦA EM
             myZodiac: profile.sun,
             myElement: ELEMENT_MAP[profile.sun],
 
-            // ⭐ CUNG ĐỐI PHƯƠNG
             otherZodiac: people[selected].zodiac,
             otherElement: people[selected].element,
           }}
+          
         />
       )}
     </View>
@@ -134,11 +136,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "700",
+    color: "#e6dfd0",
+    fontSize: 26,
+    fontWeight: "600",
+    fontFamily: "Georgia",
+    letterSpacing: 1,
     marginBottom: 40,
   },
+  
   board: {
     width: width,
     height: width * 0.55,
