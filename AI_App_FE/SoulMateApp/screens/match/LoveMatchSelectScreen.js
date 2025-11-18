@@ -19,7 +19,7 @@ import LoveMatchResultScreen from "../match/LoveMatchResultScreen";
 const { width } = Dimensions.get("window");
 
 // ⚠️ ĐỔI THÀNH IP CỦA EM
-const API_URL = "http://172.168.1.24:5000";
+const API_URL = "http://127.0.0.1:5000";
 
 const CATEGORIES = [
   { key: "redflag", title: "Red Flag", img: require("../../assets/type/redflag.png") },

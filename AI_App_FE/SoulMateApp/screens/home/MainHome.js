@@ -22,7 +22,7 @@ import { loadUserProfile } from "../../services/profileLoader";
 const { width } = Dimensions.get('window');
 
 // ⭐ ĐỔI IP BACKEND Ở ĐÂY
-const API_URL = "http://172.168.1.24:5000";
+const API_URL = "http://127.0.0.1:5000";
 
 export default function HomeScreen({ navigation }) {
   const [scope, setScope] = useState('astro');
