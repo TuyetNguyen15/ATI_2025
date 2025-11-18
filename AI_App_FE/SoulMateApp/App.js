@@ -1,4 +1,5 @@
-// 📄 App.js (bản chuẩn – không còn conflict)
+// 📄 App.js — Bản chuẩn nhất (2025) ✔
+// Đã fix đầy đủ đường dẫn + đăng ký Navigator
 
 import * as React from 'react';
 import { View, ActivityIndicator } from 'react-native';
@@ -11,10 +12,6 @@ import { auth } from './config/firebaseConfig';
 import { loadUserProfile } from './services/profileLoader';
 import * as SplashScreen from 'expo-splash-screen';
 
-// ❌ XOÁ import này ⛔
-// import ConnectionActionsScreen from './screens/conversation/ConnectionActionsScreen';
-// import IceBreakerScreen from './screens/conversation/IceBreakerScreen';
-
 // Onboarding + Auth
 import OnboardingScreen from './onboardingScreen/OnboardingScreen';
 import LoginScreen from './screens/auth/LoginScreen';
@@ -26,6 +23,10 @@ import BottomTabs from './components/BottomTabs';
 import UpdateAvatar from './screens/avatar/UpdateAvatar';
 import EditProfile from './screens/edit_profile/EditProfile';
 import NatalChartAnalysis from './screens/astrology_analysis/NatalChartAnalysis';
+
+// ⭐ ĐÚNG ĐƯỜNG DẪN (có src/)
+import ConnectionActionsScreen from './screens/conversation/ConnectionActionsScreen';
+import IceBreakerScreen from './screens/conversation/IceBreakerScreen';
 
 SplashScreen.preventAutoHideAsync();
 const Stack = createStackNavigator();
@@ -64,12 +65,18 @@ function AppContent() {
     }
   }, [appIsReady]);
 
-
   if (!appIsReady) return null;
 
   if (isInitializing) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#000',
+        }}
+      >
         <ActivityIndicator size="large" color="#ff77a9" />
       </View>
     );
@@ -82,17 +89,30 @@ function AppContent() {
           initialRouteName="Onboarding"
           screenOptions={{ headerShown: false }}
         >
-          {/* ⭐ KHÔNG CÒN ConnectionActions ở đây */}
-          {/* ⭐ KHÔNG CÒN IceBreakerScreen ở đây */}
 
+          {/* AUTH FLOW */}
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="RegisterScreen1" component={RegisterScreen1} />
           <Stack.Screen name="RegisterScreen2" component={RegisterScreen2} />
+
+          {/* MAIN APP */}
           <Stack.Screen name="Main" component={BottomTabs} />
           <Stack.Screen name="UpdateAvatar" component={UpdateAvatar} />
           <Stack.Screen name="EditProfile" component={EditProfile} />
           <Stack.Screen name="NatalChartAnalysis" component={NatalChartAnalysis} />
+
+          {/* ⭐ MÀN KẾT NỐI — BẮT BUỘC PHẢI CÓ */}
+          <Stack.Screen
+            name="ConnectionActionsScreen"
+            component={ConnectionActionsScreen}
+          />
+
+          {/* ⭐ MÀN ICE BREAKER — CHÍNH MÀN GÂY LỖI */}
+          <Stack.Screen
+            name="IceBreakerScreen"
+            component={IceBreakerScreen}
+          />
 
         </Stack.Navigator>
       </NavigationContainer>

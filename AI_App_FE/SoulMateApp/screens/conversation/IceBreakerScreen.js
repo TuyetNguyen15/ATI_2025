@@ -6,41 +6,51 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
-const initialSuggestions = [
-  {
-    id: "1",
-    time: "12h trước",
-    text: "Nghe nói Bạch Dương hay thích thử thách, hãy thử hỏi họ về những trải nghiệm phiêu lưu hoặc hoạt động thể thao mà họ yêu thích.",
-  },
-  {
-    id: "2",
-    time: "Hôm qua",
-    text: "Hỏi họ xem gần đây có bộ phim, cuốn sách hay bài nhạc nào làm họ nhớ mãi không rồi bắt chuyện từ đó.",
-  },
-  {
-    id: "3",
-    time: "Gần đây",
-    text: "Rủ họ kể về một kỷ niệm vui gần đây nhất, sau đó chia sẻ câu chuyện của bạn để tạo cảm giác đồng điệu.",
-  },
-];
+// ⭐ Bé đã có file này rồi
+import aiClient from "../../services/aiClient";
+
 
 export default function IceBreakerScreen({ navigation, route }) {
   const partnerName = route?.params?.partnerName ?? "người này";
 
-  const [suggestions, setSuggestions] = useState(initialSuggestions);
+  // ❌ XÓA 3 DEMO — GIỮ DANH SÁCH TRỐNG
+  const [suggestions, setSuggestions] = useState([]);
 
-  const handleGenerateMore = () => {
-    // Tạm thời random thêm 1 suggestion demo.
-    const newItem = {
-      id: Date.now().toString(),
-      time: "Vừa xong",
-      text: `Thử hỏi ${partnerName} xem chuyến đi mà họ mơ ước nhất là ở đâu, rồi gợi ý “hay là sau này mình đi chung nhỉ”.`,
-    };
-    setSuggestions((prev) => [newItem, ...prev]);
+  const [loading, setLoading] = useState(false);
+
+  const handleGenerateMore = async () => {
+    try {
+      setLoading(true);
+
+      // ⭐ Prompt Fireworks AI
+      const prompt = `
+      Bạn là AI tạo câu mở đầu cuộc trò chuyện thật tự nhiên. 
+      Hãy tạo một câu Ice-breaker cực duyên để bắt chuyện với "${partnerName}".
+      Câu văn ngắn gọn, ấm áp, dễ mở đầu.
+      Trả về chỉ 1 câu, không giải thích.
+      `;
+
+      const response = await aiClient.generateText(prompt);
+
+      const text = response?.trim() || "Hỏi họ về điều khiến họ vui gần đây nhé!";
+
+      const newItem = {
+        id: Date.now().toString(),
+        time: "Vừa xong",
+        text,
+      };
+
+      setSuggestions((prev) => [newItem, ...prev]);
+    } catch (err) {
+      console.log("AI Error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -59,7 +69,7 @@ export default function IceBreakerScreen({ navigation, route }) {
         <View style={{ width: 26 }} />
       </View>
 
-      {/* Thời gian / nhãn nhỏ trên đầu */}
+      {/* Sub label */}
       <View style={styles.subHeader}>
         <Text style={styles.subLabel}>
           Gợi ý để bắt chuyện với {partnerName}
@@ -90,13 +100,22 @@ export default function IceBreakerScreen({ navigation, route }) {
             </LinearGradient>
           </View>
         ))}
+
+        {/* Loading indicator */}
+        {loading && (
+          <View style={{ alignItems: "center", marginTop: 16 }}>
+            <ActivityIndicator size="large" color="#ff77a9" />
+            <Text style={{ color: "#fff", marginTop: 6 }}>Đang tạo gợi ý...</Text>
+          </View>
+        )}
       </ScrollView>
 
-      {/* Nút bóng đèn dưới đáy màn hình */}
+      {/* Bóng đèn */}
       <View style={styles.bottomBar}>
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={handleGenerateMore}
+          disabled={loading}
           style={styles.bulbButtonWrapper}
         >
           <LinearGradient
@@ -105,7 +124,11 @@ export default function IceBreakerScreen({ navigation, route }) {
             end={{ x: 0.8, y: 1 }}
             style={styles.bulbButton}
           >
-            <Ionicons name="bulb" size={26} color="#3b1100" />
+            {loading ? (
+              <ActivityIndicator size="small" color="#3b1100" />
+            ) : (
+              <Ionicons name="bulb" size={26} color="#3b1100" />
+            )}
           </LinearGradient>
           <Text style={styles.bulbLabel}>Gợi ý thêm câu mở đầu</Text>
         </TouchableOpacity>
@@ -115,9 +138,7 @@ export default function IceBreakerScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     paddingTop: 50,
     paddingHorizontal: 20,
@@ -126,47 +147,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  title: {
-    fontSize: 20,
-    color: "#ffffff",
-    fontWeight: "600",
-    letterSpacing: 0.5,
-  },
-  subHeader: {
-    paddingHorizontal: 20,
-    paddingBottom: 8,
-  },
-  subLabel: {
-    fontSize: 13,
-    color: "rgba(255,255,255,0.6)",
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 100,
-  },
-  itemWrapper: {
-    marginBottom: 18,
-  },
+  title: { fontSize: 20, color: "#ffffff", fontWeight: "600" },
+  subHeader: { paddingHorizontal: 20, paddingBottom: 8 },
+  subLabel: { fontSize: 13, color: "rgba(255,255,255,0.6)" },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
+  itemWrapper: { marginBottom: 18 },
   timeText: {
     fontSize: 11,
     color: "rgba(255,255,255,0.5)",
     marginBottom: 6,
-    alignSelf: "flex-start",
   },
   bubble: {
     borderRadius: 18,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    shadowColor: "#ff6fae",
-    shadowOpacity: 0.5,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 4 },
   },
-  bubbleHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
-  },
+  bubbleHeader: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
   iconCircle: {
     width: 24,
     height: 24,
@@ -188,19 +184,13 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: "center",
   },
-  bulbButtonWrapper: {
-    alignItems: "center",
-  },
+  bulbButtonWrapper: { alignItems: "center" },
   bulbButton: {
     width: 64,
     height: 64,
     borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#ffdd7f",
-    shadowOpacity: 0.8,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 0 },
   },
   bulbLabel: {
     marginTop: 8,
