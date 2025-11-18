@@ -6,9 +6,10 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
+
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { CommonActions } from '@react-navigation/native';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,7 +17,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 // 🏠 Screens
 import HomeScreen from '../screens/home/MainHome';
 import PredictionScreen from '../screens/home/PredictionScreen';
-import ProfileScreen from '../profile/ProfileScreen';
+import ProfileScreen from '../screens/my_profile/ProfileScreen';
+import NotificationScreen from '../screens/notification/NotificationScreen';
+import LoveMatchSelectScreen from '../screens/match/LoveMatchSelectScreen'
+
 
 // 📌 Chat Screens (THẬT)
 import ChatListScreen from '../screens/conversation/ChatListScreen';
@@ -78,6 +82,46 @@ function HomeStackScreen() {
     </HomeStack.Navigator>
   );
 }
+// match screen
+const MatchStack = createStackNavigator();
+
+function MatchStackScreen() {
+  return (
+    <MatchStack.Navigator screenOptions={{ headerShown: false }}>
+      <MatchStack.Screen name="MatchMain" component={ChatScreen} />
+      <MatchStack.Screen name="LoveMatchSelectScreen" component={LoveMatchSelectScreen} />
+      {/* <MatchStack.Screen name="MatchingListScreen" component={MatchingListScreen} /> */}
+    </MatchStack.Navigator>
+  );
+}
+function MatchTabButton(props) {
+  const navigation = useNavigation();
+  return (
+    <TouchableOpacity
+      {...props}
+      activeOpacity={0.7}
+      style={styles.centerButton}
+      onPress={() =>
+        navigation.navigate("Match", {
+          screen: "LoveMatchSelectScreen"
+        })
+      }
+    >
+      <LinearGradient
+        colors={['#ff7bbf', '#b36dff']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.heartGradient}
+      >
+        <Ionicons name="heart" size={38} color="#fff" />
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+}
+
+
+
+
 
 export default function BottomTabs() {
   return (
@@ -101,9 +145,23 @@ export default function BottomTabs() {
             />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            navigation.dispatch(
+              CommonActions.navigate({
+                name: 'Home',
+                params: {
+                  screen: 'HomeMain',
+
+                },
+              })
+            );
+          },
+        })}
       />
 
-      {/* NOTIF */}
+
+      {/* 🔔 Thông báo */}
       <Tab.Screen
         name="Notifications"
         component={NotificationScreen}
@@ -121,22 +179,14 @@ export default function BottomTabs() {
       {/* CENTER HEART */}
       <Tab.Screen
         name="Match"
-        component={DummyChat}
+        component={MatchStackScreen}
+        // component={DummyChat}
         options={{
-          tabBarIcon: () => (
-            <TouchableOpacity activeOpacity={0.7} style={styles.centerButton}>
-              <LinearGradient
-                colors={['#ff7bbf', '#b36dff']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.heartGradient}
-              >
-                <Ionicons name="heart" size={38} color="#fff" />
-              </LinearGradient>
-            </TouchableOpacity>
-          ),
+          tabBarButton: (props) => <MatchTabButton {...props} />,
         }}
       />
+
+
 
       {/* CHAT REAL */}
       <Tab.Screen

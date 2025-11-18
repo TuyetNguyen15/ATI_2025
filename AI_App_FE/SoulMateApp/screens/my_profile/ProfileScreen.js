@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, Pressable, View, RefreshControl } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
-import { auth } from '../config/firebaseConfig';
-import { loadUserProfile } from '../services/profileLoader';
-import { useRefresh } from '../hook/useRefresh';
+import { auth } from '../../config/firebaseConfig';
+import { loadUserProfile } from '../../services/profileLoader';
+import { useRefresh } from '../../hook/useRefresh';
 
 import ProfileHeader from './components/ProfileHeader';
 import PersonalInfo from './components/PersonalInfo';
 import NatalChart from './components/NatalChart';
 import AstrologyDetails from './components/AstrologyDetails';
-import MatchedHistory from './components/MatchedHistory';
 
 export default function ProfileScreen({ navigation }) {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -70,7 +69,6 @@ export default function ProfileScreen({ navigation }) {
           <PersonalInfo navigation={navigation} />
           <AstrologyDetails />
           <NatalChart />
-          <MatchedHistory />
         </Pressable>
       </ScrollView>
       

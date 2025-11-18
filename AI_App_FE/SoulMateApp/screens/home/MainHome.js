@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { getVietnameseDate } from "../../utils/date";
 import { ELEMENT_MAP, ELEMENT_COLORS, ZODIAC_ICONS } from '../../constants/astrologyMap';
 import useAstroAPI from '../../hook/useAstroAPI';
@@ -23,13 +23,12 @@ export default function HomeScreen({ navigation }) {
   const [scope, setScope] = useState('astro');
   const [loveMetrics, setLoveMetrics] = useState(null);
   const [loading, setLoading] = useState(false);
-  const profile = useSelector((state) => state.profile);
-  useEffect(() => {
-    if (profile.uid) {
+  const dispatch = useDispatch();
+useEffect(() => {
+  dispatch(loadUserProfile());
+}, []);
 
-      loadUserProfile(profile.uid);
-    }
-  }, [profile.uid]);
+  const profile = useSelector((state) => state.profile);
   const { generatePrediction, generateLoveMetrics } = useAstroAPI();
   const element = ELEMENT_MAP[profile.sun] || '...';
   const elementColors = ELEMENT_COLORS[element] || ELEMENT_COLORS['Không xác định'];
@@ -44,6 +43,7 @@ export default function HomeScreen({ navigation }) {
       console.log("Profile chưa sẵn sàng:");
     }
   }, [profile]);
+  
   const [currentDate, setCurrentDate] = useState(getVietnameseDate("today"));
   useEffect(() => {
     const interval = setInterval(() => {

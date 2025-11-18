@@ -1,4 +1,3 @@
-// redux/profileSlice.js (Updated)
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
@@ -13,6 +12,7 @@ const initialState = {
   job: "",
   email: "",
   password: "",
+  relationshipStatus: "Độc thân",
   
   // Planets 
   sun: "",
@@ -80,6 +80,11 @@ const profileSlice = createSlice({
       const { field, value } = action.payload;
       state[field] = value;
     },
+
+    // Set trạng thái độc thân
+    setRelationshipStatus: (state, action) => {
+        state.relationshipStatus = action.payload;
+    },
     
     // Set matched history
     setMatchedHistory: (state, action) => {
@@ -99,6 +104,7 @@ const profileSlice = createSlice({
 export const { 
   setProfileData, 
   updateProfileField, 
+  setRelationshipStatus,
   setMatchedHistory, 
   setStatus, 
   resetProfile 
