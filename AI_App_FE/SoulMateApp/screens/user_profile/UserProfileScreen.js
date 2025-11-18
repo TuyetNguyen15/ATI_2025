@@ -1,61 +1,70 @@
-import React, { useState, useEffect } from 'react';
-import { ScrollView, Pressable, View, RefreshControl } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
-import { auth } from '../../config/firebaseConfig';
-import { loadUserProfile } from '../../services/profileLoader';
-import { useRefresh } from '../../hook/useRefresh';
+  import React, { useState, useEffect } from 'react';
+  import { ScrollView, RefreshControl, View, Text } from 'react-native';
+  import { doc, getDoc } from "firebase/firestore";
+  import { db } from "../../config/firebaseConfig";
 
-import UserProfileHeader from './components/UserProfileHeader';
-import UserPersonalInfo from './components/UserPersonalInfo';
+  import UserProfileHeader from './components/UserProfileHeader';
+  import UserPersonalInfo from './components/UserPersonalInfo';
 
-export default function UserProfileScreen({ navigation }) {
-  const [menuVisible, setMenuVisible] = useState(false);
-  const dispatch = useDispatch();
-  
-  // Lấy status từ Redux để kiểm tra trạng thái loading
-  const profileStatus = useSelector((state) => state.profile.status);
+  export default function UserProfileScreen({ route, navigation }) {
+    const uid = route?.params?.uid;
 
-  // ✨ Sử dụng custom hook để xử lý refresh
-  const { refreshing, onRefresh } = useRefresh(async () => {
-    const userId = auth.currentUser?.uid;
-    if (userId) {
-      // await loadUserProfile(userId, dispatch);
-      await dispatch(loadUserProfile(userId));
+    console.log("👤 UserProfileScreen nhận uid:", uid);
+
+    const [userData, setUserData] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchUser = async () => {
+      if (!uid) {
+        console.log("❌ Không có UID để load profile");
+        return;
+      }
+
+      const ref = doc(db, "users", uid);
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        console.log("📄 Đã load user:", snap.data());
+        setUserData(snap.data());
+      } else {
+        console.log("❌ Không tìm thấy user trong Firestore");
+      }
+    };
+
+    useEffect(() => {
+      fetchUser();
+    }, [uid]);
+
+    const onRefresh = async () => {
+      setRefreshing(true);
+      await fetchUser();
+      setRefreshing(false);
+    };
+
+    // ⭐ NẾU CHƯA LOAD ĐƯỢC, ĐỪNG RENDER COMP BÊN DƯỚI
+    if (!userData) {
+      return <View style={{flex:1, backgroundColor:"#000"}} />;
     }
-  });
 
-  // Load profile khi component mount
-  useEffect(() => {
-    const userId = auth.currentUser?.uid;
-    if (userId && profileStatus === 'idle') {
-      loadUserProfile(userId, dispatch);
-    }
-  }, [dispatch, profileStatus]);
-
-  return (
-    <View style={{ flex: 1 }}>
-      <ScrollView 
-        style={{ backgroundColor: '#000' }}
-        scrollEventThrottle={16}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            // Tùy chỉnh màu sắc cho iOS và Android
-            tintColor="#ff7bbf" // iOS
-            colors={['#ff7bbf', '#b36dff']} // Android
-            progressBackgroundColor="#1a1a1a" // Android
-            title="Đang tải lại..." // iOS
-            titleColor="#ff7bbf" // iOS
-          />
-        }
-      >
-        <UserProfileHeader 
-          navigation={navigation}
-        />
-        <UserPersonalInfo navigation={navigation} />
-      </ScrollView>
-
-    </View>
-  );
-}
+    return (
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          style={{ backgroundColor: '#000' }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#ff7bbf"
+              colors={['#ff7bbf']}
+            />
+          }
+        >
+          <UserProfileHeader navigation={navigation} user={userData} />
+          <UserPersonalInfo 
+    navigation={navigation} 
+    userData={userData} 
+/>
+        </ScrollView>
+      </View>
+    );
+  }

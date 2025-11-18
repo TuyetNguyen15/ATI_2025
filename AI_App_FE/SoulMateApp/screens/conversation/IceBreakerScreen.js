@@ -16,6 +16,8 @@ import aiClient from "../../services/aiClient";
 
 
 export default function IceBreakerScreen({ navigation, route }) {
+  const uid = route?.params?.uid;
+
   const partnerName = route?.params?.partnerName ?? "người này";
 
   // ❌ XÓA 3 DEMO — GIỮ DANH SÁCH TRỐNG

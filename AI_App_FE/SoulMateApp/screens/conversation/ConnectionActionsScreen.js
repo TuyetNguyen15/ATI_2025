@@ -20,59 +20,64 @@ const actions = [
 ];
 
 export default function ConnectionActionsScreen({ navigation, route }) {
-  const partner = route?.params?.partner || {};
-  const partnerUid = partner?.uid;
-  const partnerName = partner?.name ?? "Đối tượng của bạn";
+
+  // ⭐ LẤY UID NGƯỜI ĐỐI DIỆN
+  const partnerId = route?.params?.partnerId;
+  const partnerName = route?.params?.partnerName;
+
+
+  console.log("🔍 ConnectionActionsScreen - partnerId:", partnerId);
 
   const handlePress = (action) => {
+    if (!partnerId) {
+      Alert.alert("Lỗi", "Không tìm thấy UID người đối diện!");
+      return;
+    }
+
     switch (action.id) {
       case "icebreaker":
-        navigation.navigate("IceBreakerScreen", { partner });
+        navigation.navigate("IceBreakerScreen", { 
+          uid: partnerId,
+          
+        });
         break;
 
       case "profile":
-        navigation.navigate("UserProfileScreen", { partner });
+        navigation.navigate("UserProfileScreen", { uid: partnerId });
         break;
 
       case "compat":
-        navigation.navigate("DetailedCompatScreen", { partner });
+        navigation.navigate("DetailedCompatScreen", { uid: partnerId });
         break;
 
       case "block":
-        handleBlockUser();
-        break;
-
-      default:
+        confirmBlockUser();
         break;
     }
   };
 
-  // ⭐ Xử lý block user
-  const handleBlockUser = () => {
+  const confirmBlockUser = () => {
     Alert.alert(
       "Block người này?",
-      `Bạn có chắc chắn muốn block ${partnerName}?`,
+      "Bạn có chắc muốn block người này không?",
       [
         { text: "Hủy", style: "cancel" },
-        {
-          text: "Block",
-          style: "destructive",
-          onPress: async () => {
-            const myUid = auth.currentUser?.uid;
-
-            if (!myUid || !partnerUid) {
-              Alert.alert("Lỗi", "Không xác định được người dùng.");
-              return;
-            }
-
-            await blockUser(myUid, partnerUid);
-
-            Alert.alert("Đã block thành công!");
-            navigation.goBack();
-          },
-        },
+        { text: "Block", style: "destructive", onPress: blockThisUser },
       ]
     );
+  };
+
+  const blockThisUser = async () => {
+    const myUid = auth.currentUser?.uid;
+
+    if (!myUid || !partnerId) {
+      Alert.alert("Lỗi", "Không xác định được người dùng.");
+      return;
+    }
+
+    await blockUser(myUid, partnerId);
+    Alert.alert("Đã block thành công!");
+    navigation.goBack();
   };
 
   return (
@@ -82,15 +87,16 @@ export default function ConnectionActionsScreen({ navigation, route }) {
       end={{ x: 0.5, y: 1 }}
       style={styles.container}
     >
-      {/* Header */}
+      {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={26} color="#ffffff" />
         </TouchableOpacity>
-        <Text style={styles.title}>Tính năng</Text>
+        <Text style={styles.title}>Cài Đặt</Text>
         <View style={{ width: 26 }} />
       </View>
 
+      {/* ACTION LIST */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

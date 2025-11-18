@@ -1,15 +1,14 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 
-export default function UserProfileHeader({ userData }) {
-  const { name, sun, avatar, coverImage } = userData || {};
+export default function UserProfileHeader({ user }) {
+  const { name, sun, avatar, coverImage } = user || {};
 
   const defaultCover = require('../../../assets/default_cover_image.jpg');
   const defaultAvatar = require('../../../assets/default_avatar.jpg');
 
   return (
     <View style={styles.container}>
-      {/* Cover Image */}
       <View style={styles.coverContainer}>
         <Image
           source={coverImage ? { uri: coverImage } : defaultCover}
@@ -17,7 +16,6 @@ export default function UserProfileHeader({ userData }) {
         />
       </View>
 
-      {/* Avatar */}
       <View style={styles.avatarContainer}>
         <Image
           source={avatar ? { uri: avatar } : defaultAvatar}
@@ -25,7 +23,6 @@ export default function UserProfileHeader({ userData }) {
         />
       </View>
 
-      {/* Info */}
       <Text style={styles.name}>{name || "Người dùng"}</Text>
       <Text style={styles.zodiac}>{sun || "Chưa cập nhật"}</Text>
     </View>
@@ -33,13 +30,11 @@ export default function UserProfileHeader({ userData }) {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    alignItems: 'center', 
-    marginBottom: 20 
+  container: {
+    alignItems: 'center',
+    marginBottom: 20,
   },
-
   coverContainer: {
-    position: 'relative',
     width: '100%',
   },
   coverImage: {
@@ -49,7 +44,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
   },
   avatarContainer: {
-    position: 'relative',
     alignItems: 'center',
     marginTop: -60,
   },
@@ -60,15 +54,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
   },
-  name: { 
-    fontSize: 20, 
-    color: '#fff', 
-    fontWeight: '600', 
-    marginTop: 10 
+  name: {
+    fontSize: 20,
+    color: '#fff',
+    fontWeight: '600',
+    marginTop: 10,
   },
-  zodiac: { 
-    fontSize: 16, 
-    color: '#999', 
-    marginTop: 5 
+  zodiac: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 5,
   },
 });
