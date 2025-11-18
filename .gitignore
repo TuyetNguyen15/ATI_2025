@@ -1,3 +1,6 @@
 AI_App_BE/venv/
 AI_App_BE/.venv/
 
+package.json
+package-lock.json
+node_modules/

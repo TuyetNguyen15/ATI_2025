@@ -24,6 +24,7 @@ import {
   onSnapshot,
   query,
   orderBy,
+  getDoc,
   doc,
   updateDoc,
   serverTimestamp,
@@ -43,6 +44,24 @@ export default function ChatRoomScreen({ route, navigation }) {
   const currentUserId = currentUser?.uid;
   const currentUserName = currentUser?.name || 'Unknown User';
   const currentUserAvatar = currentUser?.avatar;
+
+  // ⭐ BÉ THÊM ĐÚNG VÀO ĐÂY 👇👇👇
+const [partnerId, setPartnerId] = useState(null);
+
+useEffect(() => {
+  const fetchPartner = async () => {
+    const chatRef = doc(db, "chats", chatId);
+    const snap = await getDoc(chatRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      const other = data.members?.find((m) => m !== currentUserId);
+      console.log("🎯 PARTNER FOUND:", other);
+      setPartnerId(other);
+    }
+  };
+
+  if (chatId && currentUserId) fetchPartner();
+}, [chatId, currentUserId]);
 
   useEffect(() => {
     (async () => {
@@ -428,11 +447,17 @@ export default function ChatRoomScreen({ route, navigation }) {
                 style={styles.menuItem}
                 onPress={() => {
                   setShowMenu(false);
-                  navigation.navigate('ChatSettings', { chatId, chatName });
+                  navigation.navigate("ConnectionActionsScreen", {
+                    chatId,
+                    chatName,
+                    partnerId,
+                     // ⭐ IMPORTANT — phải gửi nó qua!!
+                  });
+                  
                 }}
               >
                 <Ionicons name="settings-outline" size={22} color="#e9edef" />
-                <Text style={styles.menuText}>Cài đặt chat</Text>
+                <Text style={styles.menuText}>Cài đặt</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.menuItem}

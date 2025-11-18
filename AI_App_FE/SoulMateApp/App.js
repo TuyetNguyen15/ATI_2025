@@ -31,7 +31,6 @@ import LoveMatchSelectScreen from './screens/match/LoveMatchSelectScreen';
 import ConnectionActionsScreen from './screens/conversation/ConnectionActionsScreen';
 import IceBreakerScreen from './screens/conversation/IceBreakerScreen';
 
-// ⭐ PROFILE (THÊM MỚI)
 SplashScreen.preventAutoHideAsync();
 const Stack = createStackNavigator();
 
