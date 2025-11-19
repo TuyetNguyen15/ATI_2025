@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../../config/firebaseConfig';
 import { BASE_URL } from '../../../config/api';
 
 export default function UserPersonalInfo({ 
@@ -17,18 +19,90 @@ export default function UserPersonalInfo({
   const [message, setMessage] = useState('');
   const [matchStatus, setMatchStatus] = useState('none');
   const [loading, setLoading] = useState(false);
+  const [currentUserPartnerId, setCurrentUserPartnerId] = useState(null);
+  const [currentUserRelationshipStatus, setCurrentUserRelationshipStatus] = useState(null);
 
   const targetUserId = userData?.uid;
-  const isSingle = relationshipStatus?.toLowerCase().trim() === 'độc thân';
+  const [targetUserPartnerId, setTargetUserPartnerId] = useState(null);
+  
+  // Kiểm tra người xem (currentUser) có độc thân không
+  const isCurrentUserSingle = currentUserRelationshipStatus?.toLowerCase().trim() === 'độc thân';
+  // Kiểm tra người được xem (targetUser) có độc thân không
+  const isTargetUserSingle = relationshipStatus?.toLowerCase().trim() === 'độc thân';
+  // ⭐ isInRelationship kiểm tra người được xem (targetUser) - giữ lại cho UI
   const isInRelationship = relationshipStatus?.toLowerCase().trim() === 'đã có đôi';
 
+  // BƯỚC 1: Fetch partnerId của currentUser từ Firestore
+  useEffect(() => {
+    if (currentUserId) {
+      fetchCurrentUserPartnerFromFirestore();
+    }
+  }, [currentUserId]);
+
+  // BƯỚC 2: Fetch partnerId của targetUser từ Firestore
+  useEffect(() => {
+    if (targetUserId && currentUserId !== targetUserId) {
+      fetchTargetUserPartnerFromFirestore();
+    }
+  }, [targetUserId, currentUserId]);
+
+  // BƯỚC 3: Check match status (giữ lại cho trường hợp pending)
   useEffect(() => {
     if (currentUserId && targetUserId && currentUserId !== targetUserId) {
       checkMatchStatus();
     }
   }, [currentUserId, targetUserId]);
 
+  const fetchCurrentUserPartnerFromFirestore = async () => {
+    try {
+      const userRef = doc(db, 'users', currentUserId);
+      const userSnap = await getDoc(userRef);
+      
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        const partnerId = data?.partnerId || null;
+        const status = data?.relationshipStatus || null;
+        setCurrentUserPartnerId(partnerId);
+        setCurrentUserRelationshipStatus(status);
+        console.log('✅ Lấy currentUser info:', {
+          partnerId,
+          status
+        });
+      } else {
+        setCurrentUserPartnerId(null);
+        setCurrentUserRelationshipStatus(null);
+      }
+    } catch (error) {
+      console.error('Fetch current user partner error:', error);
+      setCurrentUserPartnerId(null);
+      setCurrentUserRelationshipStatus(null);
+    }
+  };
+
+  const fetchTargetUserPartnerFromFirestore = async () => {
+    try {
+      const userRef = doc(db, 'users', targetUserId);
+      const userSnap = await getDoc(userRef);
+      
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        const partnerId = data?.partnerId || null;
+        setTargetUserPartnerId(partnerId);
+        console.log('✅ Lấy targetUser partnerId:', partnerId);
+      } else {
+        setTargetUserPartnerId(null);
+      }
+    } catch (error) {
+      console.error('Fetch target user partner error:', error);
+      setTargetUserPartnerId(null);
+    }
+  };
+
   const checkMatchStatus = async () => {
+    console.log('🔄 Calling checkMatchStatus', { 
+      currentUserId, 
+      targetUserId
+    });
     try {
       const response = await fetch(
         `${apiUrl}/check-match-status?userId=${currentUserId}&targetId=${targetUserId}`
@@ -37,9 +111,10 @@ export default function UserPersonalInfo({
       
       if (data.success) {
         setMatchStatus(data.status);
+        console.log('📊 matchStatus set to:', data.status);
       }
     } catch (error) {
-      console.error('Check match status error:', error);
+      console.error('❌ Error:', error);
     }
   };
 
@@ -47,7 +122,12 @@ export default function UserPersonalInfo({
     if (matchStatus === 'pending') {
       return;
     }
-    if (matchStatus === 'matched') {
+    // Kiểm tra xem có phải partner không
+    const arePartners = 
+      currentUserId === targetUserPartnerId && 
+      targetUserId === currentUserPartnerId;
+    
+    if (arePartners) {
       setShowBreakupPopup(true);
     } else {
       setShowMatchPopup(true);
@@ -112,8 +192,10 @@ export default function UserPersonalInfo({
       const data = await response.json();
       
       if (data.success) {
-        Alert.alert('Đã chia tay', `Mối quan hệ đã kết thúc sau ${data.duration}`);
+        Alert.alert('Đã chia tay', `Mối quan hệ đã kết thúc.`);
         setMatchStatus('none');
+        setCurrentUserPartnerId(null);
+        setTargetUserPartnerId(null);
         setShowBreakupPopup(false);
         if (onBreakup) {
           onBreakup();
@@ -225,49 +307,103 @@ export default function UserPersonalInfo({
   };
 
   const renderActionButton = () => {
-    if (currentUserId === targetUserId) {
-      return null;
-    }
+  console.log('🎬 renderActionButton called');
+  console.log('currentUserId:', currentUserId);
+  console.log('targetUserId:', targetUserId);
+  console.log('matchStatus:', matchStatus);
+  console.log('currentUserPartnerId:', currentUserPartnerId);
+  console.log('targetUserPartnerId:', targetUserPartnerId);
+  console.log('isCurrentUserSingle:', isCurrentUserSingle);
+  console.log('isTargetUserSingle:', isTargetUserSingle);
 
-    if (!isSingle) {
-      return null;
-    }
+  // ❌ Bản thân xem profile của mình
+  if (currentUserId === targetUserId) {
+    console.log('❌ Same user, returning null');
+    return null;
+  }
 
-    let buttonText = 'Ghép đôi';
-    let buttonIcon = 'favorite';
-    let buttonDisabled = false;
-    let buttonColors = ['#ff6b9d', '#c44dff'];
+  // ✅ Kiểm tra xem A và B có phải là partner của nhau không
+  // Điều kiện: uid của A === partnerId của B VÀ uid của B === partnerId của A
+  const arePartners = 
+    currentUserId === targetUserPartnerId && 
+    targetUserId === currentUserPartnerId;
+  
+  console.log('🔍 Debug:', {
+    arePartners,
+    condition1: currentUserId === targetUserPartnerId,
+    condition2: targetUserId === currentUserPartnerId,
+  });
 
-    if (matchStatus === 'pending') {
-      buttonText = 'Đang chờ phản hồi...';
-      buttonIcon = 'schedule';
-      buttonDisabled = true;
-      buttonColors = ['#666', '#999'];
-    } else if (matchStatus === 'matched') {
-      buttonText = 'Chia tay';
-      buttonIcon = 'heart-broken';
-      buttonColors = ['#ff4444', '#cc0000'];
-    }
-
+  // ✅ TRƯỜNG HỢP 1: A và B là partner của nhau → Hiển thị nút "Chia tay"
+  if (arePartners) {
+    console.log('✅ Showing breakup button (they are partners)');
     return (
       <TouchableOpacity 
-        activeOpacity={buttonDisabled ? 1 : 0.85}
+        activeOpacity={0.85}
         onPress={handleMatchPress}
-        disabled={buttonDisabled}
         style={styles.matchButtonWrapper}
       >
         <LinearGradient
-          colors={buttonColors}
+          colors={['#ff4d6d', '#cd043dff']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={[styles.matchButton, buttonDisabled && styles.disabledButton]}
+          style={styles.matchButton}
         >
-          <MaterialIcons name={buttonIcon} size={20} color="#fff" />
-          <Text style={styles.matchButtonText}>{buttonText}</Text>
+          <MaterialIcons name="heart-broken" size={20} color="#fff" />
+          <Text style={styles.matchButtonText}>Chia tay</Text>
         </LinearGradient>
       </TouchableOpacity>
     );
-  };
+  }
+
+  // ✅ TRƯỜNG HỢP 2: Đang chờ phản hồi
+  if (matchStatus === 'pending') {
+    console.log('✅ Showing pending button');
+    return (
+      <TouchableOpacity 
+        activeOpacity={1}
+        disabled={true}
+        style={styles.matchButtonWrapper}
+      >
+        <LinearGradient
+          colors={['#666', '#999']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.matchButton, styles.disabledButton]}
+        >
+          <MaterialIcons name="schedule" size={20} color="#fff" />
+          <Text style={styles.matchButtonText}>Đang chờ phản hồi...</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
+
+  // ✅ TRƯỜNG HỢP 3: A độc thân VÀ B độc thân → Hiển thị nút "Ghép đôi"
+  if (isCurrentUserSingle && isTargetUserSingle) {
+    console.log('✅ Showing match button (both are single)');
+    return (
+      <TouchableOpacity 
+        activeOpacity={0.85}
+        onPress={handleMatchPress}
+        style={styles.matchButtonWrapper}
+      >
+        <LinearGradient
+          colors={['#ff6b9d', '#c44dff']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.matchButton}
+        >
+          <MaterialIcons name="favorite" size={20} color="#fff" />
+          <Text style={styles.matchButtonText}>Ghép đôi</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
+
+  // ✅ TRƯỜNG HỢP 4: Các trường hợp khác không hiển thị nút
+  console.log('❌ No button to show');
+  return null;
+};
 
   return (
     <View style={styles.containerWrapper}>
@@ -342,7 +478,7 @@ export default function UserPersonalInfo({
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <MaterialIcons name="heart-broken" size={28} color="#ff4444" />
+              <MaterialIcons name="heart-broken" size={28} color="#ff4d6d" />
               <Text style={styles.modalTitle}>Xác nhận chia tay</Text>
             </View>
 
@@ -368,7 +504,7 @@ export default function UserPersonalInfo({
                 disabled={loading}
               >
                 <LinearGradient
-                  colors={['#ff4444', '#cc0000']}
+                  colors={['#ff4d6d', '#cd043dff']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.sendButton}
