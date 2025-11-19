@@ -11,7 +11,7 @@ import re
 import base64
 import cloudinary
 import cloudinary.uploader
-import requests
+# import requests
 from datetime import datetime, timedelta
 import uuid
 
@@ -89,44 +89,44 @@ def save_prediction(uid, name, sun, moon, category, day, data):
     db.collection("user_prediction").add(doc)
     
 
-# -------------------------------------------------
-# 🔄 Retry decorator cho Gemini API
-# -------------------------------------------------
-def retry_on_quota_exceeded(max_retries=2, initial_delay=40):
-    """Tự động retry khi gặp rate limit"""
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            retries = 0
-            delay = initial_delay
+# # -------------------------------------------------
+# # 🔄 Retry decorator cho Gemini API
+# # -------------------------------------------------
+# def retry_on_quota_exceeded(max_retries=2, initial_delay=40):
+#     """Tự động retry khi gặp rate limit"""
+#     def decorator(func):
+#         @wraps(func)
+#         def wrapper(*args, **kwargs):
+#             retries = 0
+#             delay = initial_delay
             
-            while retries <= max_retries:
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    error_msg = str(e)
+#             while retries <= max_retries:
+#                 try:
+#                     return func(*args, **kwargs)
+#                 except Exception as e:
+#                     error_msg = str(e)
                     
-                    if "429" in error_msg and "quota" in error_msg.lower():
-                        match = re.search(r'retry in (\d+(?:\.\d+)?)', error_msg)
-                        if match:
-                            delay = float(match.group(1)) + 2
+#                     if "429" in error_msg and "quota" in error_msg.lower():
+#                         match = re.search(r'retry in (\d+(?:\.\d+)?)', error_msg)
+#                         if match:
+#                             delay = float(match.group(1)) + 2
                         
-                        retries += 1
-                        if retries <= max_retries:
-                            print(f"⏳ Rate limit. Đợi {delay}s... (Lần {retries}/{max_retries})")
-                            time.sleep(delay)
-                            continue
-                        else:
-                            raise Exception(
-                                "API đang quá tải. Vui lòng thử lại sau 1-2 phút. "
-                                "Hoặc nâng cấp Gemini API lên plan trả phí."
-                            )
-                    else:
-                        raise
+#                         retries += 1
+#                         if retries <= max_retries:
+#                             print(f"⏳ Rate limit. Đợi {delay}s... (Lần {retries}/{max_retries})")
+#                             time.sleep(delay)
+#                             continue
+#                         else:
+#                             raise Exception(
+#                                 "API đang quá tải. Vui lòng thử lại sau 1-2 phút. "
+#                                 "Hoặc nâng cấp Gemini API lên plan trả phí."
+#                             )
+#                     else:
+#                         raise
             
-            return None
-        return wrapper
-    return decorator
+#             return None
+#         return wrapper
+#     return decorator
 
     
 # ===============================
