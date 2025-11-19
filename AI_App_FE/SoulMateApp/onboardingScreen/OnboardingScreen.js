@@ -9,14 +9,16 @@ import {
   Dimensions,
   TouchableOpacity,
   SafeAreaView,
+  Platform,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 
 const { width, height } = Dimensions.get('window');
 
 const slides = [
   {
     key: '1',
-    title: 'Chào mừng bạn đến với Duyên.',
+    title: 'Chào mừng bạn đến với AstroLove.',
     text: 'Công cụ kết nối tình yêu duy nhất sử dụng sức mạnh Khoa học chiêm tinh.',
   },
   {
@@ -34,15 +36,22 @@ const slides = [
 const SlideItem = ({ item, isLastSlide, onStartPress }) => {
   return (
     <View style={styles.slideContainer}>
-      <View style={styles.textBubble}>
-        <Text style={styles.titleText}>{item.title}</Text>
-        <Text style={styles.bodyText}>{item.text}</Text>
-        {isLastSlide && (
-          <TouchableOpacity style={styles.startButton} onPress={onStartPress}>
-            <Text style={styles.startButtonText}>Bắt đầu khám phá</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      <BlurView intensity={40} tint="dark" style={styles.glassCard}>
+        <View style={styles.cardContent}>
+          <Text style={styles.titleText}>{item.title}</Text>
+          <Text style={styles.bodyText}>{item.text}</Text>
+          
+          {isLastSlide && (
+            <TouchableOpacity 
+              style={styles.startButton} 
+              onPress={onStartPress}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.startButtonText}>Bắt đầu khám phá</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </BlurView>
     </View>
   );
 };
@@ -67,24 +76,27 @@ export default function OnboardingScreen({ navigation }) {
 
   return (
     <ImageBackground
-      source={require('../assets/bg_onboard.png')} // <-- Tên ảnh của bạn
+      source={require('../assets/bg_onboard.png')}
       style={styles.background}
+      resizeMode="cover"
     >
       <SafeAreaView style={styles.container}>
         
-        {/* --- PHẦN TRÊN (Tự động co giãn) --- */}
-        <View style={styles.topContainer}>
+        {/* --- PLANET (Responsive) --- */}
+        <View style={styles.planetContainer}>
           <Image
-            source={require('../assets/planet.png')} // <-- Tên ảnh của bạn
-            style={styles.planet} // <-- Chỉnh size ở đây
+            source={require('../assets/planet.png')}
+            style={styles.planet}
+            resizeMode="contain"
           />
+          
           <Text style={styles.subtitle}>
             Khám phá kết nối định mệnh với người ấy
           </Text>
         </View>
 
-        {/* --- PHẦN DƯỚI (Ghim cố định) --- */}
-        <View style={styles.bottomContainer}>
+        {/* --- GLASS CARD SLIDES --- */}
+        <View style={styles.slidesWrapper}>
           <FlatList
             ref={flatListRef}
             data={slides}
@@ -101,15 +113,20 @@ export default function OnboardingScreen({ navigation }) {
             showsHorizontalScrollIndicator={false}
             onViewableItemsChanged={onViewableItemsChanged}
             viewabilityConfig={viewabilityConfig}
+            bounces={false}
           />
-          {/* Dấu chấm Pagination */}
+          
+          {/* Pagination Dots */}
           <View style={styles.pagination}>
             {slides.map((_, index) => (
               <View
                 key={index}
                 style={[
                   styles.dot,
-                  { opacity: index === activeIndex ? 1 : 0.4 },
+                  { 
+                    width: index === activeIndex ? 24 : 8,
+                    opacity: index === activeIndex ? 1 : 0.4,
+                  },
                 ]}
               />
             ))}
@@ -127,83 +144,125 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-
   container: {
     flex: 1,
+    justifyContent: 'space-between',
   },
   
-  topContainer: {
+  // --- PLANET SECTION ---
+  planetContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: Platform.OS === 'ios' ? 20 : 40,
   },
   planet: {
-    width: width * 1, 
-    height: width * 1,
-    resizeMode: 'contain',
+    width: width * 0.85,
+    height: width * 0.85,
+    maxWidth: 500,
+    maxHeight: 500,
   },
   subtitle: {
-    color: 'white',
-    fontSize: 18,
+    color: 'rgba(255, 255, 255, 0.95)',
+    fontSize: Math.min(width * 0.045, 18),
     fontStyle: 'italic',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
-  },
-  bottomContainer: {
-    position: 'absolute', 
-    bottom: 100, 
-    left: 0,
-    right: 0,
-    width: '100%',
+    fontWeight: '500',
+    textAlign: 'center',
+    marginTop: -width * 0.08,
+    paddingHorizontal: 20,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
 
+  // --- SLIDES SECTION ---
+  slidesWrapper: {
+    paddingBottom: Platform.OS === 'ios' ? 20 : 30,
+  },
   slideContainer: {
-    width: width, 
+    width: width,
     alignItems: 'center',
-    paddingTop: 30,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
-  textBubble: {
-    width: '85%',
-    backgroundColor: 'rgba(85, 84, 84, 0.7)',
-    borderRadius: 20,
-    padding: 25,
-    minHeight: 250, 
+  
+  glassCard: {
+    width: '100%',
+    maxWidth: 300,
+    borderRadius: 32,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
   },
+  cardContent: {
+    padding: Math.min(width * 0.07, 32),
+    minHeight: height * 0.30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // --- TEXT STYLES ---
   titleText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15,
+    color: 'rgba(255, 255, 255, 0.98)',
+    fontSize: Math.min(width * 0.055, 22),
+    fontWeight: '700',
+    marginBottom: 16,
+    lineHeight: Math.min(width * 0.07, 28),
+    letterSpacing: 0.3,
+    textAlign: 'center',
   },
   bodyText: {
-    color: 'white',
-    fontSize: 16,
-    lineHeight: 24,
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: Math.min(width * 0.038, 15),
+    lineHeight: Math.min(width * 0.055, 22),
+    fontWeight: '400',
+    letterSpacing: 0.2,
+    textAlign: 'center',
+    marginBottom: 24,
   },
+  
+  // --- START BUTTON ---
   startButton: {
-    backgroundColor: '#f168a1ff', 
-    paddingVertical: 12,
-    borderRadius: 25,
-    marginTop: 70,
+    backgroundColor: 'rgba(246, 38, 187, 0.85)',
+    paddingVertical: 16,
+    paddingHorizontal: 48,
+    borderRadius: 30,
     alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '80%',
+    shadowColor: 'rgba(98, 149, 255, 0.5)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 10,
   },
   startButtonText: {
     color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: Math.min(width * 0.042, 15),
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    textAlign: 'center',
   },
-  // --- Pagination Styles (Giữ nguyên) ---
+  
+  // --- PAGINATION ---
   pagination: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 40, // Đẩy lên cao
-    marginTop: 40,
+    marginTop: 24,
+    paddingBottom: 10,
   },
   dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: 'white',
-    marginHorizontal: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    marginHorizontal: 4,
+    transition: 'all 0.3s ease',
   },
 });

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { Provider, useDispatch } from 'react-redux';
 import { store } from './app/store';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -9,9 +9,8 @@ import { auth } from './config/firebaseConfig';
 import { loadUserProfile } from './services/profileLoader';
 import * as SplashScreen from 'expo-splash-screen';
 
+// Màn hình Onboarding
 import OnboardingScreen from './onboardingScreen/OnboardingScreen';
-
-// Màn hình Đăng nhập/Đăng ký (từ một nhánh)
 import LoginScreen from './screens/auth/LoginScreen';
 import RegisterScreen1 from './screens/auth/Register1';
 import RegisterScreen2 from './screens/auth/Register2';
@@ -29,21 +28,19 @@ import MatchRequestDetailScreen from './screens/match_request/MatchRequestDetail
 // CONNECTION
 import ConnectionActionsScreen from './screens/conversation/ConnectionActionsScreen';
 import IceBreakerScreen from './screens/conversation/IceBreakerScreen';
+import ChatRoomScreen from './screens/chat/ChatRoomScreen';
+import ChatListScreen from './screens/chat/ChatListScreen';
 import DetailedCompatibilityScreen from './screens/conversation/DetailedCompatibilityScreen';
 
 SplashScreen.preventAutoHideAsync();
+
 const Stack = createStackNavigator();
 
-/**
- * Component này chứa tất cả logic chính của app.
- * Nó chỉ được render sau khi Redux <Provider> đã bọc ở ngoài.
- */
 function AppContent() {
   const dispatch = useDispatch();
   const [appIsReady, setAppIsReady] = React.useState(false);
   const [isInitializing, setIsInitializing] = React.useState(true);
 
-  // 1. Logic cho Splash Screen (tải font, assets...)
   React.useEffect(() => {
     async function prepare() {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -52,65 +49,69 @@ function AppContent() {
     prepare();
   }, []);
 
-  // 2. Logic kiểm tra Đăng nhập
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        console.log('Auth: User detected → Loading Firestore profile...');
         try {
-          await loadUserProfile(user.uid, dispatch);
-
+          await dispatch(loadUserProfile(user.uid));
           console.log('Auth: Profile loaded globally');
         } catch (err) {
           console.error('Auth: Failed to load profile:', err);
         }
-      } else {
-        console.log('Auth: No user signed in.');
       }
-      // Dù có user hay không, cũng đánh dấu là đã kiểm tra xong
       setIsInitializing(false);
     });
 
-    return unsubscribe; // Dọn dẹp listener khi component unmount
+    return unsubscribe;
   }, [dispatch]);
 
-  // Hàm để ẩn Splash Screen khi View đã sẵn sàng
   const onLayoutRootView = React.useCallback(async () => {
     if (appIsReady) {
       await SplashScreen.hideAsync();
-      console.log('Splash: Hidden.');
     }
   }, [appIsReady]);
 
-  // --- CÁC TRẠNG THÁI RENDER ---
+  if (!appIsReady) return null;
 
-  // 1. Nếu Splash chưa sẵn sàng, trả về null (Splash native vẫn đang hiển thị)
-  if (!appIsReady) {
-    return null;
-  }
-
-  // 2. Nếu Splash đã xong, nhưng Auth chưa kiểm tra xong, hiển thị loading
   if (isInitializing) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' }}>
+      <View style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#000',
+      }}>
         <ActivityIndicator size="large" color="#ff77a9" />
       </View>
     );
   }
 
-  // 3. Nếu cả 2 đều xong, hiển thị ứng dụng
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <NavigationContainer>
         <Stack.Navigator
           initialRouteName="Onboarding"
-          screenOptions={{ headerShown: false }}
+          detachPreviousScreen={false} // Giữ màn cũ trong animation để giảm lóe sáng
+          screenOptions={{
+            headerShown: false,
+            gestureEnabled: true,
+            animationEnabled: true,
+            animationDuration: 500, // Kéo dài animation cho mượt
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, // Hiệu ứng trượt iOS mượt
+            transitionSpec: {
+              open: { animation: 'timing', config: { duration: 500 } },
+              close: { animation: 'timing', config: { duration: 500 } },
+            },
+            cardStyle: { backgroundColor: '#000' }, // nền đen mượt khi chuyển
+          }}
         >
-          {/* Gộp TẤT CẢ các màn hình từ cả 2 nhánh */}
+          {/* Tất cả màn hình trong 1 navigator */}
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="RegisterScreen1" component={RegisterScreen1} />
           <Stack.Screen name="RegisterScreen2" component={RegisterScreen2} />
+
+          {/* MAIN APP */}
           <Stack.Screen name="Main" component={BottomTabs} />
           <Stack.Screen name="UpdateAvatar" component={UpdateAvatar} />
           <Stack.Screen name="EditProfile" component={EditProfile} />
@@ -126,17 +127,14 @@ function AppContent() {
           {/* ⭐ PROFILE */}
           <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
           <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} />
-
-
+          <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} />
+          <Stack.Screen name="ChatListScreen" component={ChatListScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </View>
   );
 }
 
-/**
- * Component App chính, chỉ dùng để bọc Redux Provider
- */
 export default function App() {
   return (
     <Provider store={store}>

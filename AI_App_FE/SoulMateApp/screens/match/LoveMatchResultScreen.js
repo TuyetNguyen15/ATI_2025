@@ -115,7 +115,7 @@ export default function LoveMatchResultScreen({ type, people }) {
         <MysticProfile
           info={{
             ...people[selected],
-
+            myUid: profile.uid, 
             myZodiac: profile.sun,
             myElement: ELEMENT_MAP[profile.sun],
 

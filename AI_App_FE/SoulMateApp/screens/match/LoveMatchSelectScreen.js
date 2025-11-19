@@ -16,10 +16,8 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import LoveMatchResultScreen from "../match/LoveMatchResultScreen";
 import { BASE_URL } from "../../config/api";
-// import { getMatchResult } from "../../services/matchService";
 const { width } = Dimensions.get("window");
 
-const API_URL = BASE_URL;
 
 const CATEGORIES = [
   { key: "redflag", title: "Red Flag", img: require("../../assets/type/redflag.png") },
@@ -51,7 +49,7 @@ export default function LoveMatchSelectScreen() {
   
       // 1️⃣ CHECK FIRESTORE TRƯỚC
       const cached = await fetch(
-        `${API_URL}/love-matching/history/${user.uid}/${type}`
+        `${BASE_URL}/love-matching/history/${user.uid}/${type}`
       ).then(res => res.json());
   
       console.log("📌 CACHE CHECK:", cached);
@@ -65,7 +63,7 @@ export default function LoveMatchSelectScreen() {
   
       // 2️⃣ KHÔNG CÓ CACHE → GỌI AI
       console.log("🤖 CALL AI:", type);
-      const res = await axios.post(`${API_URL}/love-matching/${type}`, {
+      const res = await axios.post(`${BASE_URL}/love-matching/${type}`, {
         uid: user.uid,
       });
   

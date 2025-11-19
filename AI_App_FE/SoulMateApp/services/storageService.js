@@ -1,6 +1,6 @@
 // services/storageService.js
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { storage } from '../firebaseConfig';
+import { storage } from '../config/firebaseConfig';
 
 /**
  * Upload image to Firebase Storage
