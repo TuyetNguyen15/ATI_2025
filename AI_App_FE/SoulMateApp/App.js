@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { Provider, useDispatch } from 'react-redux';
 import { store } from './app/store';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -33,10 +33,10 @@ import LoveMatchSelectScreen from './screens/match/LoveMatchSelectScreen';
 import ConnectionActionsScreen from './screens/conversation/ConnectionActionsScreen';
 import IceBreakerScreen from './screens/conversation/IceBreakerScreen';
 import ChatRoomScreen from './screens/chat/ChatRoomScreen';
-
-
+import ChatListScreen from './screens/chat/ChatListScreen';
 
 SplashScreen.preventAutoHideAsync();
+
 const Stack = createStackNavigator();
 
 function AppContent() {
@@ -52,7 +52,6 @@ function AppContent() {
     prepare();
   }, []);
 
-  // 2. Logic kiểm tra Đăng nhập
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -95,8 +94,21 @@ function AppContent() {
       <NavigationContainer>
         <Stack.Navigator
           initialRouteName="Onboarding"
-          screenOptions={{ headerShown: false }}
+          detachPreviousScreen={false} // Giữ màn cũ trong animation để giảm lóe sáng
+          screenOptions={{
+            headerShown: false,
+            gestureEnabled: true,
+            animationEnabled: true,
+            animationDuration: 500, // Kéo dài animation cho mượt
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, // Hiệu ứng trượt iOS mượt
+            transitionSpec: {
+              open: { animation: 'timing', config: { duration: 500 } },
+              close: { animation: 'timing', config: { duration: 500 } },
+            },
+            cardStyle: { backgroundColor: '#000' }, // nền đen mượt khi chuyển
+          }}
         >
+          {/* Tất cả màn hình trong 1 navigator */}
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="RegisterScreen1" component={RegisterScreen1} />
@@ -108,17 +120,14 @@ function AppContent() {
           <Stack.Screen name="EditProfile" component={EditProfile} />
           <Stack.Screen name="NatalChartAnalysis" component={NatalChartAnalysis} />
           <Stack.Screen name="LoveMatchSelectScreen" component={LoveMatchSelectScreen} />
-
-          {/* CONNECTION */}
           <Stack.Screen name="ConnectionActionsScreen" component={ConnectionActionsScreen} />
           <Stack.Screen name="IceBreakerScreen" component={IceBreakerScreen} />
 
           {/* ⭐ PROFILE */}
           <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
           <Stack.Screen name="UserProfileScreen" component={UserProfileScreen} />
-          {/* Chat */}
-          <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen}  />
-
+          <Stack.Screen name="ChatRoomScreen" component={ChatRoomScreen} />
+          <Stack.Screen name="ChatListScreen" component={ChatListScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </View>

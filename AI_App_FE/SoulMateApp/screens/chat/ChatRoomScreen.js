@@ -12,11 +12,13 @@ import {
   Alert,
   Modal,
   Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import { Audio } from 'expo-av';
+import { LinearGradient } from 'expo-linear-gradient';
 import { db } from '../../config/firebaseConfig';
 import {
   collection,
@@ -24,9 +26,9 @@ import {
   onSnapshot,
   query,
   orderBy,
-  getDoc,
   doc,
   updateDoc,
+  getDoc,
   serverTimestamp,
   limit,
 } from 'firebase/firestore';
@@ -39,29 +41,29 @@ export default function ChatRoomScreen({ route, navigation }) {
   const [showMenu, setShowMenu] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const recordingRef = useRef(null);
+  const flatListRef = useRef(null);
 
   const currentUser = useSelector((state) => state.profile);
   const currentUserId = currentUser?.uid;
   const currentUserName = currentUser?.name || 'Unknown User';
   const currentUserAvatar = currentUser?.avatar;
 
-  // ⭐ BÉ THÊM ĐÚNG VÀO ĐÂY 👇👇👇
-const [partnerId, setPartnerId] = useState(null);
+  const [partnerId, setPartnerId] = useState(null);
 
-useEffect(() => {
-  const fetchPartner = async () => {
-    const chatRef = doc(db, "chats", chatId);
-    const snap = await getDoc(chatRef);
-    if (snap.exists()) {
-      const data = snap.data();
-      const other = data.members?.find((m) => m !== currentUserId);
-      console.log("🎯 PARTNER FOUND:", other);
-      setPartnerId(other);
-    }
-  };
+  useEffect(() => {
+    const fetchPartner = async () => {
+      const chatRef = doc(db, "chats", chatId);
+      const snap = await getDoc(chatRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        const other = data.members?.find((m) => m !== currentUserId);
+        console.log("🎯 PARTNER FOUND:", other);
+        setPartnerId(other);
+      }
+    };
 
-  if (chatId && currentUserId) fetchPartner();
-}, [chatId, currentUserId]);
+    if (chatId && currentUserId) fetchPartner();
+  }, [chatId, currentUserId]);
 
   useEffect(() => {
     (async () => {
@@ -70,7 +72,6 @@ useEffect(() => {
       await Audio.requestPermissionsAsync();
     })();
 
-    // Lắng nghe sự kiện bàn phím
     const keyboardWillShow = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
       (e) => {
@@ -94,24 +95,48 @@ useEffect(() => {
   useEffect(() => {
     navigation.setOptions({
       headerTitle: chatName,
+      headerShown: true,
+      headerStyle: {
+        backgroundColor: '#050009',
+      },
+      headerTintColor: '#ffffff',
+      headerTitleStyle: {
+        fontWeight: '700',
+        fontSize: 20,
+      },
+      headerBackVisible: true,
       headerRight: () => (
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.headerButton} onPress={handleCall}>
-            <Ionicons name="call" size={22} color="#fff" />
+            <Ionicons name="call" size={22} color="#ffffff" />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerButton}
             onPress={() => setShowMenu(true)}
           >
-            <Ionicons name="ellipsis-vertical" size={22} color="#fff" />
+            <Ionicons name="ellipsis-vertical" size={22} color="#ffffff" />
           </TouchableOpacity>
         </View>
       ),
     });
-  }, [navigation]);
+  }, [navigation, chatName]);
 
   useEffect(() => {
     if (!chatId || !currentUserId) return;
+
+    const resetUnreadCount = async () => {
+      try {
+        const chatRef = doc(db, 'chats', chatId);
+        await updateDoc(chatRef, {
+          [`unreadCount.${currentUserId}`]: 0,
+        });
+        console.log('Reset unread count for user:', currentUserId);
+      } catch (error) {
+        console.error('Error resetting unread count:', error);
+      }
+    };
+
+    resetUnreadCount();
 
     const messagesQuery = query(
       collection(db, 'chats', chatId, 'messages'),
@@ -136,6 +161,11 @@ useEffect(() => {
         });
       });
       setMessages(loadedMessages);
+      
+      // Auto scroll to bottom when messages update
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
     });
 
     return () => unsubscribe();
@@ -158,10 +188,23 @@ useEffect(() => {
 
     try {
       await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
-      await updateDoc(doc(db, 'chats', chatId), {
-        lastMessageText: messageText,
-        lastMessageTimestamp: serverTimestamp(),
-      });
+
+      const chatRef = doc(db, 'chats', chatId);
+      const chatSnap = await getDoc(chatRef);
+
+      if (chatSnap.exists()) {
+        const chatData = chatSnap.data();
+        const recipientId = chatData.members.find(id => id !== currentUserId);
+
+        const currentUnreadCount = chatData.unreadCount?.[recipientId] || 0;
+
+        await updateDoc(chatRef, {
+          lastMessageText: messageText,
+          lastMessageTimestamp: serverTimestamp(),
+          lastMessageSenderId: currentUserId,
+          [`unreadCount.${recipientId}`]: currentUnreadCount + 1,
+        });
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       setInputText(messageText);
@@ -215,10 +258,22 @@ useEffect(() => {
       };
 
       await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
-      await updateDoc(doc(db, 'chats', chatId), {
-        lastMessageText: '📷 Ảnh',
-        lastMessageTimestamp: serverTimestamp(),
-      });
+
+      const chatRef = doc(db, 'chats', chatId);
+      const chatSnap = await getDoc(chatRef);
+
+      if (chatSnap.exists()) {
+        const chatData = chatSnap.data();
+        const recipientId = chatData.members.find(id => id !== currentUserId);
+        const currentUnreadCount = chatData.unreadCount?.[recipientId] || 0;
+
+        await updateDoc(chatRef, {
+          lastMessageText: '📷 Ảnh',
+          lastMessageTimestamp: serverTimestamp(),
+          lastMessageSenderId: currentUserId,
+          [`unreadCount.${recipientId}`]: currentUnreadCount + 1,
+        });
+      }
     } catch (error) {
       console.error('Error sending image:', error);
       Alert.alert('Lỗi', 'Không thể gửi ảnh');
@@ -235,9 +290,16 @@ useEffect(() => {
 
   const startRecording = async () => {
     try {
+      const { granted } = await Audio.requestPermissionsAsync();
+      if (!granted) {
+        Alert.alert('Lỗi', 'Cần cấp quyền ghi âm');
+        return;
+      }
+
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
+        playThroughEarpieceAndroid: false,
       });
 
       const { recording } = await Audio.Recording.createAsync(
@@ -249,22 +311,37 @@ useEffect(() => {
       console.log('Recording started');
     } catch (error) {
       console.error('Failed to start recording:', error);
-      Alert.alert('Lỗi', 'Không thể ghi âm');
+      Alert.alert('Lỗi', 'Không thể ghi âm: ' + error.message);
     }
   };
 
   const stopRecording = async () => {
+    if (!recordingRef.current) {
+      console.log('No recording to stop');
+      return;
+    }
+
     try {
+      console.log('Stopping recording...');
       setIsRecording(false);
+
       await recordingRef.current.stopAndUnloadAsync();
       const uri = recordingRef.current.getURI();
-      recordingRef.current = null;
 
       console.log('Recording stopped, URI:', uri);
 
-      await sendAudioMessage(uri);
+      recordingRef.current = null;
+
+      if (uri) {
+        await sendAudioMessage(uri);
+      } else {
+        Alert.alert('Lỗi', 'Không lấy được file ghi âm');
+      }
     } catch (error) {
       console.error('Failed to stop recording:', error);
+      Alert.alert('Lỗi', 'Không thể dừng ghi âm: ' + error.message);
+      recordingRef.current = null;
+      setIsRecording(false);
     }
   };
 
@@ -281,10 +358,22 @@ useEffect(() => {
       };
 
       await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
-      await updateDoc(doc(db, 'chats', chatId), {
-        lastMessageText: '🎤 Tin nhắn thoại',
-        lastMessageTimestamp: serverTimestamp(),
-      });
+
+      const chatRef = doc(db, 'chats', chatId);
+      const chatSnap = await getDoc(chatRef);
+
+      if (chatSnap.exists()) {
+        const chatData = chatSnap.data();
+        const recipientId = chatData.members.find(id => id !== currentUserId);
+        const currentUnreadCount = chatData.unreadCount?.[recipientId] || 0;
+
+        await updateDoc(chatRef, {
+          lastMessageText: '🎤 Tin nhắn thoại',
+          lastMessageTimestamp: serverTimestamp(),
+          lastMessageSenderId: currentUserId,
+          [`unreadCount.${recipientId}`]: currentUnreadCount + 1,
+        });
+      }
     } catch (error) {
       console.error('Error sending audio:', error);
       Alert.alert('Lỗi', 'Không thể gửi âm thanh');
@@ -359,14 +448,14 @@ useEffect(() => {
 
           {item.type === 'audio' && (
             <View style={styles.audioContainer}>
-              <Ionicons name="play-circle" size={32} color="#e9edef" />
+              <Ionicons name="play-circle" size={32} color="#ffe9ff" />
               <Text style={styles.audioDuration}>0:15</Text>
             </View>
           )}
 
           <View style={styles.timeContainer}>
             <Text style={styles.timeText}>{formatTime(item.createdAt)}</Text>
-            {isMyMessage && <Ionicons name="checkmark-done" size={16} color="#53bdeb" />}
+            {isMyMessage && <Ionicons name="checkmark-done" size={16} color="#ffd6f4" />}
           </View>
         </View>
       </View>
@@ -374,149 +463,150 @@ useEffect(() => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0b141a' }}>
-      <View style={styles.container}>
-        {/* Background Pattern */}
-        <View style={styles.backgroundPattern} />
-        
-        {/* Danh sách tin nhắn với flex:1 */}
-        <FlatList
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.messagesList}
-          style={{ flex: 1 }}
-          keyboardShouldPersistTaps="handled"
-        />
-        
-        {/* Input Bar luôn ở dưới cùng */}
-        <View style={[
-          styles.inputBar,
-          Platform.OS === 'android' && keyboardHeight > 0 && { marginBottom: 8 }
-        ]}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="happy-outline" size={26} color="#8696a0" />
-          </TouchableOpacity>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Nhập tin nhắn..."
-              placeholderTextColor="#8696a0"
-              value={inputText}
-              onChangeText={setInputText}
-              multiline
-              maxLength={1000}
-            />
-          </View>
-          <TouchableOpacity style={styles.iconButton} onPress={handleCamera}>
-            <Ionicons name="camera-outline" size={24} color="#8696a0" />
-          </TouchableOpacity>
-          {inputText.trim() ? (
-            <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-              <Ionicons name="send" size={22} color="#fff" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={[styles.sendButton, isRecording && styles.recordingButton]}
-              onPress={handleVoicePress}
-              onLongPress={startRecording}
-              onPressOut={isRecording ? stopRecording : undefined}
-            >
-              <Ionicons
-                name={isRecording ? 'stop' : 'mic'}
-                size={22}
-                color="#fff"
+    <LinearGradient
+      colors={["#050009", "#260014", "#000000"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? keyboardHeight : 70}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.container}>
+            <View style={{ flex: 1 }}>
+              <FlatList
+                ref={flatListRef}
+                data={messages}
+                renderItem={renderMessage}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.messagesList}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                onContentSizeChange={() => {
+                  flatListRef.current?.scrollToEnd({ animated: false });
+                }}
               />
-            </TouchableOpacity>
-          )}
-        </View>
-        
-        {/* Menu Modal */}
-        <Modal
-          visible={showMenu}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowMenu(false)}
-        >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowMenu(false)}
-          >
-            <View style={styles.menuContainer}>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => {
-                  setShowMenu(false);
-                  navigation.navigate("ConnectionActionsScreen", {
-                    chatId,
-                    chatName,
-                    partnerId,
-                     // ⭐ IMPORTANT — phải gửi nó qua!!
-                  });
-                  
-                }}
-              >
-                <Ionicons name="settings-outline" size={22} color="#e9edef" />
-                <Text style={styles.menuText}>Cài đặt</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => {
-                  setShowMenu(false);
-                  Alert.alert('Thông báo', 'Xem ảnh/video');
-                }}
-              >
-                <Ionicons name="images-outline" size={22} color="#e9edef" />
-                <Text style={styles.menuText}>Xem ảnh & video</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => {
-                  setShowMenu(false);
-                  Alert.alert('Thông báo', 'Tìm kiếm trong chat');
-                }}
-              >
-                <Ionicons name="search-outline" size={22} color="#e9edef" />
-                <Text style={styles.menuText}>Tìm kiếm</Text>
-              </TouchableOpacity>
-              <View style={styles.menuDivider} />
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => {
-                  setShowMenu(false);
-                  Alert.alert('Xác nhận', 'Bạn muốn xóa toàn bộ tin nhắn?', [
-                    { text: 'Hủy', style: 'cancel' },
-                    { text: 'Xóa', style: 'destructive' },
-                  ]);
-                }}
-              >
-                <Ionicons name="trash-outline" size={22} color="#f44336" />
-                <Text style={[styles.menuText, { color: '#f44336' }]}>
-                  Xóa tin nhắn
-                </Text>
-              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-        </Modal>
-      </View>
-    </View>
+
+            <View
+              style={[
+                styles.inputBar,
+                Platform.OS === 'android' && keyboardHeight > 0 && { marginBottom: 8 },
+              ]}
+            >
+              <TouchableOpacity style={styles.iconButton}>
+                <Ionicons name="happy-outline" size={26} color="#ffd6f4" />
+              </TouchableOpacity>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Nhập tin nhắn..."
+                  placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                  value={inputText}
+                  onChangeText={setInputText}
+                  multiline
+                  maxLength={1000}
+                />
+              </View>
+              <TouchableOpacity style={styles.iconButton} onPress={handleCamera}>
+                <Ionicons name="camera-outline" size={24} color="#ffd6f4" />
+              </TouchableOpacity>
+              {inputText.trim() ? (
+                <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+                  <Ionicons name="send" size={22} color="#fff" />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.sendButton, isRecording && styles.recordingButton]}
+                  onPress={handleVoicePress}
+                >
+                  <Ionicons
+                    name={isRecording ? 'stop' : 'mic'}
+                    size={22}
+                    color="#fff"
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <Modal
+              visible={showMenu}
+              transparent
+              animationType="fade"
+              onRequestClose={() => setShowMenu(false)}
+            >
+              <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+                onPress={() => setShowMenu(false)}
+              >
+                <View style={styles.menuContainer}>
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => {
+                      setShowMenu(false);
+                      navigation.navigate("ConnectionActionsScreen", {
+                        chatId,
+                        chatName,
+                        partnerId,
+                      });
+                    }}
+                  >
+                    <Ionicons name="settings-outline" size={22} color="#ffd6f4" />
+                    <Text style={styles.menuText}>Cài đặt</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => {
+                      setShowMenu(false);
+                      Alert.alert('Thông báo', 'Xem ảnh/video');
+                    }}
+                  >
+                    <Ionicons name="images-outline" size={22} color="#ffd6f4" />
+                    <Text style={styles.menuText}>Xem ảnh & video</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => {
+                      setShowMenu(false);
+                      Alert.alert('Thông báo', 'Tìm kiếm trong chat');
+                    }}
+                  >
+                    <Ionicons name="search-outline" size={22} color="#ffd6f4" />
+                    <Text style={styles.menuText}>Tìm kiếm</Text>
+                  </TouchableOpacity>
+                  <View style={styles.menuDivider} />
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => {
+                      setShowMenu(false);
+                      Alert.alert('Xác nhận', 'Bạn muốn xóa toàn bộ tin nhắn?', [
+                        { text: 'Hủy', style: 'cancel' },
+                        { text: 'Xóa', style: 'destructive' },
+                      ]);
+                    }}
+                  >
+                    <Ionicons name="trash-outline" size={22} color="#ff8080" />
+                    <Text style={[styles.menuText, { color: '#ff8080' }]}>
+                      Xóa tin nhắn
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            </Modal>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0b141a',
-  },
-  backgroundPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#0b141a',
-    opacity: 0.06,
   },
   headerRight: {
     flexDirection: 'row',
@@ -560,17 +650,17 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
   },
   myMessage: {
-    backgroundColor: '#005c4b',
+    backgroundColor: 'rgba(255, 105, 180, 0.3)',
     borderBottomRightRadius: 2,
     alignSelf: 'flex-end',
   },
   theirMessage: {
-    backgroundColor: '#1f2c34',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderBottomLeftRadius: 2,
     alignSelf: 'flex-start',
   },
   messageText: {
-    color: '#e9edef',
+    color: '#ffe9ff',
     fontSize: 15,
     lineHeight: 20,
     marginBottom: 4,
@@ -588,7 +678,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   audioDuration: {
-    color: '#e9edef',
+    color: '#ffe9ff',
     fontSize: 14,
   },
   timeContainer: {
@@ -598,7 +688,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   timeText: {
-    color: '#8696a0',
+    color: 'rgba(255, 255, 255, 0.5)',
     fontSize: 11,
   },
   inputBar: {
@@ -606,10 +696,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 12,
-    backgroundColor: '#1f2c34',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     borderTopWidth: 1,
-    borderTopColor: '#2a3942',
-    marginBottom: Platform.OS === 'android' ? 16 : 0,
+    borderTopColor: 'rgba(255, 105, 180, 0.2)',
   },
   iconButton: {
     padding: 8,
@@ -618,7 +707,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flex: 1,
-    backgroundColor: '#2a3942',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -626,13 +715,13 @@ const styles = StyleSheet.create({
     maxHeight: 100,
   },
   textInput: {
-    color: '#e9edef',
+    color: '#ffffff',
     fontSize: 16,
     minHeight: 20,
     maxHeight: 100,
   },
   sendButton: {
-    backgroundColor: '#00a884',
+    backgroundColor: '#ff69b4',
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -641,25 +730,27 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   recordingButton: {
-    backgroundColor: '#f44336',
+    backgroundColor: '#ff6b6b',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'flex-start',
     alignItems: 'flex-end',
   },
   menuContainer: {
-    backgroundColor: '#1f2c34',
+    backgroundColor: 'rgba(26, 0, 38, 0.95)',
     marginTop: 60,
     marginRight: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     minWidth: 200,
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: '#ff69b4',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 105, 180, 0.3)',
   },
   menuItem: {
     flexDirection: 'row',
@@ -669,12 +760,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   menuText: {
-    color: '#e9edef',
+    color: '#ffe9ff',
     fontSize: 15,
   },
   menuDivider: {
     height: 1,
-    backgroundColor: '#2a3942',
+    backgroundColor: 'rgba(255, 105, 180, 0.2)',
     marginVertical: 4,
   },
 });
