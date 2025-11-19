@@ -11,7 +11,7 @@ export default function AppButton({
   borderWidth = 0,
   borderRadius = size,
   buttonTitle = '',
-  fontSize = 16, // thêm prop fontSize
+  fontSize = 16,
   onPress,
   style,
 }) {
@@ -21,7 +21,7 @@ export default function AppButton({
         styles.button,
         {
           backgroundColor,
-          width: size * 2 + (buttonTitle ? 80 : 0), // rộng hơn nếu có title
+          width: size * 2 + (buttonTitle ? 80 : 0), 
           height: size * 2,
           borderRadius,
           borderColor,

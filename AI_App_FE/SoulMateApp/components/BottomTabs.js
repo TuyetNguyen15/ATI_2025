@@ -14,7 +14,7 @@ import { CommonActions, useNavigation, getFocusedRouteNameFromRoute } from '@rea
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-// 🏠 Screens
+// Screens
 import HomeScreen from '../screens/home/MainHome';
 import PredictionScreen from '../screens/home/PredictionScreen';
 import ProfileScreen from '../screens/my_profile/ProfileScreen';
@@ -23,13 +23,13 @@ import ProfileScreen from '../screens/my_profile/ProfileScreen';
 import NotificationScreen from '../screens/notification/NotificationScreen';
 import LoveMatchSelectScreen from '../screens/match/LoveMatchSelectScreen'
 
-// 💬 Chat Screens
+// Chat Screens
 import ChatListScreen from '../screens/chat/ChatListScreen';
 import ChatRoomScreen from '../screens/chat/ChatRoomScreen';
 import ConnectionActionsScreen from '../screens/conversation/ConnectionActionsScreen';
 import IceBreakerScreen from '../screens/conversation/IceBreakerScreen';
 
-// ⚙️ Màn giả
+// Màn giả
 function DummyScreen({ title }) {
   return (
     <View style={styles.screen}>
@@ -38,18 +38,12 @@ function DummyScreen({ title }) {
   );
 }
 
-// const NotificationScreen = () => <DummyScreen title="🔔 Thông báo" />;
-
-// ❌ KHÔNG GHI ĐÈ CHATSCREEN NỮA
-// → ĐỔI TÊN MÀN GIẢ
-const DummyChat = () => <DummyScreen title="💬 Trò chuyện" />;
-
 // Tab + Stack
 const Tab = createBottomTabNavigator();
 const HomeStack = createStackNavigator();
 const ChatStack = createStackNavigator();
 
-// 🧡 Chat stack
+// Chat stack
 function ChatStackScreen() {
   return (
     <ChatStack.Navigator screenOptions={{ headerShown: false }}>
@@ -61,7 +55,7 @@ function ChatStackScreen() {
   );
 }
 
-/* 🏠 Home stack */
+/* Home stack */
 function HomeStackScreen() {
   return (
     <HomeStack.Navigator>
@@ -89,9 +83,7 @@ const MatchStack = createStackNavigator();
 function MatchStackScreen() {
   return (
     <MatchStack.Navigator screenOptions={{ headerShown: false }}>
-      {/* <MatchStack.Screen name="MatchMain" component={ChatScreen} /> */}
       <MatchStack.Screen name="LoveMatchSelectScreen" component={LoveMatchSelectScreen} />
-      {/* <MatchStack.Screen name="MatchingListScreen" component={MatchingListScreen} /> */}
     </MatchStack.Navigator>
   );
 }
@@ -124,7 +116,7 @@ function MatchTabButton(props) {
 
 
 
-/* 💬 Stack riêng cho tab Chat */
+/* Stack riêng cho tab Chat */
 function ChatNavigator() {
   return (
     <ChatStack.Navigator
@@ -200,7 +192,7 @@ export default function BottomTabs() {
         })}
       />
 
-      {/* 🔔 Thông báo */}
+      {/* Thông báo */}
       <Tab.Screen
         name="Notifications"
         component={NotificationScreen}
@@ -219,15 +211,12 @@ export default function BottomTabs() {
       <Tab.Screen
         name="Match"
         component={MatchStackScreen}
-        // component={DummyChat}
         options={{
           tabBarButton: (props) => <MatchTabButton {...props} />,
         }}
       />
 
-
-
-      {/* CHAT REAL */}
+      {/* CHAT */}
       <Tab.Screen
         name="Chat"
         component={ChatNavigator}
@@ -239,7 +228,7 @@ export default function BottomTabs() {
               color={focused ? '#ffb6d9' : '#ccc'}
             />
           ),
-          // ⭐ Ẩn tab bar khi vào ChatRoom
+          // Ẩn tab bar khi vào ChatRoom
           tabBarStyle: ((route) => {
             const routeName = getFocusedRouteNameFromRoute(route) ?? 'ChatList';
             if (routeName === 'ChatRoom') {
@@ -268,7 +257,6 @@ export default function BottomTabs() {
   );
 }
 
-/* STYLE */
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',

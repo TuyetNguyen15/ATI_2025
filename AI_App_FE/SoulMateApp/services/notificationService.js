@@ -1,12 +1,9 @@
-// src/services/notificationService.js
 import axios from 'axios';
 import { BASE_URL } from '../config/api';
 
 const API_BASE_URL = BASE_URL;
 
-/**
- * Lấy danh sách thông báo của user
- */
+
 export const getNotifications = async (userId) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/get-notifications`, {
@@ -19,9 +16,7 @@ export const getNotifications = async (userId) => {
   }
 };
 
-/**
- * Đánh dấu thông báo đã đọc
- */
+
 export const markNotificationRead = async (notificationIds) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/mark-notification-read`, {
@@ -34,9 +29,7 @@ export const markNotificationRead = async (notificationIds) => {
   }
 };
 
-/**
- * Xóa thông báo
- */
+
 export const deleteNotification = async (notificationId) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/delete-notification`, {

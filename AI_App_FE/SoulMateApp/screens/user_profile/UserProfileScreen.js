@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, RefreshControl, View, Text } from 'react-native';
 import { doc, getDoc } from "firebase/firestore";
-import { db, auth } from "../../config/firebaseConfig"; // ⭐ THÊM auth
+import { db, auth } from "../../config/firebaseConfig"; 
 
 import UserProfileHeader from './components/UserProfileHeader';
 import UserPersonalInfo from './components/UserPersonalInfo';
@@ -25,7 +25,7 @@ export default function UserProfileScreen({ route, navigation }) {
 
     if (snap.exists()) {
       console.log("📄 Đã load user:", snap.data());
-      setUserData({ ...snap.data(), uid }); // ⭐ THÊM uid vào userData
+      setUserData({ ...snap.data(), uid });
     } else {
       console.log("❌ Không tìm thấy user trong Firestore");
     }
@@ -41,7 +41,6 @@ export default function UserProfileScreen({ route, navigation }) {
     setRefreshing(false);
   };
 
-  // ⭐ NẾU CHƯA LOAD ĐƯỢC, ĐỪNG RENDER COMP BÊN DƯỚI
   if (!userData) {
     return <View style={{flex:1, backgroundColor:"#000"}} />;
   }
@@ -63,9 +62,9 @@ export default function UserProfileScreen({ route, navigation }) {
         <UserPersonalInfo 
           navigation={navigation} 
           userData={userData}
-          currentUserId={auth.currentUser?.uid} // ⭐ THÊM currentUserId
+          currentUserId={auth.currentUser?.uid}
           onMatchPress={() => {
-            // Callback khi match thành công (có thể reload data)
+            // Callback khi match thành công
             fetchUser();
           }}
           onBreakup={() => {

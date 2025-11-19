@@ -148,8 +148,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
   },
-  
-  // --- PLANET SECTION ---
   planetContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -174,8 +172,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
   },
-
-  // --- SLIDES SECTION ---
   slidesWrapper: {
     paddingBottom: Platform.OS === 'ios' ? 20 : 30,
   },
@@ -206,8 +202,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
-  // --- TEXT STYLES ---
   titleText: {
     color: 'rgba(255, 255, 255, 0.98)',
     fontSize: Math.min(width * 0.055, 22),
@@ -226,8 +220,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
   },
-  
-  // --- START BUTTON ---
   startButton: {
     backgroundColor: '#ff7bbf',
     paddingVertical: 16,
@@ -249,8 +241,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textAlign: 'center',
   },
-  
-  // --- PAGINATION ---
   pagination: {
     flexDirection: 'row',
     justifyContent: 'center',

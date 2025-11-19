@@ -1,5 +1,3 @@
-// 📄 services/aiClient.js — REST Client Fireworks (React Native dùng được 100%)
-
 const API_KEY = "fw_3ZRU8nHvQqbLcynsQAdPyBee";
 
 const MODEL_ID = "accounts/fireworks/models/llama-v3p1-8b-instruct";

@@ -103,14 +103,14 @@ export default function NatalChartAnalysis({ navigation }) {
   };
 
   const formatAnalysis = (text) => {
-    // Loại bỏ TẤT CẢ dấu * (bao gồm cả ** và *)
+    // Loại bỏ TẤT CẢ dấu *
     let cleanedText = text.replace(/\*/g, '');
     
     // Tách các phần dựa trên số thứ tự
     const sections = cleanedText.split(/\n\n+/);
     
     return sections.map((section, index) => {
-      // Chỉ kiểm tra tiêu đề có số thứ tự (ví dụ: 1. Tiêu đề)
+      // Chỉ kiểm tra tiêu đề có số thứ tự 
       const isNumberedTitle = section.match(/^(\d+\.)\s*(.+?)(:)?$/m);
       
       if (isNumberedTitle) {

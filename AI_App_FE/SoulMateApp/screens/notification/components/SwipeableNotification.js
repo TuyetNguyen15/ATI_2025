@@ -1,4 +1,3 @@
-// src/components/SwipeableNotification.js
 import React, { useRef, useState } from 'react';
 import { 
   View, 

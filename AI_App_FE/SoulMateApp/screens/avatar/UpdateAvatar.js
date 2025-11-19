@@ -31,7 +31,7 @@ export default function UpdateAvatar({ route, navigation }) {
     ? require('../../assets/default_avatar.jpg')
     : require('../../assets/default_cover_image.jpg');
 
-  // 📸 Chọn ảnh từ thư viện
+  // Chọn ảnh từ thư viện
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
@@ -41,7 +41,7 @@ export default function UpdateAvatar({ route, navigation }) {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'], // ✅ Updated: Use array instead of MediaTypeOptions
+      mediaTypes: ['images'], // Use array instead of MediaTypeOptions
       allowsEditing: true,
       aspect: imageType === 'avatar' ? [1, 1] : [16, 9],
       quality: 0.8,
@@ -53,7 +53,7 @@ export default function UpdateAvatar({ route, navigation }) {
     }
   };
 
-  // 📷 Chụp ảnh mới
+  // Chụp ảnh mới
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     
@@ -74,7 +74,7 @@ export default function UpdateAvatar({ route, navigation }) {
     }
   };
 
-  // ☁️ Upload ảnh lên server
+  // Upload ảnh lên server
   const uploadImage = async () => {
     if (!selectedImage) {
       Alert.alert('⚠️', 'Vui lòng chọn ảnh trước!');
@@ -119,7 +119,7 @@ export default function UpdateAvatar({ route, navigation }) {
     }
   };
 
-  // 🗑️ Xóa ảnh hiện tại
+  // Xóa ảnh hiện tại
   const deleteImage = async () => {
     Alert.alert(
       '🗑️ Xóa ảnh',

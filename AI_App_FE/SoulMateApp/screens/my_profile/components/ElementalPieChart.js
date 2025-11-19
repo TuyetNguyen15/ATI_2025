@@ -1,4 +1,3 @@
-// src/components/ElementalPieChart.js
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { useSelector } from 'react-redux';
@@ -9,7 +8,6 @@ const ElementalPieChart = () => {
     (state) => state.profile
   );
 
-  // Dữ liệu cho biểu đồ
   const data = [
     {
       name: 'Hỏa',

@@ -1,10 +1,9 @@
-// services/profileLoader.js
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { setProfileData, setStatus } from '../screens/my_profile/profileSlice';
 import { getAuth } from "firebase/auth";
 
-// ⭐ Hàm xử lý sạch toàn bộ Firestore Timestamp
+// xử lý sạch toàn bộ Firestore Timestamp
 const deepClean = (data) => {
   if (!data) return data;
 
@@ -55,7 +54,7 @@ export const loadUserProfile = () => {
 
         const rawData = userSnap.data();
 
-      // ⭐ Làm sạch toàn bộ Timestamp
+      // làm sạch toàn bộ Timestamp
       const cleanedData = deepClean(rawData);
       delete cleanedData.updatedAt;
 
@@ -79,7 +78,5 @@ export const loadUserProfile = () => {
   };
   };
 
-  /**
-   * Refresh profile - alias cho loadUserProfile
-   */
+// Refresh profile
   export const refreshUserProfile = (userId, dispatch) => loadUserProfile(userId, dispatch);

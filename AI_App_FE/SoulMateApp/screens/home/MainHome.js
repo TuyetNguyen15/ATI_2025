@@ -1,4 +1,3 @@
-// 📄 src/screens/HomeScreen.jsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -102,8 +101,8 @@ export default function HomeScreen({ navigation }) {
 
 
 
-  // ⭐ LOAD 5 NGƯỜI TƯƠNG HỢP ĐÃ LƯU TRONG FIRESTORE
-  // ⭐ LOAD 5 NGƯỜI GREENFLAG – nếu không có thì gọi AI để tạo luôn
+  // LOAD 5 NGƯỜI TƯƠNG HỢP ĐÃ LƯU TRONG FIRESTORE
+  // LOAD 5 NGƯỜI GREENFLAG – nếu không có thì gọi AI để tạo luôn
   const [fiveMatches, setFiveMatches] = useState([]);
   const [loadingMatches, setLoadingMatches] = useState(false);
 
@@ -114,7 +113,7 @@ export default function HomeScreen({ navigation }) {
       try {
         setLoadingMatches(true);
 
-        // ⭐ 1. CHECK DB
+        // CHECK DB
         const cachedRes = await fetch(
           `${BASE_URL}/love-matching/history/${profile.uid}/greenflag`
         );
@@ -122,7 +121,7 @@ export default function HomeScreen({ navigation }) {
 
         console.log("💚 GREENFLAG HISTORY:", cached);
 
-        // ⭐ Nếu có users → dùng DB
+        //Nếu có users → dùng DB
         if (cached.success && cached.users && cached.users.length > 0) {
           console.log("⚡ Dùng dữ liệu DB (GreenFlag)");
           setFiveMatches(cached.users);
@@ -130,7 +129,7 @@ export default function HomeScreen({ navigation }) {
           return;
         }
 
-        // ⭐ 2. KHÔNG CÓ DB → GỌI AI
+        // KHÔNG CÓ DB → GỌI AI
         console.log("🤖 Không có DB → Gọi AI để tạo GreenFlag");
 
         const aiRes = await fetch(
@@ -171,13 +170,13 @@ export default function HomeScreen({ navigation }) {
 
       <ScrollView contentContainerStyle={styles.scroll}>
 
-        {/* 🌙 Header */}
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.date}>{currentDate}</Text>
           <Text style={styles.welcome}>Xin Chào, {profile.name || 'bạn'}</Text>
         </View>
 
-        {/* 🔘 Segment */}
+        {/* Segment */}
         <View style={styles.segmentContainer}>
           <View style={styles.segmentBg}>
 
@@ -207,7 +206,7 @@ export default function HomeScreen({ navigation }) {
         {/* Nội dung */}
         {scope === 'astro' ? (
           <>
-            {/* 🔮 Zodiac info */}
+            {/* Zodiac info */}
             <View style={styles.zodiacBox}>
 
               <View style={styles.row}>
@@ -266,7 +265,7 @@ export default function HomeScreen({ navigation }) {
           </>
         ) : (
           <>
-            {/* 💞 Widgets */}
+            {/* Widgets */}
             <View style={styles.loveRow}>
               <LinearGradient
                 colors={['rgba(255, 154, 201, 0.2)', 'rgba(179, 109, 255, 0.2)']}
@@ -323,7 +322,7 @@ export default function HomeScreen({ navigation }) {
               </LinearGradient>
             </View>
 
-            {/* 🌟 Quote */}
+            {/*Quote */}
             <View style={styles.quoteBox}>
               <LinearGradient
                 colors={['rgba(255, 154, 201, 0.2)', 'rgba(179, 109, 255, 0.2)']}
@@ -342,7 +341,7 @@ export default function HomeScreen({ navigation }) {
           </>
         )}
 
-        {/* ⭐ TƯƠNG HỢP */}
+        {/* TƯƠNG HỢP */}
         <View style={styles.compatibilitySection}>
           <Text style={styles.sectionTitle}>Tương hợp</Text>
 
