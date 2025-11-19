@@ -17,6 +17,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { updateProfileField, resetProfile } from '../my_profile/profileSlice';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../config/firebaseConfig';
+import { BASE_URL } from '../../config/api';
 
 export default function EditProfile({ navigation, route }) {
   const dispatch = useDispatch();
@@ -226,7 +227,7 @@ export default function EditProfile({ navigation, route }) {
         };
 
         // Gọi API để cập nhật
-        const response = await fetch('http://192.168.23.106:5000/update-profile', {
+        const response = await fetch(`${BASE_URL}/update-profile`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -257,7 +258,7 @@ export default function EditProfile({ navigation, route }) {
         // ✅ Nếu đổi mật khẩu, xác thực mật khẩu hiện tại trước
         if (newPassword || email.trim() !== profile.email) {
           try {
-            const verifyResponse = await fetch('http://192.168.23.106:5000/verify-password', {
+            const verifyResponse = await fetch(`${BASE_URL}/verify-password`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -287,7 +288,7 @@ export default function EditProfile({ navigation, route }) {
           updatedFields.password = newPassword;
         }
 
-        const response = await fetch('http://192.168.23.106:5000/update-profile', {
+        const response = await fetch(`${BASE_URL}/update-profile`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

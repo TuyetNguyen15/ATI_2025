@@ -1,7 +1,8 @@
 // src/services/notificationService.js
 import axios from 'axios';
+import { BASE_URL } from '../config/api';
 
-const API_BASE_URL = 'http://192.168.100.203:5000'; // Thay bằng URL backend của bạn
+const API_BASE_URL = BASE_URL;
 
 /**
  * Lấy danh sách thông báo của user

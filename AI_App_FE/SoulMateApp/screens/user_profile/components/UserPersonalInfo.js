@@ -2,25 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BASE_URL } from '../../../config/api';
 
 export default function UserPersonalInfo({ 
   userData, 
   currentUserId,
   onMatchPress,
   onBreakup,
-  apiUrl = 'http://192.168.100.203:5000'
+  apiUrl = BASE_URL
 }) {
   const { relationshipStatus, age, gender, height, weight, job } = userData || {};
   const [showMatchPopup, setShowMatchPopup] = useState(false);
   const [showBreakupPopup, setShowBreakupPopup] = useState(false);
   const [message, setMessage] = useState('');
-  const [matchStatus, setMatchStatus] = useState('none'); // none, pending, matched
+  const [matchStatus, setMatchStatus] = useState('none');
   const [loading, setLoading] = useState(false);
 
   const targetUserId = userData?.uid;
   const isSingle = relationshipStatus?.toLowerCase().trim() === 'độc thân';
+  const isInRelationship = relationshipStatus?.toLowerCase().trim() === 'đã có đôi';
 
-  // Kiểm tra trạng thái match khi component mount
   useEffect(() => {
     if (currentUserId && targetUserId && currentUserId !== targetUserId) {
       checkMatchStatus();
@@ -44,7 +45,7 @@ export default function UserPersonalInfo({
 
   const handleMatchPress = () => {
     if (matchStatus === 'pending') {
-      return; // Không làm gì nếu đang pending
+      return;
     }
     if (matchStatus === 'matched') {
       setShowBreakupPopup(true);
@@ -128,20 +129,59 @@ export default function UserPersonalInfo({
     }
   };
 
-  const renderInfoCard = (item) => (
-    <View style={[styles.infoRow, item.halfWidth && styles.halfWidth]} key={item.label}>
-      <View style={styles.iconContainer}>
-        <MaterialIcons name={item.icon} size={22} color="#ff7bbf" />
+  const renderInfoCard = (item) => {
+    const isRelationshipCard = item.isRelationship && isInRelationship;
+
+    if (isRelationshipCard) {
+      return (
+        <View 
+          style={styles.relationshipRow}
+          key={item.label}
+        >
+          <LinearGradient
+            colors={['rgba(255, 107, 157, 0.3)', 'rgba(196, 77, 255, 0.3)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.relationshipGradient}
+          >
+            <View style={styles.iconContainer}>
+              <MaterialIcons name={item.icon} size={24} color="#ff6b9d" />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>{item.label}</Text>
+              <View style={styles.relationshipValueContainer}>
+                <Text style={[styles.infoValue, styles.relationshipValue]}>
+                  {item.value}
+                </Text>
+                <MaterialIcons name="favorite" size={16} color="#ff6b9d" style={styles.heartIcon} />
+              </View>
+            </View>
+          </LinearGradient>
+        </View>
+      );
+    }
+
+    return (
+      <View style={[styles.infoRow, item.halfWidth && styles.halfWidth]} key={item.label}>
+        <View style={styles.iconContainer}>
+          <MaterialIcons name={item.icon} size={22} color="#ff7bbf" />
+        </View>
+        <View style={styles.infoTextContainer}>
+          <Text style={styles.infoLabel}>{item.label}</Text>
+          <Text style={styles.infoValue}>{item.value}</Text>
+        </View>
       </View>
-      <View style={styles.infoTextContainer}>
-        <Text style={styles.infoLabel}>{item.label}</Text>
-        <Text style={styles.infoValue}>{item.value}</Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   const personalInfoItems = [
-    { icon: 'favorite', label: 'Trạng thái', value: relationshipStatus || 'Chưa cập nhật', fullWidth: true },
+    { 
+      icon: 'favorite', 
+      label: 'Trạng thái', 
+      value: relationshipStatus || 'Chưa cập nhật', 
+      fullWidth: true,
+      isRelationship: true 
+    },
     { icon: 'cake', label: 'Tuổi', value: age || 'Chưa cập nhật', halfWidth: true },
     { icon: 'wc', label: 'Giới tính', value: gender || 'Chưa cập nhật', halfWidth: true },
     { icon: 'straighten', label: 'Chiều cao', value: height != null ? `${height} m` : 'Chưa cập nhật', halfWidth: true },
@@ -157,7 +197,6 @@ export default function UserPersonalInfo({
       const currentItem = items[i];
       
       if (currentItem.fullWidth) {
-        // Full width item
         rows.push(
           <View key={i} style={styles.rowContainer}>
             {renderInfoCard(currentItem)}
@@ -165,7 +204,6 @@ export default function UserPersonalInfo({
         );
         i++;
       } else if (currentItem.halfWidth && i + 1 < items.length && items[i + 1].halfWidth) {
-        // Two half width items in a row
         rows.push(
           <View key={i} style={styles.rowContainer}>
             {renderInfoCard(currentItem)}
@@ -174,7 +212,6 @@ export default function UserPersonalInfo({
         );
         i += 2;
       } else {
-        // Single half width item (fallback)
         rows.push(
           <View key={i} style={styles.rowContainer}>
             {renderInfoCard(currentItem)}
@@ -188,12 +225,10 @@ export default function UserPersonalInfo({
   };
 
   const renderActionButton = () => {
-    // Nếu là profile của chính mình, không hiển thị nút
     if (currentUserId === targetUserId) {
       return null;
     }
 
-    // Nếu không phải độc thân, không hiển thị nút
     if (!isSingle) {
       return null;
     }
@@ -240,10 +275,8 @@ export default function UserPersonalInfo({
         {renderInfo(personalInfoItems)}
       </View>
 
-      {/* Nút hành động */}
       {renderActionButton()}
 
-      {/* Popup Ghép đôi */}
       <Modal
         visible={showMatchPopup}
         transparent={true}
@@ -300,7 +333,6 @@ export default function UserPersonalInfo({
         </View>
       </Modal>
 
-      {/* Popup Chia tay */}
       <Modal
         visible={showBreakupPopup}
         transparent={true}
@@ -365,7 +397,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     borderRadius: 14,
     padding: 20,
-    borderRadius: 14,
     borderWidth: 2,
     borderColor: '#ff7acb',
   },
@@ -388,11 +419,40 @@ const styles = StyleSheet.create({
   halfWidth: {
     flex: 0.5,
   },
+  relationshipRow: {
+    flex: 1,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  relationshipGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderColor: 'rgba(255, 107, 157, 0.4)',
+  },
+  relationshipValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  relationshipValue: {
+    color: '#ff6b9d',
+    fontWeight: '700',
+    fontSize: 17,
+    textShadowColor: 'rgba(255, 107, 157, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  heartIcon: {
+    marginLeft: 2,
+  },
   iconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 123, 191, 0.1)',
+    backgroundColor: 'rgba(255, 123, 191, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

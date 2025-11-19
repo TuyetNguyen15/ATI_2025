@@ -16,6 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firebaseConfig';
 import { updateProfileField } from '../my_profile/profileSlice';
+import { BASE_URL } from '../../config/api';
 
 export default function UpdateAvatar({ route, navigation }) {
   const { imageType } = route.params; // "avatar" hoặc "coverImage"
@@ -84,7 +85,7 @@ export default function UpdateAvatar({ route, navigation }) {
 
     try {
       // Gửi base64 lên Flask server
-      const response = await fetch('http://192.168.23.106:5000/upload-image', {
+      const response = await fetch(`${BASE_URL}/upload-image`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -133,7 +134,7 @@ export default function UpdateAvatar({ route, navigation }) {
               setUploading(true);
 
               // Xóa trên server
-              await fetch('http://192.168.23.106:5000/delete-image', {
+              await fetch(`${BASE_URL}/delete-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

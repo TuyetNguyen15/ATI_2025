@@ -18,11 +18,11 @@ import { getVietnameseDate } from "../../utils/date";
 import { ELEMENT_MAP, ELEMENT_COLORS, ZODIAC_ICONS } from '../../constants/astrologyMap';
 import useAstroAPI from '../../hook/useAstroAPI';
 import { loadUserProfile } from "../../services/profileLoader";
+import { BASE_URL } from '../../config/api';
 
 const { width } = Dimensions.get('window');
 
-// ⭐ ĐỔI IP BACKEND Ở ĐÂY
-const API_URL = "http://172.168.1.24:5000";
+const API_URL = BASE_URL; 
 
 export default function HomeScreen({ navigation }) {
   const [scope, setScope] = useState('astro');

@@ -15,11 +15,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import LoveMatchResultScreen from "../match/LoveMatchResultScreen";
+import { BASE_URL } from "../../config/api";
 // import { getMatchResult } from "../../services/matchService";
 const { width } = Dimensions.get("window");
 
-// ⚠️ ĐỔI THÀNH IP CỦA EM
-const API_URL = "http://172.168.1.24:5000";
+const API_URL = BASE_URL;
 
 const CATEGORIES = [
   { key: "redflag", title: "Red Flag", img: require("../../assets/type/redflag.png") },

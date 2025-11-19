@@ -16,7 +16,7 @@ import SwipeableNotification from './components/SwipeableNotification';
 import { 
   getNotifications, 
   markNotificationRead, 
-  deleteNotification 
+  deleteNotification,
 } from '../../services/notificationService';
 import { auth } from '../../config/firebaseConfig';
 
@@ -76,20 +76,12 @@ const NotificationsScreen = ({ navigation }) => {
     }
   };
 
-  // ✅ Callback để xóa notification khi accept/reject
-  const handleMatchRequestResponse = (requestId) => {
-    // Tìm notification dựa trên requestId
-    const notifToRemove = notifications.find(n => n.requestId === requestId);
-    
-    if (notifToRemove) {
-      // Xóa khỏi UI
-      setNotifications(prev => prev.filter(n => n.id !== notifToRemove.id));
-      
-      // Gọi API xóa (optional, có thể backend tự động xóa khi accept/reject)
-      deleteNotification(notifToRemove.id).catch(err => {
-        console.error('Error deleting notification:', err);
-      });
-    }
+  // Callback khi accept/reject match request
+  const handleMatchRequestResponse = async (action, requestId) => {
+    console.log(`Match request ${action}:`, requestId);
+    // Reload notifications để cập nhật trạng thái mới
+    // Notification sẽ được giữ lại nhưng có thể thay đổi nội dung
+    await loadNotifications(userId);
   };
 
   // Xác định navigationData dựa trên type của notification
@@ -102,7 +94,7 @@ const NotificationsScreen = ({ navigation }) => {
           return {
             screen: 'MatchRequestDetailScreen',
             params: {
-              ...notif.navigationData.params, // Spread tất cả params
+              ...notif.navigationData.params,
               // Truyền thêm callbacks
               onAccept: handleMatchRequestResponse,
               onReject: handleMatchRequestResponse

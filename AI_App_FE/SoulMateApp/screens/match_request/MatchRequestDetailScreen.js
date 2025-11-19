@@ -12,6 +12,10 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { auth } from '../../config/firebaseConfig';
+import { BASE_URL } from '../../config/api';
+
+const API_BASE_URL = BASE_URL;
 
 const MatchRequestDetailScreen = ({ route, navigation }) => {
   const {
@@ -21,89 +25,151 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
     senderAvatar,
     message,
     senderAge,
-    senderJob
+    senderJob,
+    onAccept, // ✅ Callback từ NotificationScreen
+    onReject  // ✅ Callback từ NotificationScreen
   } = route.params;
 
   const [responding, setResponding] = useState(false);
   const [hasResponded, setHasResponded] = useState(false);
-  const [requestStatus, setRequestStatus] = useState('pending'); // ✅ Track status từ backend
+  const [requestStatus, setRequestStatus] = useState('pending');
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
-  // ✅ Load request status từ backend khi component mount
+  // ✅ Lấy current user ID khi component mount
   useEffect(() => {
-    checkRequestStatus();
+    const userId = auth.currentUser?.uid;
+    if (userId) {
+      setCurrentUserId(userId);
+      console.log('✅ Current User ID:', userId);
+    } else {
+      console.error('❌ No authenticated user found');
+      Alert.alert('Lỗi', 'Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+      navigation.goBack();
+    }
   }, []);
 
-  // ✅ Hàm kiểm tra status của request
+  // ✅ Load request status từ backend khi có userId
+  useEffect(() => {
+    if (currentUserId && requestId) {
+      checkRequestStatus();
+    }
+  }, [currentUserId, requestId]);
+
+  // ✅ Hàm kiểm tra status của request - FIX URL
   const checkRequestStatus = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://127.0.0.1:5000/match-request/${requestId}`);
+      
+      // ✅ FIX: Đổi URL thành /check-match-request/
+      const response = await fetch(`${API_BASE_URL}/check-match-request/${requestId}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       
-      // Giả lập API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('✅ Request status:', data);
       
-      // Giả sử API trả về { status: 'pending' | 'accepted' | 'rejected' }
-      setRequestStatus(data.status);
-      
-      // Nếu đã xử lý rồi thì disable buttons
-      if (data.status !== 'pending') {
-         setHasResponded(true);
+      if (data.success) {
+        setRequestStatus(data.status);
+        
+        // Nếu đã xử lý rồi thì disable buttons
+        if (data.status !== 'pending') {
+          setHasResponded(true);
+        }
+      } else {
+        throw new Error(data.error || 'Không thể tải thông tin lời mời');
       }
       
     } catch (error) {
-      console.error('Error checking request status:', error);
-      Alert.alert('Lỗi', 'Không thể tải thông tin lời mời. Vui lòng thử lại.');
+      console.error('❌ Error checking request status:', error);
+      Alert.alert(
+        'Lỗi', 
+        'Không thể tải thông tin lời mời. Vui lòng thử lại.',
+        [
+          { text: 'Thử lại', onPress: checkRequestStatus },
+          { text: 'Quay lại', onPress: () => navigation.goBack() }
+        ]
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Xử lý đồng ý ghép đôi
+  // ✅ Xử lý đồng ý ghép đôi - FIX userId
   const handleAccept = async () => {
     if (hasResponded || requestStatus !== 'pending') return;
+    
+    if (!currentUserId) {
+      Alert.alert('Lỗi', 'Không tìm thấy thông tin người dùng');
+      return;
+    }
     
     setResponding(true);
     setHasResponded(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/accept-match-request', {
+      console.log('📤 Accepting match request:', { requestId, receiverId: currentUserId });
+      
+      const response = await fetch(`${API_BASE_URL}/accept-match-request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           requestId, 
-          receiverId: 'CURRENT_USER_ID' // Lấy từ auth
+          receiverId: currentUserId // ✅ Dùng real user ID
         })
       });
 
-      // Navigate back
-      navigation.goBack();
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       
-      // Show alert
-      setTimeout(() => {
-        Alert.alert(
-          'Thành công!',
-          'Bạn đã chấp nhận ghép đôi!'
-        );
-      }, 300);
+      if (data.success) {
+        console.log('✅ Match accepted successfully:', data);
+        
+        // Navigate back
+        navigation.goBack();
+        
+        // Show success alert
+        setTimeout(() => {
+          Alert.alert(
+            '🎉 Thành công!',
+            `Bạn đã chấp nhận ghép đôi với ${senderName}!`,
+            [{ text: 'OK' }]
+          );
+        }, 300);
+      } else {
+        throw new Error(data.error || 'Không thể chấp nhận lời mời');
+      }
       
     } catch (error) {
+      console.error('❌ Accept match error:', error);
       setHasResponded(false);
-      Alert.alert('Lỗi', 'Không thể chấp nhận lời mời. Vui lòng thử lại.');
-      console.error('Accept match error:', error);
+      Alert.alert(
+        'Lỗi', 
+        error.message || 'Không thể chấp nhận lời mời. Vui lòng thử lại.'
+      );
     } finally {
       setResponding(false);
     }
   };
 
-  // Xử lý từ chối ghép đôi
+  // ✅ Xử lý từ chối ghép đôi - FIX userId
   const handleReject = async () => {
     if (hasResponded || requestStatus !== 'pending') return;
     
+    if (!currentUserId) {
+      Alert.alert('Lỗi', 'Không tìm thấy thông tin người dùng');
+      return;
+    }
+    
     Alert.alert(
       'Xác nhận từ chối',
-      'Bạn có chắc muốn từ chối lời mời ghép đôi này?',
+      `Bạn có chắc muốn từ chối lời mời ghép đôi từ ${senderName}?`,
       [
         {
           text: 'Hủy',
@@ -117,28 +183,48 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
             setHasResponded(true);
 
             try {
-              // TODO: Gọi API để từ chối lời mời ghép đôi
-              const response = await fetch('http://127.0.0.1:5000/reject-match-request', {
+              console.log('📤 Rejecting match request:', { requestId, receiverId: currentUserId });
+              
+              const response = await fetch(`${API_BASE_URL}/reject-match-request`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                   requestId, 
-                  receiverId: 'CURRENT_USER_ID' 
+                  receiverId: currentUserId // ✅ Dùng real user ID
                 })
               });
 
-              // Navigate back
-              navigation.goBack();
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+
+              const data = await response.json();
               
-              // Show alert
-              setTimeout(() => {
-                Alert.alert('Đã từ chối', 'Bạn đã từ chối lời mời ghép đôi.');
-              }, 300);
+              if (data.success) {
+                console.log('✅ Match rejected successfully');
+                
+                // Navigate back
+                navigation.goBack();
+                
+                // Show alert
+                setTimeout(() => {
+                  Alert.alert(
+                    'Đã từ chối',
+                    'Bạn đã từ chối lời mời ghép đôi.',
+                    [{ text: 'OK' }]
+                  );
+                }, 300);
+              } else {
+                throw new Error(data.error || 'Không thể từ chối lời mời');
+              }
               
             } catch (error) {
+              console.error('❌ Reject match error:', error);
               setHasResponded(false);
-              Alert.alert('Lỗi', 'Không thể từ chối lời mời. Vui lòng thử lại.');
-              console.error('Reject match error:', error);
+              Alert.alert(
+                'Lỗi',
+                error.message || 'Không thể từ chối lời mời. Vui lòng thử lại.'
+              );
             } finally {
               setResponding(false);
             }
@@ -148,8 +234,8 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
     );
   };
 
-  // ✅ Hiển thị loading khi đang check status
-  if (loading) {
+  // ✅ Hiển thị loading khi đang check status hoặc chưa có userId
+  if (loading || !currentUserId) {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" color="#b36dff" />
@@ -265,7 +351,7 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
             <TouchableOpacity
               style={[
                 styles.rejectButtonWrapper,
-                hasResponded && styles.disabledButton
+                (responding || hasResponded) && styles.disabledButton
               ]}
               onPress={handleReject}
               disabled={responding || hasResponded}
@@ -273,7 +359,9 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
             >
               <View style={styles.rejectButton}>
                 <MaterialIcons name="close" size={24} color="#ff3b30" />
-                <Text style={styles.rejectButtonText}>Từ chối</Text>
+                <Text style={styles.rejectButtonText}>
+                  {responding ? 'Đang xử lý...' : 'Từ chối'}
+                </Text>
               </View>
             </TouchableOpacity>
 
@@ -281,7 +369,7 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
             <TouchableOpacity
               style={[
                 styles.acceptButtonWrapper,
-                hasResponded && styles.disabledButton
+                (responding || hasResponded) && styles.disabledButton
               ]}
               onPress={handleAccept}
               disabled={responding || hasResponded}
@@ -348,7 +436,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 120
   },
-  // ✅ Status banner styles
   statusBanner: {
     flexDirection: 'row',
     alignItems: 'center',
