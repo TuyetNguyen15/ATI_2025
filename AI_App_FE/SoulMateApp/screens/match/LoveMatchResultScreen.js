@@ -30,14 +30,14 @@ export default function LoveMatchResultScreen({ type, people }) {
   const [selected, setSelected] = useState(null);
   const navigation = useNavigation();
 
-  // ⭐ Lấy dữ liệu user đang đăng nhập
+  // Lấy dữ liệu user đang đăng nhập
   const profile = useSelector((state) => state.profile);
 
   if (!people || people.length < 5) {
     return <Text style={{ color: "#fff", marginTop: 20 }}>Không đủ dữ liệu</Text>;
   }
 
-  // ⭐ RENDER TỪNG CARD
+  // RENDER TỪNG CARD
   const renderCard = (index, person, baseStyle) => {
     const isSelected = selected === index;
 

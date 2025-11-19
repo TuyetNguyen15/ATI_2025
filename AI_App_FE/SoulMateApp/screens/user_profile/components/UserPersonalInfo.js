@@ -25,28 +25,25 @@ export default function UserPersonalInfo({
   const targetUserId = userData?.uid;
   const [targetUserPartnerId, setTargetUserPartnerId] = useState(null);
   
-  // Kiểm tra người xem (currentUser) có độc thân không
   const isCurrentUserSingle = currentUserRelationshipStatus?.toLowerCase().trim() === 'độc thân';
-  // Kiểm tra người được xem (targetUser) có độc thân không
   const isTargetUserSingle = relationshipStatus?.toLowerCase().trim() === 'độc thân';
-  // ⭐ isInRelationship kiểm tra người được xem (targetUser) - giữ lại cho UI
   const isInRelationship = relationshipStatus?.toLowerCase().trim() === 'đã có đôi';
 
-  // BƯỚC 1: Fetch partnerId của currentUser từ Firestore
+  // Fetch partnerId của currentUser từ Firestore
   useEffect(() => {
     if (currentUserId) {
       fetchCurrentUserPartnerFromFirestore();
     }
   }, [currentUserId]);
 
-  // BƯỚC 2: Fetch partnerId của targetUser từ Firestore
+  // Fetch partnerId của targetUser từ Firestore
   useEffect(() => {
     if (targetUserId && currentUserId !== targetUserId) {
       fetchTargetUserPartnerFromFirestore();
     }
   }, [targetUserId, currentUserId]);
 
-  // BƯỚC 3: Check match status (giữ lại cho trường hợp pending)
+  // Check match status (trường hợp pending)
   useEffect(() => {
     if (currentUserId && targetUserId && currentUserId !== targetUserId) {
       checkMatchStatus();
@@ -316,14 +313,14 @@ export default function UserPersonalInfo({
   console.log('isCurrentUserSingle:', isCurrentUserSingle);
   console.log('isTargetUserSingle:', isTargetUserSingle);
 
-  // ❌ Bản thân xem profile của mình
+  // Bản thân xem profile của mình
   if (currentUserId === targetUserId) {
     console.log('❌ Same user, returning null');
     return null;
   }
 
-  // ✅ Kiểm tra xem A và B có phải là partner của nhau không
-  // Điều kiện: uid của A === partnerId của B VÀ uid của B === partnerId của A
+  // Kiểm tra xem A và B có phải là partner của nhau không
+  // uid của A === partnerId của B VÀ uid của B === partnerId của A
   const arePartners = 
     currentUserId === targetUserPartnerId && 
     targetUserId === currentUserPartnerId;
@@ -334,7 +331,7 @@ export default function UserPersonalInfo({
     condition2: targetUserId === currentUserPartnerId,
   });
 
-  // ✅ TRƯỜNG HỢP 1: A và B là partner của nhau → Hiển thị nút "Chia tay"
+  // TRƯỜNG HỢP 1: A và B là partner của nhau → Hiển thị nút "Chia tay"
   if (arePartners) {
     console.log('✅ Showing breakup button (they are partners)');
     return (
@@ -356,7 +353,7 @@ export default function UserPersonalInfo({
     );
   }
 
-  // ✅ TRƯỜNG HỢP 2: Đang chờ phản hồi
+  // TRƯỜNG HỢP 2: Đang chờ phản hồi
   if (matchStatus === 'pending') {
     console.log('✅ Showing pending button');
     return (
@@ -378,7 +375,7 @@ export default function UserPersonalInfo({
     );
   }
 
-  // ✅ TRƯỜNG HỢP 3: A độc thân VÀ B độc thân → Hiển thị nút "Ghép đôi"
+  // TRƯỜNG HỢP 3: A độc thân VÀ B độc thân → Hiển thị nút "Ghép đôi"
   if (isCurrentUserSingle && isTargetUserSingle) {
     console.log('✅ Showing match button (both are single)');
     return (
@@ -400,7 +397,7 @@ export default function UserPersonalInfo({
     );
   }
 
-  // ✅ TRƯỜNG HỢP 4: Các trường hợp khác không hiển thị nút
+  // Các trường hợp khác không hiển thị nút
   console.log('❌ No button to show');
   return null;
 };

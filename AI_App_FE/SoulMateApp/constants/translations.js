@@ -1,5 +1,3 @@
-// constants/translations.js
-
 export const ZODIAC_TRANSLATIONS = {
   'Aries': 'Bạch Dương',
   'Taurus': 'Kim Ngưu',

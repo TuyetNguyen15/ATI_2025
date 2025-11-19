@@ -17,7 +17,7 @@ export default function ProfileScreen({ navigation }) {
   // Lấy status từ Redux để kiểm tra trạng thái loading
   const profileStatus = useSelector((state) => state.profile.status);
 
-  // ✨ Sử dụng custom hook để xử lý refresh
+  // Sử dụng custom hook để xử lý refresh
   const { refreshing, onRefresh } = useRefresh(async () => {
     const userId = auth.currentUser?.uid;
     if (userId) {

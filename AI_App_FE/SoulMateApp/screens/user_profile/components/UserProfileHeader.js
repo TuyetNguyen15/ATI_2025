@@ -22,7 +22,6 @@ export default function UserProfileHeader({ user, navigation }) {
           style={styles.coverImage}
         />
         
-        {/* Nút Back */}
         <TouchableOpacity 
           style={styles.backButton} 
           onPress={handleGoBack}

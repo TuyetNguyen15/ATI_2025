@@ -1,4 +1,3 @@
-// src/screens/MatchRequestDetailScreen.js
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -26,8 +25,8 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
     message,
     senderAge,
     senderJob,
-    onAccept, // ✅ Callback từ NotificationScreen
-    onReject  // ✅ Callback từ NotificationScreen
+    onAccept, // Callback từ NotificationScreen
+    onReject  //Callback từ NotificationScreen
   } = route.params;
 
   const [responding, setResponding] = useState(false);
@@ -36,7 +35,7 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
 
-  // ✅ Lấy current user ID khi component mount
+  // Lấy current user ID khi component mount
   useEffect(() => {
     const userId = auth.currentUser?.uid;
     if (userId) {
@@ -49,19 +48,19 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
     }
   }, []);
 
-  // ✅ Load request status từ backend khi có userId
+  // Load request status từ backend khi có userId
   useEffect(() => {
     if (currentUserId && requestId) {
       checkRequestStatus();
     }
   }, [currentUserId, requestId]);
 
-  // ✅ Hàm kiểm tra status của request - FIX URL
+  // Hàm kiểm tra status của request - FIX URL
   const checkRequestStatus = async () => {
     try {
       setLoading(true);
       
-      // ✅ FIX: Đổi URL thành /check-match-request/
+      //FIX: Đổi URL thành /check-match-request/
       const response = await fetch(`${API_BASE_URL}/check-match-request/${requestId}`);
       
       if (!response.ok) {
@@ -98,7 +97,7 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
     }
   };
 
-  // ✅ Xử lý đồng ý ghép đôi - FIX userId
+  // Xử lý đồng ý ghép đôi - FIX userId
   const handleAccept = async () => {
     if (hasResponded || requestStatus !== 'pending') return;
     
@@ -118,7 +117,7 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           requestId, 
-          receiverId: currentUserId // ✅ Dùng real user ID
+          receiverId: currentUserId // Dùng real user ID
         })
       });
 
@@ -158,7 +157,7 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
     }
   };
 
-  // ✅ Xử lý từ chối ghép đôi - FIX userId
+  // Xử lý từ chối ghép đôi - FIX userId
   const handleReject = async () => {
     if (hasResponded || requestStatus !== 'pending') return;
     
@@ -190,7 +189,7 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                   requestId, 
-                  receiverId: currentUserId // ✅ Dùng real user ID
+                  receiverId: currentUserId // Dùng real user ID
                 })
               });
 
@@ -234,7 +233,7 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
     );
   };
 
-  // ✅ Hiển thị loading khi đang check status hoặc chưa có userId
+  // Hiển thị loading khi đang check status hoặc chưa có userId
   if (loading || !currentUserId) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -244,7 +243,7 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
     );
   }
 
-  // ✅ Hiển thị thông báo nếu đã xử lý
+  // Hiển thị thông báo nếu đã xử lý
   const showStatusMessage = () => {
     if (requestStatus === 'accepted') {
       return (
@@ -284,7 +283,7 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* ✅ Status banner */}
+        {/* Status banner */}
         {showStatusMessage()}
 
         {/* Profile Card */}
@@ -343,7 +342,7 @@ const MatchRequestDetailScreen = ({ route, navigation }) => {
         </View>
       </ScrollView>
 
-      {/* ✅ Buttons - Chỉ hiển thị khi status là pending */}
+      {/* Chỉ hiển thị khi status là pending */}
       {requestStatus === 'pending' && (
         <View style={styles.fixedButton}>
           <View style={styles.buttonContainer}>

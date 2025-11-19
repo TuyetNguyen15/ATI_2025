@@ -15,7 +15,7 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // 🌌 Hiệu ứng nền sao
+  // Hiệu ứng nền sao
   const glowAnim = useRef(new Animated.Value(0.7)).current;
   const stars = useRef(
     Array.from({ length: 250 }).map(() => ({

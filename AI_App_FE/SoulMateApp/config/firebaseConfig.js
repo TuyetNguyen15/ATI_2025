@@ -1,8 +1,7 @@
-// firebaseConfig.js
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage"; // ⭐ THÊM STORAGE
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDnzNnNMDI__0gsGSg_RTR69m-RKUh9n04",
@@ -15,12 +14,12 @@ const firebaseConfig = {
   measurementId: "G-PYD6JX4RJN"
 };
 
-// 🚀 Chỉ khởi tạo 1 lần
+// Chỉ khởi tạo 1 lần
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// ✅ Khởi tạo Auth, Firestore & Storage
+// Khởi tạo Auth, Firestore & Storage
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const storage = getStorage(app); // ⭐ EXPORT STORAGE
+export const storage = getStorage(app);
 
 export default app;

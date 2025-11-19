@@ -21,7 +21,7 @@ const actions = [
 
 export default function ConnectionActionsScreen({ navigation, route }) {
 
-  // ⭐ LẤY UID NGƯỜI ĐỐI DIỆN
+  // LẤY UID NGƯỜI ĐỐI DIỆN
   const partnerId = route?.params?.partnerId;
   const partnerName = route?.params?.partnerName;
 

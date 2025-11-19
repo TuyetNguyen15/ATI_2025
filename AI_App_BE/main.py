@@ -11,11 +11,10 @@ import re
 import base64
 import cloudinary
 import cloudinary.uploader
-import requests
 from datetime import datetime, timedelta
 import uuid
 
-# 🚀 Load biến môi trường
+# Load biến môi trường
 base_dir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(base_dir, ".env"))
 
@@ -25,22 +24,22 @@ firebase_api_key = os.getenv("FIREBASE_API_KEY")
 if not api_key:
     raise ValueError("⚠️ Chưa load được GEMINI_API_KEY!")
 
-# 🔮 Cấu hình Gemini
+# Cấu hình Gemini
 genai.configure(api_key=api_key)
 
-# 🔥 Firebase Admin (chỉ Firestore)
+# Firebase Admin (chỉ Firestore)
 cred = credentials.Certificate(os.path.join(base_dir, "firebase-key.json"))
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-# ☁️ Cấu hình Cloudinary (MIỄN PHÍ)
+# Cấu hình Cloudinary (MIỄN PHÍ)
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", "YOUR_CLOUD_NAME"),
     api_key=os.getenv("CLOUDINARY_API_KEY", "YOUR_API_KEY"),
     api_secret=os.getenv("CLOUDINARY_API_SECRET", "YOUR_API_SECRET")
 )
 
-# 🚀 Flask setup
+# Flask setup
 app = Flask(__name__)
 CORS(app)
 
@@ -48,7 +47,7 @@ MODEL_NAME ="gemini-2.5-flash"
 
 
 # -------------------------------------------------
-# 🧠 Lấy dữ liệu cache Firestore
+#  Lấy dữ liệu cache Firestore
 # -------------------------------------------------
 def get_cached_prediction(uid, name, sun, moon, category, day):
     query = (
@@ -68,7 +67,7 @@ def get_cached_prediction(uid, name, sun, moon, category, day):
 
 
 # -------------------------------------------------
-# 💾 Lưu dữ liệu vào Firestore
+#  Lưu dữ liệu vào Firestore
 # -------------------------------------------------
 def save_prediction(uid, name, sun, moon, category, day, data):
     doc = {
@@ -88,49 +87,9 @@ def save_prediction(uid, name, sun, moon, category, day, data):
 
     db.collection("user_prediction").add(doc)
     
-
-# -------------------------------------------------
-# 🔄 Retry decorator cho Gemini API
-# -------------------------------------------------
-def retry_on_quota_exceeded(max_retries=2, initial_delay=40):
-    """Tự động retry khi gặp rate limit"""
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            retries = 0
-            delay = initial_delay
-            
-            while retries <= max_retries:
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    error_msg = str(e)
-                    
-                    if "429" in error_msg and "quota" in error_msg.lower():
-                        match = re.search(r'retry in (\d+(?:\.\d+)?)', error_msg)
-                        if match:
-                            delay = float(match.group(1)) + 2
-                        
-                        retries += 1
-                        if retries <= max_retries:
-                            print(f"⏳ Rate limit. Đợi {delay}s... (Lần {retries}/{max_retries})")
-                            time.sleep(delay)
-                            continue
-                        else:
-                            raise Exception(
-                                "API đang quá tải. Vui lòng thử lại sau 1-2 phút. "
-                                "Hoặc nâng cấp Gemini API lên plan trả phí."
-                            )
-                    else:
-                        raise
-            
-            return None
-        return wrapper
-    return decorator
-
     
 # ===============================
-# 🎯 Lọc user có đầy đủ dữ liệu chiêm tinh
+#  Lọc user có đầy đủ dữ liệu chiêm tinh
 # ===============================
 def is_valid_user(u):
     try:
@@ -159,7 +118,7 @@ def is_valid_user(u):
 
 
 # -------------------------------------------------
-# 🔐 Route Verify Password (XÁC THỰC MẬT KHẨU)
+#  Route Verify Password
 # -------------------------------------------------
 @app.route("/verify-password", methods=["POST"])
 def verify_password():
@@ -179,7 +138,7 @@ def verify_password():
         url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={firebase_api_key}"
 
         payload = {
-            "email": email.strip(),  # ✅ Thêm strip() để loại bỏ khoảng trắng
+            "email": email.strip(),  # Thêm strip() để loại bỏ khoảng trắng
             "password": password,
             "returnSecureToken": True
         }
@@ -207,7 +166,7 @@ def verify_password():
 
 
 # -------------------------------------------------
-# 📝 Route Update Profile (CẬP NHẬT AUTHENTICATION)
+# Route Update Profile 
 # -------------------------------------------------
 @app.route("/update-profile", methods=["POST"])
 def update_profile():
@@ -222,7 +181,7 @@ def update_profile():
         if not uid or not fields:
             return jsonify({"error": "Thiếu uid hoặc fields"}), 400
 
-        # ✅ Cập nhật Firebase Authentication nếu có email hoặc password
+        # Cập nhật Firebase Authentication nếu có email hoặc password
         auth_updated = False
         auth_updates = {}
 
@@ -267,7 +226,7 @@ def update_profile():
 
 
 # -------------------------------------------------
-# 🔮 Route chính: /generate
+# Route chính: /generate
 # -------------------------------------------------
 @app.route("/generate", methods=["POST"])
 def generate_prediction():
@@ -284,7 +243,7 @@ def generate_prediction():
     if not name or not sun or not moon:
         return jsonify({"error": "Thiếu thông tin người dùng"}), 400
 
-    # ⚡ Kiểm tra cache Firestore
+    # Kiểm tra cache Firestore
     cached_doc = get_cached_prediction(uid, name, sun, moon, category, day)
     if cached_doc:
         print(f"✅ Cache Firestore có sẵn cho {name} ({uid}) - {category} ({day})")
@@ -302,7 +261,7 @@ def generate_prediction():
 
     print(f"⚙️ Không có cache → Gọi Gemini ({category}, {day})")
 
-    # 🪐 Map tiếng Việt
+    # Map tiếng Việt
     category_map = {
         "daily": "Dự đoán hằng ngày",
         "love": "Dự đoán tình duyên",
@@ -315,7 +274,7 @@ def generate_prediction():
         "tomorrow": "ngày mai",
     }
 
-    # ✨ Prompt riêng từng loại
+    # Prompt riêng từng loại
     prompt_templates = {
         "daily": f"""
         {category_map['daily']} cho {day_map.get(day)}:
@@ -385,7 +344,7 @@ def generate_prediction():
             print(f"Đã lưu Firestore: {name} ({uid}) - love_metrics ({day})")
             return jsonify({**data, "cached": False})
 
-        # ✨ Các loại khác (daily/love/work)
+        # Các loại khác (daily/love/work)
         save_prediction(uid, name, sun, moon, category, day, text)
         print(f"Đã lưu Firestore: {name} ({uid}) - {category} ({day})")
 
@@ -397,7 +356,7 @@ def generate_prediction():
 
 
 # -------------------------------------------------
-# 🌐 Route test server
+#  Route test server
 # -------------------------------------------------
 @app.route("/", methods=["GET"])
 def home():
@@ -405,7 +364,7 @@ def home():
 
 
 # -------------------------------------------------
-# 📸 Route Upload Image (CLOUDINARY)
+#  Route Upload Image (CLOUDINARY)
 # -------------------------------------------------
 @app.route("/upload-image", methods=["POST"])
 def upload_image():
@@ -461,7 +420,7 @@ def upload_image():
 
 
 # -------------------------------------------------
-# 🗑️ Route Delete Image (CLOUDINARY)
+#  Route Delete Image (CLOUDINARY)
 # -------------------------------------------------
 @app.route("/delete-image", methods=["POST"])
 def delete_image():
@@ -505,7 +464,7 @@ def delete_image():
 
 
 # -------------------------------------------------
-# 🔮 Route phân tích bản đồ sao
+#  Route phân tích bản đồ sao
 # -------------------------------------------------
 @app.route("/natal-analysis", methods=["POST"])
 def natal_chart_analysis():
@@ -560,7 +519,7 @@ def natal_chart_analysis():
         if not user_info["name"] or not user_info["sun"] or not user_info["moon"]:
             return jsonify({"error": "Thiếu thông tin cơ bản"}), 400
 
-        # ⚡ Kiểm tra cache Firestore
+        # Kiểm tra cache Firestore
         cache_query = (
             db.collection("natal_analysis")
             .where("uid", "==", uid)
@@ -578,7 +537,7 @@ def natal_chart_analysis():
 
         print(f"⚙️ Không có cache → Gọi Gemini để phân tích")
 
-        # 🔮 Tạo prompt phân tích chi tiết
+        # Tạo prompt phân tích chi tiết
         prompt = f"""
         Phân tích bản đồ sao chi tiết cho người có thông tin sau:
         
@@ -669,7 +628,7 @@ def natal_chart_analysis():
 
 
 # -------------------------------------------------
-# 📨 Route: Gửi lời mời ghép đôi
+#  Route: Gửi lời mời ghép đôi
 # -------------------------------------------------
 @app.route("/send-match-request", methods=["POST"])
 def send_match_request():
@@ -724,7 +683,7 @@ def send_match_request():
         }
         db.collection("match_requests").document(request_id).set(match_request)
 
-        # ✅ Tạo thông báo với cả top-level fields VÀ navigationData
+        # Tạo thông báo với cả top-level fields VÀ navigationData
         notification = {
             "id": str(uuid.uuid4()),
             "userId": receiver_id,
@@ -733,7 +692,7 @@ def send_match_request():
             "message": message or "Xin chào! Tôi thấy chúng ta có nhiều điểm chung...",
             "read": False,
             
-            # ✅ THÊM TOP-LEVEL FIELDS để dễ access
+            # THÊM TOP-LEVEL FIELDS để dễ access
             "requestId": request_id,
             "senderId": sender_id,
             "senderName": sender_data.get("name", ""),
@@ -771,7 +730,7 @@ def send_match_request():
 
 
 # -------------------------------------------------
-# ✅ Route: Chấp nhận lời mời ghép đôi (FIXED)
+#  Route: Chấp nhận lời mời ghép đôi
 # -------------------------------------------------
 @app.route("/accept-match-request", methods=["POST"])
 def accept_match_request():
@@ -821,7 +780,7 @@ def accept_match_request():
 
         db.collection("matches").document(match_id).set(match_record)
 
-        # ✅ FIX: Cập nhật relationshipStatus thành "Đã có đôi"
+        # Cập nhật relationshipStatus thành "Đã có đôi"
         db.collection("users").document(sender_id).update({
             "relationshipStatus": "Đã có đôi",
             "partnerId": receiver_id,
@@ -843,7 +802,7 @@ def accept_match_request():
         sender_data = sender_doc.to_dict()
         receiver_data = receiver_doc.to_dict()
 
-        # ✅ FIX: Tạo thông báo chúc mừng cho NGƯỜI GỬI (sender)
+        # Tạo thông báo chúc mừng cho NGƯỜI GỬI 
         notification_for_sender = {
             "id": str(uuid.uuid4()),
             "userId": sender_id,
@@ -863,7 +822,7 @@ def accept_match_request():
             "createdAt": firestore.SERVER_TIMESTAMP,
         }
 
-        # ✅ FIX: Tạo thông báo chúc mừng cho NGƯỜI NHẬN (receiver)
+        # Tạo thông báo chúc mừng cho NGƯỜI NHẬN 
         notification_for_receiver = {
             "id": str(uuid.uuid4()),
             "userId": receiver_id,
@@ -883,7 +842,7 @@ def accept_match_request():
             "createdAt": firestore.SERVER_TIMESTAMP,
         }
 
-        # ✅ Gửi cả 2 thông báo
+        # Gửi cả 2 thông báo
         db.collection("notifications").add(notification_for_sender)
         db.collection("notifications").add(notification_for_receiver)
 
@@ -902,7 +861,7 @@ def accept_match_request():
 
 
 # -------------------------------------------------
-# ❌ Route: Từ chối lời mời ghép đôi (FIXED)
+#  Route: Từ chối lời mời ghép đôi 
 # -------------------------------------------------
 @app.route("/reject-match-request", methods=["POST"])
 def reject_match_request():
@@ -937,11 +896,11 @@ def reject_match_request():
             "rejectionMessage": rejection_message,
         })
 
-        # ✅ FIX: Lấy thông tin người nhận để gửi thông báo
+        # Lấy thông tin người nhận để gửi thông báo
         receiver_doc = db.collection("users").document(receiver_id).get()
         receiver_data = receiver_doc.to_dict()
 
-        # ✅ FIX: Tạo thông báo cho NGƯỜI GỬI (sender) về việc bị từ chối
+        # Tạo thông báo cho NGƯỜI GỬI (sender) về việc bị từ chối
         notification_for_sender = {
             "id": str(uuid.uuid4()),
             "userId": sender_id,
@@ -968,7 +927,7 @@ def reject_match_request():
     
 
 # -------------------------------------------------
-# 💔 Route: Chia tay (UPDATED)
+#  Route: Chia tay 
 # -------------------------------------------------
 @app.route("/breakup", methods=["POST"])
 def breakup():
@@ -1007,7 +966,7 @@ def breakup():
             "breakupMessage": breakup_message,
         })
         
-        # ✅ Reset relationship status về "Độc thân"
+        # Reset relationship status về "Độc thân"
         db.collection("users").document(user_id).update({
             "relationshipStatus": "Độc thân",
             "partnerId": firestore.DELETE_FIELD,
@@ -1022,7 +981,7 @@ def breakup():
             "updatedAt": firestore.SERVER_TIMESTAMP,
         })
         
-        # ✅ Tạo thông báo cho PARTNER (người bị chia tay)
+        # Tạo thông báo cho PARTNER (người bị chia tay)
         partner_notification = {
             "id": str(uuid.uuid4()),
             "userId": partner_id,
@@ -1035,7 +994,7 @@ def breakup():
         }
         db.collection("notifications").add(partner_notification)
         
-        # ✅ Tạo thông báo cho USER (người chủ động chia tay) - OPTIONAL
+        
         user_notification = {
             "id": str(uuid.uuid4()),
             "userId": user_id,
@@ -1059,7 +1018,7 @@ def breakup():
     
     
 # -------------------------------------------------
-# ✅ Route: Kiểm tra status của match request
+#  Route: Kiểm tra status của match request
 # -------------------------------------------------
 @app.route("/check-match-request/<request_id>", methods=["GET"])
 def check_match_request(request_id):
@@ -1090,7 +1049,7 @@ def check_match_request(request_id):
     
 
 # -------------------------------------------------
-# 🔍 Route: Kiểm tra trạng thái match request
+#  Route: Kiểm tra trạng thái match request
 # -------------------------------------------------
 @app.route("/check-match-status", methods=["GET"])
 def check_match_status():
@@ -1148,8 +1107,8 @@ def check_match_status():
 
 
 # -------------------------------------------------
-# 📋 Route: Lấy danh sách thông báo (FIXED)
-# -------------------------------------------------
+#  Route: Lấy danh sách thông báo
+# ------------------------------------------------
 @app.route("/get-notifications", methods=["GET"])
 def get_notifications():
     """
@@ -1203,7 +1162,7 @@ def get_notifications():
                 else:
                     notif_data["time"] = "Vừa xong"
 
-                # ✅ FIX: Thêm icon cho match_rejected và breakup
+                # Thêm icon cho match_rejected và breakup
                 icon_map = {
                     "match_request": "favorite",
                     "match_accepted": "check-circle",
@@ -1239,7 +1198,7 @@ def get_notifications():
     
 
 # -------------------------------------------------
-# ✓ Route: Đánh dấu thông báo đã đọc
+#  Route: Đánh dấu thông báo đã đọc
 # -------------------------------------------------
 @app.route("/mark-notification-read", methods=["POST"])
 def mark_notification_read():
@@ -1271,7 +1230,7 @@ def mark_notification_read():
 
 
 # -------------------------------------------------
-# 🗑️ Route: Xóa thông báo
+#  Route: Xóa thông báo
 # -------------------------------------------------
 @app.route("/delete-notification", methods=["POST"])
 def delete_notification():
@@ -1298,7 +1257,7 @@ def delete_notification():
 
 
 # -------------------------------------------------
-# 📊 Route: Lấy danh sách match requests của user
+#  Route: Lấy danh sách match requests của user
 # -------------------------------------------------
 @app.route("/get-match-requests", methods=["GET"])
 def get_match_requests():
@@ -1354,7 +1313,7 @@ def get_match_requests():
     
 
 # -------------------------------------------------
-# 💕 Route phân tích tương hợp giữa 2 người
+#  Route phân tích tương hợp giữa 2 người
 # -------------------------------------------------
 @app.route("/compatibility-analysis", methods=["POST"])
 def compatibility_analysis():
@@ -1369,7 +1328,7 @@ def compatibility_analysis():
         if not my_uid or not partner_uid:
             return jsonify({"error": "Thiếu thông tin UID"}), 400
 
-        # ⚡ Kiểm tra cache Firestore (cặp đôi có thể được phân tích theo 2 chiều)
+        # Kiểm tra cache Firestore (cặp đôi có thể được phân tích theo 2 chiều)
         cache_key = f"{my_uid}_{partner_uid}"
         reverse_key = f"{partner_uid}_{my_uid}"
         
@@ -1459,7 +1418,7 @@ def compatibility_analysis():
         partner_aspects = extract_aspects(partner_raw)
         partner_elements = extract_elements(partner_raw)
 
-        # 🔮 Tạo prompt phân tích tương hợp
+        #  prompt phân tích tương hợp
         prompt = f"""
         Phân tích độ tương hợp chi tiết giữa 2 người dựa trên thông tin chiêm tinh sau:
         
@@ -1605,7 +1564,7 @@ def compatibility_analysis():
 
 
 # ------------------------------------------------------
-# 📊 Route: Phân tích chiêm tinh ghép cặp theo tag
+#  Route: Phân tích chiêm tinh ghép cặp theo tag
 # ------------------------------------------------------
 @app.route("/love-matching/<match_type>", methods=["POST"])
 def love_matching_single(match_type):
@@ -1721,7 +1680,7 @@ KHÔNG in bất kỳ văn bản nào ngoài JSON.
 
         result = json.loads(clean)
 
-        # 4️⃣ LƯU DẠNG TREE
+        # LƯU DẠNG TREE
         doc_ref = (
             db.collection("love_matching_results")
             .document(uid)             # folder user
@@ -1750,7 +1709,7 @@ KHÔNG in bất kỳ văn bản nào ngoài JSON.
     
 
 # ------------------------------------------------------
-# 📊 Route: Lấy lịch sử phân tích ghép cặp theo tag
+#  Route: Lấy lịch sử phân tích ghép cặp theo tag
 # ------------------------------------------------------
 @app.route("/love-matching/history/<uid>/<match_type>", methods=["GET"])
 def get_matching_history(uid, match_type):
@@ -1785,7 +1744,7 @@ def get_matching_history(uid, match_type):
         return jsonify({"error": str(e)}), 500
 
 # -------------------------------------------------
-# 🚀 Run Flask App
+#  Run Flask App
 # -------------------------------------------------
 if __name__ == "__main__":
     print("Flask nhận request /generate, /upload-image, /update-profile, /verify-password")

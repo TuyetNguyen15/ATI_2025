@@ -37,11 +37,11 @@ const DESC_MAP = {
 export default function LoveMatchSelectScreen() {
   const user = useSelector((state) => state.profile);
 
-  const [selectedType, setSelectedType] = useState("greenflag");   // ⭐ AUTO CHỌN GREEN FLAG
+  const [selectedType, setSelectedType] = useState("greenflag");   // AUTO CHỌN GREEN FLAG
   const [singleMatchData, setSingleMatchData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ⭐ GỌI API
+  // GỌI API
   const loadSingleMatching = async (type) => {
     try {
       setLoading(true);
@@ -61,7 +61,7 @@ export default function LoveMatchSelectScreen() {
         return;
       }
   
-      // 2️⃣ KHÔNG CÓ CACHE → GỌI AI
+      // KHÔNG CÓ CACHE → GỌI AI
       console.log("🤖 CALL AI:", type);
       const res = await axios.post(`${BASE_URL}/love-matching/${type}`, {
         uid: user.uid,
@@ -80,7 +80,7 @@ export default function LoveMatchSelectScreen() {
     }
   };
   
-  // ⭐ AUTO LOAD GREEN FLAG NGAY KHI VÀO
+  // AUTO LOAD GREEN FLAG NGAY KHI VÀO
   React.useEffect(() => {
     const timer = setTimeout(() => {
       handleSelect("greenflag");
@@ -90,7 +90,7 @@ export default function LoveMatchSelectScreen() {
   }, []);
   
 
-  // ⭐ Khi chọn loại khác
+  // Khi chọn loại khác
   const handleSelect = (type) => {
     setSelectedType(type);
     loadSingleMatching(type);
@@ -110,8 +110,8 @@ export default function LoveMatchSelectScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.scroll}>
-      <Text style={styles.title}>Năng Lượng</Text>
-        {/* ⭐ 2 BOX TRÊN */}
+      <Text style={styles.title}>Chọn Năng Lượng Giữa Hai Bạn</Text>
+        {/* 2 BOX TRÊN */}
         <View style={styles.row2}>
           {CATEGORIES.slice(0, 2).map((item) => (
             <TouchableOpacity
@@ -132,7 +132,7 @@ export default function LoveMatchSelectScreen() {
           ))}
         </View>
 
-        {/* ⭐ 3 BOX DƯỚI */}
+        {/* 3 BOX DƯỚI */}
         <View style={styles.row3}>
           {CATEGORIES.slice(2).map((item) => (
             <TouchableOpacity
@@ -153,14 +153,14 @@ export default function LoveMatchSelectScreen() {
             </TouchableOpacity>
           ))}
         </View>
-        {/* ⭐ BOX GIẢI THÍCH CATEGORY */}
+        {/* BOX GIẢI THÍCH CATEGORY */}
         {selectedItem && !loading && (
           <View style={styles.detailBox}>
             <Text style={styles.detailDesc}>{DESC_MAP[selectedItem.key]}</Text>
           </View>
         )}
 
-        {/* ⭐ LOADING RIÊNG CHO MỖI LOẠI */}
+        {/* LOADING RIÊNG CHO MỖI LOẠI */}
         {loading && (
           <View style={{ marginTop: 40 }}>
             <ActivityIndicator size="large" color="#fff" />
@@ -168,7 +168,7 @@ export default function LoveMatchSelectScreen() {
           </View>
         )}
 
-        {/* ⭐ HIỂN THỊ 5 NGƯỜI */}
+        {/* HIỂN THỊ 5 NGƯỜI */}
         {!loading && selectedItem && singleMatchData && (
           <LoveMatchResultScreen type={selectedItem.key} people={singleMatchData} />
         )}

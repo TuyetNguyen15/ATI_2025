@@ -1,4 +1,3 @@
-// src/components/NotificationsScreen.js
 import React, { useState, useEffect } from 'react';
 import { 
   View, 
@@ -88,9 +87,9 @@ const NotificationsScreen = ({ navigation }) => {
   const getNavigationData = (notif) => {
     switch (notif.type) {
       case 'match_request':
-        // ✅ Kiểm tra xem backend đã lưu navigationData chưa
+        // Kiểm tra xem backend đã lưu navigationData chưa
         if (notif.navigationData && notif.navigationData.params) {
-          // Lấy từ navigationData.params (cách backend lưu)
+          // Lấy từ navigationData.params 
           return {
             screen: 'MatchRequestDetailScreen',
             params: {
@@ -119,7 +118,7 @@ const NotificationsScreen = ({ navigation }) => {
         };
         
       case 'match_accepted':
-        // Tương tự cho match_accepted
+        // Tương tự
         if (notif.navigationData && notif.navigationData.params) {
           return {
             screen: 'Chat',
@@ -217,7 +216,7 @@ const NotificationsScreen = ({ navigation }) => {
     }
   };
 
-  // Retry function
+  // Xử lý khi nhấn nút Thử lại
   const handleRetry = () => {
     setError(null);
     if (userId) {
@@ -232,7 +231,7 @@ const NotificationsScreen = ({ navigation }) => {
     }
   };
 
-  // Pull-to-refresh
+  // refresh
   const { refreshing, onRefresh } = useRefresh(() => {
     if (userId) {
       return loadNotifications(userId);
