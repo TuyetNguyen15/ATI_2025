@@ -87,6 +87,7 @@ def save_prediction(uid, name, sun, moon, category, day, data):
         doc["prediction"] = data
 
     db.collection("user_prediction").add(doc)
+    
 # ===============================
 # 🎯 Lọc user có đầy đủ dữ liệu chiêm tinh
 # ===============================
@@ -1308,6 +1309,257 @@ def get_match_requests():
 
     except Exception as e:
         print(f"❌ Get match requests error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
+
+# -------------------------------------------------
+# 💕 Route phân tích tương hợp giữa 2 người
+# -------------------------------------------------
+@app.route("/compatibility-analysis", methods=["POST"])
+def compatibility_analysis():
+    """
+    Phân tích chi tiết độ tương hợp giữa 2 người dựa trên thông tin chiêm tinh
+    """
+    try:
+        data = request.get_json()
+        my_uid = data.get("myUid", "")
+        partner_uid = data.get("partnerUid", "")
+
+        if not my_uid or not partner_uid:
+            return jsonify({"error": "Thiếu thông tin UID"}), 400
+
+        # ⚡ Kiểm tra cache Firestore (cặp đôi có thể được phân tích theo 2 chiều)
+        cache_key = f"{my_uid}_{partner_uid}"
+        reverse_key = f"{partner_uid}_{my_uid}"
+        
+        cache_query = (
+            db.collection("compatibility_analysis")
+            .where("cache_key", "in", [cache_key, reverse_key])
+            .limit(1)
+            .stream()
+        )
+
+        for doc in cache_query:
+            cached_data = doc.to_dict()
+            print(f"✅ Cache phân tích có sẵn cho cặp {my_uid} - {partner_uid}")
+            return jsonify({
+                "analysis": cached_data.get("analysis", ""),
+                "compatibility_score": cached_data.get("compatibility_score", 0),
+                "love_score": cached_data.get("love_score", 0),
+                "trust_score": cached_data.get("trust_score", 0),
+                "communication_score": cached_data.get("communication_score", 0),
+                "marriage_score": cached_data.get("marriage_score", 0),
+                "cached": True
+            })
+
+        print(f"⚙️ Không có cache → Lấy dữ liệu và gọi Gemini")
+
+        # --- LẤY THÔNG TIN USER 1 ---
+        me_doc = db.collection("users").document(my_uid).get()
+        if not me_doc.exists:
+            return jsonify({"error": "Không tìm thấy thông tin người dùng"}), 404
+
+        me_raw = me_doc.to_dict()
+
+        # --- LẤY THÔNG TIN USER 2 ---
+        partner_doc = db.collection("users").document(partner_uid).get()
+        if not partner_doc.exists:
+            return jsonify({"error": "Không tìm thấy thông tin đối phương"}), 404
+
+        partner_raw = partner_doc.to_dict()
+
+        # --- HELPER FUNCTIONS ---
+        def extract_user_info(user_data):
+            return {
+                "name": user_data.get("name", ""),
+                "sun": user_data.get("sun", ""),
+                "moon": user_data.get("moon", ""),
+                "mercury": user_data.get("mercury", ""),
+                "venus": user_data.get("venus", ""),
+                "mars": user_data.get("mars", ""),
+                "jupiter": user_data.get("jupiter", ""),
+                "saturn": user_data.get("saturn", ""),
+                "uranus": user_data.get("uranus", ""),
+                "neptune": user_data.get("neptune", ""),
+                "pluto": user_data.get("pluto", ""),
+                "ascendant": user_data.get("ascendant", ""),
+                "descendant": user_data.get("descendant", ""),
+                "mc": user_data.get("mc", ""),
+                "ic": user_data.get("ic", ""),
+            }
+
+        def extract_houses(user_data):
+            return {f"house{i}": user_data.get(f"house{i}", "") for i in range(1, 13)}
+
+        def extract_aspects(user_data):
+            return {
+                "conjunction": user_data.get("conjunctionAspect", ""),
+                "opposition": user_data.get("oppositionAspect", ""),
+                "trine": user_data.get("trineAspect", ""),
+                "square": user_data.get("squareAspect", ""),
+                "sextile": user_data.get("sextileAspect", ""),
+            }
+
+        def extract_elements(user_data):
+            return {
+                "fire": user_data.get("fireRatio", 0),
+                "earth": user_data.get("earthRatio", 0),
+                "air": user_data.get("airRatio", 0),
+                "water": user_data.get("waterRatio", 0),
+            }
+
+        me_info = extract_user_info(me_raw)
+        me_houses = extract_houses(me_raw)
+        me_aspects = extract_aspects(me_raw)
+        me_elements = extract_elements(me_raw)
+
+        partner_info = extract_user_info(partner_raw)
+        partner_houses = extract_houses(partner_raw)
+        partner_aspects = extract_aspects(partner_raw)
+        partner_elements = extract_elements(partner_raw)
+
+        # 🔮 Tạo prompt phân tích tương hợp
+        prompt = f"""
+        Phân tích độ tương hợp chi tiết giữa 2 người dựa trên thông tin chiêm tinh sau:
+        
+        **NGƯỜI 1:**
+        - Tên: {me_info['name']}
+        - Mặt Trời: {me_info['sun']}
+        - Mặt Trăng: {me_info['moon']}
+        - Thủy tinh: {me_info['mercury']}
+        - Kim tinh: {me_info['venus']}
+        - Hỏa tinh: {me_info['mars']}
+        - Mộc tinh: {me_info['jupiter']}
+        - Thổ tinh: {me_info['saturn']}
+        - Thiên Vương tinh: {me_info['uranus']}
+        - Hải Vương tinh: {me_info['neptune']}
+        - Diêm Vương tinh: {me_info['pluto']}
+        - Ascendant: {me_info['ascendant']}
+        - Descendant: {me_info['descendant']}
+        - MC: {me_info['mc']}
+        - IC: {me_info['ic']}
+        
+        Các nhà: {json.dumps(me_houses, ensure_ascii=False)}
+        Aspects: {json.dumps(me_aspects, ensure_ascii=False)}
+        Tỷ lệ nguyên tố: {json.dumps(me_elements, ensure_ascii=False)}
+        
+        **NGƯỜI 2:**
+        - Tên: {partner_info['name']}
+        - Mặt Trời: {partner_info['sun']}
+        - Mặt Trăng: {partner_info['moon']}
+        - Thủy tinh: {partner_info['mercury']}
+        - Kim tinh: {partner_info['venus']}
+        - Hỏa tinh: {partner_info['mars']}
+        - Mộc tinh: {partner_info['jupiter']}
+        - Thổ tinh: {partner_info['saturn']}
+        - Thiên Vương tinh: {partner_info['uranus']}
+        - Hải Vương tinh: {partner_info['neptune']}
+        - Diêm Vương tinh: {partner_info['pluto']}
+        - Ascendant: {partner_info['ascendant']}
+        - Descendant: {partner_info['descendant']}
+        - MC: {partner_info['mc']}
+        - IC: {partner_info['ic']}
+        
+        Các nhà: {json.dumps(partner_houses, ensure_ascii=False)}
+        Aspects: {json.dumps(partner_aspects, ensure_ascii=False)}
+        Tỷ lệ nguyên tố: {json.dumps(partner_elements, ensure_ascii=False)}
+        
+        Hãy phân tích chi tiết và sâu sắc độ tương hợp của cặp đôi này theo các mục sau:
+        
+        1. **Tổng quan về mối quan hệ**: Đánh giá tổng thể về sự hòa hợp giữa 2 người
+        2. **Tương thích cảm xúc**: Phân tích Mặt Trăng, Kim tinh và các hành tinh cá nhân
+        3. **Giao tiếp và tư duy**: Dựa vào Thủy tinh, Không khí trong nguyên tố
+        4. **Tình yêu và lãng mạn**: Phân tích Kim tinh, Hỏa tinh và Nhà 5, 7
+        5. **Cam kết dài hạn và hôn nhân**: Dựa vào Thổ tinh, Mộc tinh, MC và các góc tương tác
+        6. **Thách thức và xung đột**: Các aspects khó khăn, điểm bất hòa cần lưu ý
+        7. **Điểm mạnh của mối quan hệ**: Những gì làm cho mối quan hệ này đặc biệt
+        8. **Lời khuyên để phát triển**: Hướng dẫn cụ thể để xây dựng mối quan hệ bền vững
+        
+        Sau khi phân tích, hãy đánh giá các chỉ số sau (0-100):
+        - Độ tương thích tổng thể (compatibility_score)
+        - Tình yêu và hấp dẫn (love_score)
+        - Lòng tin và an toàn (trust_score)
+        - Giao tiếp và hiểu biết (communication_score)
+        - Tiềm năng hôn nhân (marriage_score)
+        
+        Yêu cầu:
+        - Viết bằng tiếng Việt, văn phong chuyên nghiệp nhưng ấm áp
+        - Mỗi mục khoảng 2-3 đoạn văn
+        - Không dùng emoji, không dùng ký tự đặc biệt
+        - Không chào hỏi hay văn phong dư thừa
+        - Tập trung vào phân tích sâu, có căn cứ chiêm tinh học
+        - Cuối cùng, ghi rõ 5 chỉ số theo format:
+        
+        SCORES:
+        compatibility_score: [số]
+        love_score: [số]
+        trust_score: [số]
+        communication_score: [số]
+        marriage_score: [số]
+        """
+
+        # Gọi Gemini API
+        model = genai.GenerativeModel(MODEL_NAME)
+        response = model.generate_content(prompt)
+        analysis_text = response.text if hasattr(response, "text") else str(response)
+
+        # Làm sạch text
+        analysis_text = re.sub(r"(```|'''|\"\"\")", "", analysis_text).strip()
+
+        # Trích xuất scores từ text
+        scores = {
+            "compatibility_score": 75,  # default
+            "love_score": 75,
+            "trust_score": 75,
+            "communication_score": 75,
+            "marriage_score": 75,
+        }
+
+        # Parse scores từ phần cuối của analysis
+        score_pattern = r"(compatibility_score|love_score|trust_score|communication_score|marriage_score):\s*(\d+)"
+        matches = re.findall(score_pattern, analysis_text, re.IGNORECASE)
+        
+        for key, value in matches:
+            scores[key.lower()] = int(value)
+        
+        # Loại bỏ phần SCORES khỏi analysis text
+        analysis_text = re.sub(r"SCORES:[\s\S]*$", "", analysis_text).strip()
+
+        # Lưu vào Firestore
+        compatibility_doc = {
+            "cache_key": cache_key,
+            "my_uid": my_uid,
+            "partner_uid": partner_uid,
+            "my_name": me_info["name"],
+            "partner_name": partner_info["name"],
+            "analysis": analysis_text,
+            "compatibility_score": scores["compatibility_score"],
+            "love_score": scores["love_score"],
+            "trust_score": scores["trust_score"],
+            "communication_score": scores["communication_score"],
+            "marriage_score": scores["marriage_score"],
+            "created_at": datetime.now().isoformat(),
+            "user_data": {
+                "person1": {**me_info, **me_houses, **me_aspects, **me_elements},
+                "person2": {**partner_info, **partner_houses, **partner_aspects, **partner_elements}
+            }
+        }
+
+        db.collection("compatibility_analysis").add(compatibility_doc)
+        print(f"✅ Đã lưu phân tích tương hợp cho {me_info['name']} - {partner_info['name']}")
+
+        return jsonify({
+            "analysis": analysis_text,
+            "compatibility_score": scores["compatibility_score"],
+            "love_score": scores["love_score"],
+            "trust_score": scores["trust_score"],
+            "communication_score": scores["communication_score"],
+            "marriage_score": scores["marriage_score"],
+            "cached": False
+        }), 200
+
+    except Exception as e:
+        print(f"❌ Error in compatibility analysis: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 

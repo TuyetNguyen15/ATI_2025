@@ -47,7 +47,7 @@ export default function ConnectionActionsScreen({ navigation, route }) {
         break;
 
       case "compat":
-        navigation.navigate("DetailedCompatScreen", { uid: partnerId });
+        navigation.navigate("DetailedCompatibilityScreen", { uid: partnerId });
         break;
 
       case "block":

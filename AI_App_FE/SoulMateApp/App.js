@@ -9,7 +9,6 @@ import { auth } from './config/firebaseConfig';
 import { loadUserProfile } from './services/profileLoader';
 import * as SplashScreen from 'expo-splash-screen';
 
-
 import OnboardingScreen from './onboardingScreen/OnboardingScreen';
 
 // Màn hình Đăng nhập/Đăng ký (từ một nhánh)
@@ -30,6 +29,7 @@ import MatchRequestDetailScreen from './screens/match_request/MatchRequestDetail
 // CONNECTION
 import ConnectionActionsScreen from './screens/conversation/ConnectionActionsScreen';
 import IceBreakerScreen from './screens/conversation/IceBreakerScreen';
+import DetailedCompatibilityScreen from './screens/conversation/DetailedCompatibilityScreen';
 
 SplashScreen.preventAutoHideAsync();
 const Stack = createStackNavigator();
@@ -121,6 +121,7 @@ function AppContent() {
           {/* CONNECTION */}
           <Stack.Screen name="ConnectionActionsScreen" component={ConnectionActionsScreen} />
           <Stack.Screen name="IceBreakerScreen" component={IceBreakerScreen} />
+          <Stack.Screen name="DetailedCompatibilityScreen" component={DetailedCompatibilityScreen} />
 
           {/* ⭐ PROFILE */}
           <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
