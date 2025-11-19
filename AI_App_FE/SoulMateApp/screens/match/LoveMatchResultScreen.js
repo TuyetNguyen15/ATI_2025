@@ -110,12 +110,13 @@ export default function LoveMatchResultScreen({ type, people }) {
         })}
       </View>
 
-      {/* ⭐ HỒ SƠ CHIÊM TINH — CHỈ HIỂN THỊ KHI CHỌN CARD */}
+   
       {selected !== null && (
         <MysticProfile
           info={{
             ...people[selected],
             myUid: profile.uid, 
+            myName: profile.name,
             myZodiac: profile.sun,
             myElement: ELEMENT_MAP[profile.sun],
 

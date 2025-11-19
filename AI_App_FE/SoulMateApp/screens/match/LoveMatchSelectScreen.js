@@ -110,7 +110,7 @@ export default function LoveMatchSelectScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.scroll}>
-      <Text style={styles.title}>Chọn Năng Lượng Giữa Hai Bạn</Text>
+      <Text style={styles.title}>Năng Lượng</Text>
         {/* ⭐ 2 BOX TRÊN */}
         <View style={styles.row2}>
           {CATEGORIES.slice(0, 2).map((item) => (

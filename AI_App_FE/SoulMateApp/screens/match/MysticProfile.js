@@ -36,8 +36,13 @@ export default function MysticProfile({ info }) {
     3: 180,
     1: 0,
   };
-  const openChatWith = async (person) => {
-    const result = await openDirectChat(myUid, myName, person);
+  const openChatWith = async () => {
+    const result = await openDirectChat(
+      info.myUid,
+      info.myName,
+      info
+    );
+  
     if (!result) return;
   
     navigation.navigate("ChatRoomScreen", {
@@ -45,6 +50,7 @@ export default function MysticProfile({ info }) {
       chatName: result.chatName,
     });
   };
+  
   
   
   return (

@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
   date: { color: '#dcdcdc', fontSize: 26, opacity: 0.8 },
   welcome: {
     color: '#fff',
-    fontSize: 42,
+    fontSize: 32,
     fontWeight: '700',
     marginTop: 6,
     textShadowColor: 'rgba(0, 0, 0, 0.7)',
