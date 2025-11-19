@@ -539,7 +539,7 @@ def natal_chart_analysis():
         # 🔮 Tạo prompt phân tích chi tiết
         prompt = f"""
         Phân tích bản đồ sao chi tiết cho người có thông tin sau:
-        
+
         **Thông tin cơ bản:**
         - Tên: {user_info['name']}
         - Mặt Trời: {user_info['sun']}
@@ -552,31 +552,31 @@ def natal_chart_analysis():
         - Thiên Vương tinh: {user_info['uranus']}
         - Hải Vương tinh: {user_info['neptune']}
         - Diêm Vương tinh: {user_info['pluto']}
-        
+
         **Điểm đặc biệt:**
         - Ascendant (Cung Thăng): {user_info['ascendant']}
         - Descendant: {user_info['descendant']}
         - MC (Midheaven): {user_info['mc']}
         - IC: {user_info['ic']}
-        
+
         **Các nhà (Houses):**
         {chr(10).join([f"- Nhà {i}: {houses[f'house{i}']}" for i in range(1, 13) if houses[f'house{i}']])}
-        
+
         **Các góc tương tác (Aspects):**
         - Conjunction: {aspects['conjunction']}
         - Opposition: {aspects['opposition']}
         - Trine: {aspects['trine']}
         - Square: {aspects['square']}
         - Sextile: {aspects['sextile']}
-        
+
         **Tỷ lệ nguyên tố:**
         - Lửa: {elemental_ratios['fire']}%
         - Đất: {elemental_ratios['earth']}%
         - Khí: {elemental_ratios['air']}%
         - Nước: {elemental_ratios['water']}%
-        
+
         Hãy phân tích chi tiết và sâu sắc bản đồ sao này theo các mục sau:
-        
+
         1. **Tổng quan tính cách**: Dựa vào Mặt Trời, Mặt Trăng và Ascendant
         2. **Cảm xúc và nội tâm**: Phân tích sâu về Mặt Trăng và các hành tinh cá nhân
         3. **Sự nghiệp và mục tiêu**: Dựa vào MC, Mặt Trời, và các nhà liên quan
@@ -584,10 +584,10 @@ def natal_chart_analysis():
         5. **Thế mạnh và thách thức**: Dựa vào các aspects và vị trí hành tinh
         6. **Cân bằng nguyên tố**: Ý nghĩa của tỷ lệ Lửa-Đất-Khí-Nước
         7. **Lời khuyên phát triển**: Hướng dẫn cụ thể để phát huy tiềm năng
-        8. **Đối tượng ghép cặp phù hợp**: Phân tích kiểu người, năng lượng và cung hoàng đạo phù hợp nhất 
-        với bản đồ sao này. Giải thích vì sao những đặc điểm đó tạo ra sự hòa hợp trong cảm xúc, trí tuệ và 
+        8. **Đối tượng ghép cặp phù hợp**: Phân tích kiểu người, năng lượng và cung hoàng đạo phù hợp nhất
+        với bản đồ sao này. Giải thích vì sao những đặc điểm đó tạo ra sự hòa hợp trong cảm xúc, trí tuệ và
         giá trị sống, đồng thời chỉ ra những dạng năng lượng dễ xung khắc hoặc cần học cách dung hòa.
-        
+
         Yêu cầu:
         - Viết bằng tiếng Việt, văn phong chuyên nghiệp nhưng dễ hiểu
         - Mỗi mục khoảng 2-3 đoạn văn

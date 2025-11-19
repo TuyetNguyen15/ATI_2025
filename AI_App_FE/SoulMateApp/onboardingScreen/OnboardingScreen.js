@@ -157,8 +157,8 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 20 : 40,
   },
   planet: {
-    width: width * 0.85,
-    height: width * 0.85,
+    width: width * 0.5,
+    height: width * 0.5,
     maxWidth: 500,
     maxHeight: 500,
   },
