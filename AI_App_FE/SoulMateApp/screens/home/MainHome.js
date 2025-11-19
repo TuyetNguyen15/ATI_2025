@@ -17,7 +17,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { getVietnameseDate } from "../../utils/date";
 import { ELEMENT_MAP, ELEMENT_COLORS, ZODIAC_ICONS } from '../../constants/astrologyMap';
 import useAstroAPI from '../../hook/useAstroAPI';
-import { BASE_URL } from '../../config/api';
 import { auth } from "../../config/firebaseConfig";
 import { loadUserProfile } from "../../services/profileLoader";
 import { openDirectChat } from "../../services/chatService";

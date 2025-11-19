@@ -157,8 +157,8 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 20 : 40,
   },
   planet: {
-    width: width * 0.85,
-    height: width * 0.85,
+    width: width * 0.4,
+    height: width * 0.4,
     maxWidth: 500,
     maxHeight: 500,
   },
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     fontWeight: '500',
     textAlign: 'center',
-    marginTop: -width * 0.08,
+    marginTop: width * 0.1,
     paddingHorizontal: 20,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 2 },
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   
   glassCard: {
     width: '100%',
-    maxWidth: 300,
+    maxWidth: 500,
     borderRadius: 32,
     overflow: 'hidden',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   
   // --- START BUTTON ---
   startButton: {
-    backgroundColor: 'rgba(246, 38, 187, 0.85)',
+    backgroundColor: '#ff7bbf',
     paddingVertical: 16,
     paddingHorizontal: 48,
     borderRadius: 30,
