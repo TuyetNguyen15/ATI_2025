@@ -76,7 +76,7 @@ export default function OnboardingScreen({ navigation }) {
 
   return (
     <ImageBackground
-      source={require('../assets/bg_onboard.png')}
+      source={require('../../assets/bg_onboard.png')}
       style={styles.background}
       resizeMode="cover"
     >
@@ -85,7 +85,7 @@ export default function OnboardingScreen({ navigation }) {
         {/* --- PLANET (Responsive) --- */}
         <View style={styles.planetContainer}>
           <Image
-            source={require('../assets/planet.png')}
+            source={require('../../assets/planet.png')}
             style={styles.planet}
             resizeMode="contain"
           />

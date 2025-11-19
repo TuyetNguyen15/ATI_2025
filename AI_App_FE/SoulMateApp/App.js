@@ -10,7 +10,7 @@ import { loadUserProfile } from './services/profileLoader';
 import * as SplashScreen from 'expo-splash-screen';
 
 // Màn hình Onboarding
-import OnboardingScreen from './onboardingScreen/OnboardingScreen';
+import OnboardingScreen from './screens/onboarding/OnboardingScreen';
 import LoginScreen from './screens/auth/LoginScreen';
 import RegisterScreen1 from './screens/auth/Register1';
 import RegisterScreen2 from './screens/auth/Register2';
