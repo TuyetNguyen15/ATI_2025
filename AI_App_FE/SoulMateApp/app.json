@@ -28,12 +28,26 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+      "expo-build-properties",
+      {
+        "android": {
+          "androidHardwareAccelerationDisable": true
+        }
+      }
+    ]
     ],
     "extra": {
       "eas": {
         "projectId": "b7478253-fd21-40e3-bacb-c67771d0d65e"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b7478253-fd21-40e3-bacb-c67771d0d65e"
     }
   },
   "extra": {
