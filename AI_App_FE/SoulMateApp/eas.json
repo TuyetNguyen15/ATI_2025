@@ -8,22 +8,25 @@
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
-      "node": {
-        "rootDir": "AI_App_FE/SoulMateApp" 
+      "node": "18", // Đặt là major version (18)
+      "env": {
+        "EAS_PROJECT_ROOT": "AI_App_FE/SoulMateApp" // Dùng biến môi trường thay cho rootDir
       }
     },
     "preview": {
       "distribution": "internal",
       "channel": "preview",
-      "node": {
-        "rootDir": "AI_App_FE/SoulMateApp" 
+      "node": "18",
+      "env": {
+        "EAS_PROJECT_ROOT": "AI_App_FE/SoulMateApp"
       }
     },
     "production": {
       "autoIncrement": true,
       "channel": "production",
-      "node": {
-        "rootDir": "AI_App_FE/SoulMateApp" 
+      "node": "18",
+      "env": {
+        "EAS_PROJECT_ROOT": "AI_App_FE/SoulMateApp"
       }
     }
   },
