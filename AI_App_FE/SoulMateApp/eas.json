@@ -7,18 +7,28 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "channel": "development"
+      "channel": "development",
+      "node": {
+        "rootDir": "AI_App_FE/SoulMateApp" 
+      }
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "node": {
+        "rootDir": "AI_App_FE/SoulMateApp" 
+      }
     },
     "production": {
       "autoIncrement": true,
-      "channel": "production"
+      "channel": "production",
+      "node": {
+        "rootDir": "AI_App_FE/SoulMateApp" 
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+    }
   }
 }
