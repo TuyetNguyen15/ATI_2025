@@ -15,8 +15,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { ELEMENT_MAP, ELEMENT_COLORS, ZODIAC_ICONS } from '../../constants/astrologyMap';
 import useAstroAPI from "../hook/useAstroAPI";
+import { BASE_URL } from '../config/api';
+
 const { width } = Dimensions.get('window');
-const API_URL = "http://172.168.1.47:5000/generate";
+const API_URL = `${BASE_URL}/generate`;
+
 export default function HomeScreen( {navigation }) {
   const [scope, setScope] = useState('astro');
   const profile = useSelector((state) => state.profile); 

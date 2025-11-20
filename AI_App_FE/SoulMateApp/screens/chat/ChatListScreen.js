@@ -62,10 +62,10 @@ export default function ChatListScreen({ navigation }) {
     });
   }, [currentUserId, currentUserName]);
 
-  // ⭐ Avatar mặc định từ assets (giống ProfileHeader)
+  // Avatar mặc định từ assets 
   const DEFAULT_AVATAR = require('../../assets/default_avatar.jpg');
 
-  // ⭐ Helper function để lấy avatar source cho Image component
+  // Helper function để lấy avatar source cho Image component
   const getAvatarSource = (user) => {
     // Nếu có avatar URL từ Cloudinary/Firestore
     if (user?.avatar && user.avatar.trim() !== '') {
@@ -75,7 +75,7 @@ export default function ChatListScreen({ navigation }) {
     return DEFAULT_AVATAR;
   };
 
-  // --- 1. LẮNG NGHE DANH SÁCH CHAT HIỆN CÓ ---
+  // DANH SÁCH CHAT HIỆN CÓ 
   useEffect(() => {
     if (!currentUserId) {
       console.log('ChatList - No currentUserId, skipping chat listener');
@@ -96,7 +96,7 @@ export default function ChatListScreen({ navigation }) {
       async (querySnapshot) => {
         const chatRooms = [];
         
-        // ⭐ Dùng Promise.all để lấy avatar của recipient
+        // lấy avatar của recipient
         const chatPromises = querySnapshot.docs.map(async (docSnap) => {
           const data = docSnap.data();
           
@@ -104,7 +104,7 @@ export default function ChatListScreen({ navigation }) {
           const recipientId = data.members?.find(id => id !== currentUserId);
           const recipientName = data.memberNames?.find(name => name !== currentUserName);
           
-          // ⭐ Lấy avatar của recipient từ collection users
+          // Lấy avatar của recipient từ collection users
           let recipientAvatar = null;
           if (recipientId) {
             try {
@@ -143,7 +143,7 @@ export default function ChatListScreen({ navigation }) {
     return () => unsubscribe();
   }, [currentUserId, currentUserName]);
 
-  // --- 2. HÀM TÌM KIẾM TRONG DANH SÁCH CHAT HIỆN CÓ ---
+  // HÀM TÌM KIẾM TRONG DANH SÁCH CHAT HIỆN CÓ 
   const performSearch = (text) => {
     if (text.length < 1) {
       setSearchResults([]);
@@ -178,7 +178,7 @@ export default function ChatListScreen({ navigation }) {
     setIsSearching(false);
   };
 
-  // --- 3. HÀM MỞ CHAT (không cần tạo mới nữa, chỉ mở) ---
+  // HÀM MỞ CHAT (không cần tạo mới nữa, chỉ mở)
   const handleOpenChat = (chatItem) => {
     navigation.navigate('ChatRoomScreen', {
       chatId: chatItem.id,
@@ -224,7 +224,7 @@ export default function ChatListScreen({ navigation }) {
             }
             style={styles.avatar}
           />
-          {/* ⭐ Unread indicator dot - chỉ hiện khi có tin nhắn chưa đọc từ người khác */}
+          {/*Unread indicator dot - chỉ hiện khi có tin nhắn chưa đọc từ người khác */}
           {hasUnread && !isLastMessageFromMe && (
             <View style={styles.unreadDot} />
           )}
@@ -260,7 +260,7 @@ export default function ChatListScreen({ navigation }) {
               {item.lastMessageText}
             </Text>
             
-            {/* ⭐ Unread count badge - hiển thị số tin nhắn chưa đọc */}
+            {/* Unread count badge - hiển thị số tin nhắn chưa đọc */}
             {hasUnread && !isLastMessageFromMe && (
               <View style={styles.unreadBadge}>
                 <Text style={styles.unreadBadgeText}>
@@ -274,7 +274,7 @@ export default function ChatListScreen({ navigation }) {
     );
   };
 
-  // ⭐ Format thời gian hiển thị
+  // Format thời gian hiển thị
   const formatMessageTime = (timestamp) => {
     if (!timestamp) return '';
     
@@ -307,7 +307,7 @@ export default function ChatListScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* --- THANH TÌM KIẾM --- */}
+      {/*THANH TÌM KIẾM */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputWrapper}>
           <Text style={styles.searchIcon}>🔍</Text>
@@ -334,7 +334,7 @@ export default function ChatListScreen({ navigation }) {
         <ActivityIndicator color="#ff77a9" size="large" style={styles.loader} />
       )}
 
-      {/* --- DANH SÁCH (Chat hoặc User) --- */}
+      {/* DANH SÁCH (Chat hoặc User) */}
       <FlatList
         data={searchText.length > 0 ? searchResults : chats}
         keyExtractor={(item) => item.id}
@@ -367,7 +367,6 @@ export default function ChatListScreen({ navigation }) {
   );
 }
 
-// --- STYLESHEET ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -424,7 +423,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     flexGrow: 1,
-    paddingBottom: 20, // Padding cho empty state
+    paddingBottom: 20,
   },
   emptyContainer: {
     flex: 1,
@@ -450,8 +449,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: 'center',
   },
-  
-  // ⭐ Style cho chat item
   chatItem: {
     flexDirection: 'row',
     padding: 16,

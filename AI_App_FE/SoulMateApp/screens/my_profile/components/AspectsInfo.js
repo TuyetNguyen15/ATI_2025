@@ -84,7 +84,6 @@ export default function AspectsInfo() {
     );
   };
 
-  // Check if there's any data
   const hasData = Object.values(aspectConfig).some(
     config => parseAspects(config.data).length > 0
   );

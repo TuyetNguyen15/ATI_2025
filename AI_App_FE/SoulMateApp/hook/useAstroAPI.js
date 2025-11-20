@@ -1,4 +1,3 @@
-// 📄 src/hooks/useAstroAPI.js
 import { useState } from "react";
 import { Alert } from "react-native";
 import axios from "axios";
@@ -10,7 +9,7 @@ export default function useAstroAPI() {
   const [loading, setLoading] = useState(false);
   const [prediction, setPrediction] = useState("");
 
-  // 📡 Hàm chung gọi Flask API
+  // Hàm chung gọi Flask API
   const fetchPrediction = async (userData, category = "daily", day = "today") => {
     try {
       setLoading(true);
@@ -29,7 +28,7 @@ export default function useAstroAPI() {
     }
   };
 
-  // 🔮 Dự đoán hằng ngày
+  // Dự đoán hằng ngày
   const generatePrediction = async (userData, navigation) => {
     try {
       console.log("Gọi dự đoán daily...");
@@ -48,7 +47,7 @@ export default function useAstroAPI() {
     }
   };
 
-  // 💞 Tình duyên
+  // Tình duyên
   const generateLoveMetrics = async (userData) => {
     try {
     

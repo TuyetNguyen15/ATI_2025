@@ -1,4 +1,3 @@
-// src/components/AstrologyDetails.js
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -93,7 +92,6 @@ const styles = StyleSheet.create({
   },
   sectionWrapper: {
     marginBottom: 16,
-    // Shadow blur effect (glowing)
     shadowColor: '#ff7acb',
     shadowOpacity: 0.5,
     shadowRadius: 15,
@@ -102,7 +100,7 @@ const styles = StyleSheet.create({
   },
   gradientBorder: {
     borderRadius: 12,
-    padding: 2, // Độ dày viền gradient
+    padding: 2,
   },
   section: {
     borderRadius: 10,

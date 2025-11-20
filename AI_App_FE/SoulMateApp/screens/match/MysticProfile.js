@@ -36,8 +36,13 @@ export default function MysticProfile({ info }) {
     3: 180,
     1: 0,
   };
-  const openChatWith = async (person) => {
-    const result = await openDirectChat(myUid, myName, person);
+  const openChatWith = async () => {
+    const result = await openDirectChat(
+      info.myUid,
+      info.myName,
+      info
+    );
+  
     if (!result) return;
   
     navigation.navigate("ChatRoomScreen", {
@@ -45,6 +50,7 @@ export default function MysticProfile({ info }) {
       chatName: result.chatName,
     });
   };
+  
   
   
   return (
@@ -82,12 +88,12 @@ export default function MysticProfile({ info }) {
 
       </View>
 
-      {/* ⭐ Compatibility */}
+      {/* Compatibility */}
       <View style={styles.compatBox}>
         <Text style={styles.compatTitle}>Hòa hợp chiêm tinh</Text>
         <Text style={styles.compatSub}>Dựa trên phân tích chiêm tinh từ hệ thống</Text>
 
-        {/* ⭐ ICON 2 CUNG ⭐ */}
+        {/* ICON 2 CUNG */}
         <View style={styles.zodiacCircleBox}>
           {/* Icon cung của bạn */}
           <View style={[styles.zodiacItem, { left: width * 0.10 }]}>

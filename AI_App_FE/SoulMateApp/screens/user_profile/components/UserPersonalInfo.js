@@ -2,32 +2,104 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../../config/firebaseConfig';
+import { BASE_URL } from '../../../config/api';
 
 export default function UserPersonalInfo({ 
   userData, 
   currentUserId,
   onMatchPress,
   onBreakup,
-  apiUrl = 'http://localhost:5000'
+  apiUrl = BASE_URL
 }) {
   const { relationshipStatus, age, gender, height, weight, job } = userData || {};
   const [showMatchPopup, setShowMatchPopup] = useState(false);
   const [showBreakupPopup, setShowBreakupPopup] = useState(false);
   const [message, setMessage] = useState('');
-  const [matchStatus, setMatchStatus] = useState('none'); // none, pending, matched
+  const [matchStatus, setMatchStatus] = useState('none');
   const [loading, setLoading] = useState(false);
+  const [currentUserPartnerId, setCurrentUserPartnerId] = useState(null);
+  const [currentUserRelationshipStatus, setCurrentUserRelationshipStatus] = useState(null);
 
   const targetUserId = userData?.uid;
-  const isSingle = relationshipStatus?.toLowerCase() === 'độc thân';
+  const [targetUserPartnerId, setTargetUserPartnerId] = useState(null);
+  
+  const isCurrentUserSingle = currentUserRelationshipStatus?.toLowerCase().trim() === 'độc thân';
+  const isTargetUserSingle = relationshipStatus?.toLowerCase().trim() === 'độc thân';
+  const isInRelationship = relationshipStatus?.toLowerCase().trim() === 'đã có đôi';
 
-  // Kiểm tra trạng thái match khi component mount
+  // Fetch partnerId của currentUser từ Firestore
+  useEffect(() => {
+    if (currentUserId) {
+      fetchCurrentUserPartnerFromFirestore();
+    }
+  }, [currentUserId]);
+
+  // Fetch partnerId của targetUser từ Firestore
+  useEffect(() => {
+    if (targetUserId && currentUserId !== targetUserId) {
+      fetchTargetUserPartnerFromFirestore();
+    }
+  }, [targetUserId, currentUserId]);
+
+  // Check match status (trường hợp pending)
   useEffect(() => {
     if (currentUserId && targetUserId && currentUserId !== targetUserId) {
       checkMatchStatus();
     }
   }, [currentUserId, targetUserId]);
 
+  const fetchCurrentUserPartnerFromFirestore = async () => {
+    try {
+      const userRef = doc(db, 'users', currentUserId);
+      const userSnap = await getDoc(userRef);
+      
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        const partnerId = data?.partnerId || null;
+        const status = data?.relationshipStatus || null;
+        setCurrentUserPartnerId(partnerId);
+        setCurrentUserRelationshipStatus(status);
+        console.log('✅ Lấy currentUser info:', {
+          partnerId,
+          status
+        });
+      } else {
+        setCurrentUserPartnerId(null);
+        setCurrentUserRelationshipStatus(null);
+      }
+    } catch (error) {
+      console.error('Fetch current user partner error:', error);
+      setCurrentUserPartnerId(null);
+      setCurrentUserRelationshipStatus(null);
+    }
+  };
+
+  const fetchTargetUserPartnerFromFirestore = async () => {
+    try {
+      const userRef = doc(db, 'users', targetUserId);
+      const userSnap = await getDoc(userRef);
+      
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        const partnerId = data?.partnerId || null;
+        setTargetUserPartnerId(partnerId);
+        console.log('✅ Lấy targetUser partnerId:', partnerId);
+      } else {
+        setTargetUserPartnerId(null);
+      }
+    } catch (error) {
+      console.error('Fetch target user partner error:', error);
+      setTargetUserPartnerId(null);
+    }
+  };
+
   const checkMatchStatus = async () => {
+    console.log('🔄 Calling checkMatchStatus', { 
+      currentUserId, 
+      targetUserId
+    });
     try {
       const response = await fetch(
         `${apiUrl}/check-match-status?userId=${currentUserId}&targetId=${targetUserId}`
@@ -36,17 +108,23 @@ export default function UserPersonalInfo({
       
       if (data.success) {
         setMatchStatus(data.status);
+        console.log('📊 matchStatus set to:', data.status);
       }
     } catch (error) {
-      console.error('Check match status error:', error);
+      console.error('❌ Error:', error);
     }
   };
 
   const handleMatchPress = () => {
     if (matchStatus === 'pending') {
-      return; // Không làm gì nếu đang pending
+      return;
     }
-    if (matchStatus === 'matched') {
+    // Kiểm tra xem có phải partner không
+    const arePartners = 
+      currentUserId === targetUserPartnerId && 
+      targetUserId === currentUserPartnerId;
+    
+    if (arePartners) {
       setShowBreakupPopup(true);
     } else {
       setShowMatchPopup(true);
@@ -111,8 +189,10 @@ export default function UserPersonalInfo({
       const data = await response.json();
       
       if (data.success) {
-        Alert.alert('Đã chia tay', `Mối quan hệ đã kết thúc sau ${data.duration}`);
+        Alert.alert('Đã chia tay', `Mối quan hệ đã kết thúc.`);
         setMatchStatus('none');
+        setCurrentUserPartnerId(null);
+        setTargetUserPartnerId(null);
         setShowBreakupPopup(false);
         if (onBreakup) {
           onBreakup();
@@ -128,99 +208,208 @@ export default function UserPersonalInfo({
     }
   };
 
-  const renderInfoCard = (item, isFullWidth = false) => (
-    <View style={[styles.infoCard, isFullWidth && styles.fullWidth]} key={item.label}>
-      <View style={styles.iconWrapper}>
-        <MaterialIcons name={item.icon} size={20} color="#ff7bbf" />
-      </View>
-      <View style={styles.infoContent}>
-        <Text style={styles.label}>{item.label}</Text>
-        <Text style={styles.value} numberOfLines={1}>{item.value}</Text>
-      </View>
-    </View>
-  );
+  const renderInfoCard = (item) => {
+    const isRelationshipCard = item.isRelationship && isInRelationship;
 
-  const renderActionButton = () => {
-    // Nếu là profile của chính mình, không hiển thị nút
-    if (currentUserId === targetUserId) {
-      return null;
-    }
-
-    // Nếu không phải độc thân, không hiển thị nút
-    if (!isSingle) {
-      return null;
-    }
-
-    let buttonText = 'Ghép đôi';
-    let buttonIcon = 'favorite';
-    let buttonDisabled = false;
-    let buttonColors = ['#ff6b9d', '#c44dff'];
-
-    if (matchStatus === 'pending') {
-      buttonText = 'Đang chờ phản hồi...';
-      buttonIcon = 'schedule';
-      buttonDisabled = true;
-      buttonColors = ['#666', '#999'];
-    } else if (matchStatus === 'matched') {
-      buttonText = 'Chia tay';
-      buttonIcon = 'heart-broken';
-      buttonColors = ['#ff4444', '#cc0000'];
+    if (isRelationshipCard) {
+      return (
+        <View 
+          style={styles.relationshipRow}
+          key={item.label}
+        >
+          <LinearGradient
+            colors={['rgba(255, 107, 157, 0.3)', 'rgba(196, 77, 255, 0.3)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.relationshipGradient}
+          >
+            <View style={styles.iconContainer}>
+              <MaterialIcons name={item.icon} size={24} color="#ff6b9d" />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>{item.label}</Text>
+              <View style={styles.relationshipValueContainer}>
+                <Text style={[styles.infoValue, styles.relationshipValue]}>
+                  {item.value}
+                </Text>
+                <MaterialIcons name="favorite" size={16} color="#ff6b9d" style={styles.heartIcon} />
+              </View>
+            </View>
+          </LinearGradient>
+        </View>
+      );
     }
 
     return (
+      <View style={[styles.infoRow, item.halfWidth && styles.halfWidth]} key={item.label}>
+        <View style={styles.iconContainer}>
+          <MaterialIcons name={item.icon} size={22} color="#ff7bbf" />
+        </View>
+        <View style={styles.infoTextContainer}>
+          <Text style={styles.infoLabel}>{item.label}</Text>
+          <Text style={styles.infoValue}>{item.value}</Text>
+        </View>
+      </View>
+    );
+  };
+
+  const personalInfoItems = [
+    { 
+      icon: 'favorite', 
+      label: 'Trạng thái', 
+      value: relationshipStatus || 'Chưa cập nhật', 
+      fullWidth: true,
+      isRelationship: true 
+    },
+    { icon: 'cake', label: 'Tuổi', value: age || 'Chưa cập nhật', halfWidth: true },
+    { icon: 'wc', label: 'Giới tính', value: gender || 'Chưa cập nhật', halfWidth: true },
+    { icon: 'straighten', label: 'Chiều cao', value: height != null ? `${height} m` : 'Chưa cập nhật', halfWidth: true },
+    { icon: 'fitness-center', label: 'Cân nặng', value: weight != null ? `${weight} kg` : 'Chưa cập nhật', halfWidth: true },
+    { icon: 'work', label: 'Công việc', value: job || 'Chưa cập nhật', fullWidth: true },
+  ];
+
+  const renderInfo = (items) => {
+    const rows = [];
+    let i = 0;
+    
+    while (i < items.length) {
+      const currentItem = items[i];
+      
+      if (currentItem.fullWidth) {
+        rows.push(
+          <View key={i} style={styles.rowContainer}>
+            {renderInfoCard(currentItem)}
+          </View>
+        );
+        i++;
+      } else if (currentItem.halfWidth && i + 1 < items.length && items[i + 1].halfWidth) {
+        rows.push(
+          <View key={i} style={styles.rowContainer}>
+            {renderInfoCard(currentItem)}
+            {renderInfoCard(items[i + 1])}
+          </View>
+        );
+        i += 2;
+      } else {
+        rows.push(
+          <View key={i} style={styles.rowContainer}>
+            {renderInfoCard(currentItem)}
+          </View>
+        );
+        i++;
+      }
+    }
+    
+    return rows;
+  };
+
+  const renderActionButton = () => {
+  console.log('🎬 renderActionButton called');
+  console.log('currentUserId:', currentUserId);
+  console.log('targetUserId:', targetUserId);
+  console.log('matchStatus:', matchStatus);
+  console.log('currentUserPartnerId:', currentUserPartnerId);
+  console.log('targetUserPartnerId:', targetUserPartnerId);
+  console.log('isCurrentUserSingle:', isCurrentUserSingle);
+  console.log('isTargetUserSingle:', isTargetUserSingle);
+
+  // Bản thân xem profile của mình
+  if (currentUserId === targetUserId) {
+    console.log('❌ Same user, returning null');
+    return null;
+  }
+
+  // Kiểm tra xem A và B có phải là partner của nhau không
+  // uid của A === partnerId của B VÀ uid của B === partnerId của A
+  const arePartners = 
+    currentUserId === targetUserPartnerId && 
+    targetUserId === currentUserPartnerId;
+  
+  console.log('🔍 Debug:', {
+    arePartners,
+    condition1: currentUserId === targetUserPartnerId,
+    condition2: targetUserId === currentUserPartnerId,
+  });
+
+  // TRƯỜNG HỢP 1: A và B là partner của nhau → Hiển thị nút "Chia tay"
+  if (arePartners) {
+    console.log('✅ Showing breakup button (they are partners)');
+    return (
       <TouchableOpacity 
-        activeOpacity={buttonDisabled ? 1 : 0.85}
+        activeOpacity={0.85}
         onPress={handleMatchPress}
-        disabled={buttonDisabled}
         style={styles.matchButtonWrapper}
       >
         <LinearGradient
-          colors={buttonColors}
+          colors={['#ff4d6d', '#cd043dff']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={[styles.matchButton, buttonDisabled && styles.disabledButton]}
+          style={styles.matchButton}
         >
-          <MaterialIcons name={buttonIcon} size={20} color="#fff" />
-          <Text style={styles.matchButtonText}>{buttonText}</Text>
+          <MaterialIcons name="heart-broken" size={20} color="#fff" />
+          <Text style={styles.matchButtonText}>Chia tay</Text>
         </LinearGradient>
       </TouchableOpacity>
     );
-  };
+  }
+
+  // TRƯỜNG HỢP 2: Đang chờ phản hồi
+  if (matchStatus === 'pending') {
+    console.log('✅ Showing pending button');
+    return (
+      <TouchableOpacity 
+        activeOpacity={1}
+        disabled={true}
+        style={styles.matchButtonWrapper}
+      >
+        <LinearGradient
+          colors={['#666', '#999']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.matchButton, styles.disabledButton]}
+        >
+          <MaterialIcons name="schedule" size={20} color="#fff" />
+          <Text style={styles.matchButtonText}>Đang chờ phản hồi...</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
+
+  // TRƯỜNG HỢP 3: A độc thân VÀ B độc thân → Hiển thị nút "Ghép đôi"
+  if (isCurrentUserSingle && isTargetUserSingle) {
+    console.log('✅ Showing match button (both are single)');
+    return (
+      <TouchableOpacity 
+        activeOpacity={0.85}
+        onPress={handleMatchPress}
+        style={styles.matchButtonWrapper}
+      >
+        <LinearGradient
+          colors={['#ff6b9d', '#c44dff']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.matchButton}
+        >
+          <MaterialIcons name="favorite" size={20} color="#fff" />
+          <Text style={styles.matchButtonText}>Ghép đôi</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
+
+  // Các trường hợp khác không hiển thị nút
+  console.log('❌ No button to show');
+  return null;
+};
 
   return (
     <View style={styles.containerWrapper}>
       <View style={styles.container}>
-        {/* Trạng thái - Full width */}
-        <View style={styles.statusRow}>
-          {renderInfoCard({ 
-            icon: 'favorite', 
-            label: 'Trạng thái', 
-            value: relationshipStatus || 'Chưa cập nhật' 
-          }, true)}
-        </View>
-
-        {/* Grid 2 cột */}
-        <View style={styles.infoGrid}>
-          {renderInfoCard({ icon: 'cake', label: 'Tuổi', value: age || 'Chưa cập nhật' })}
-          {renderInfoCard({ icon: 'wc', label: 'Giới tính', value: gender || 'Chưa cập nhật' })}
-          {renderInfoCard({ icon: 'straighten', label: 'Chiều cao', value: height != null ? `${height} m` : 'Chưa cập nhật' })}
-          {renderInfoCard({ icon: 'fitness-center', label: 'Cân nặng', value: weight != null ? `${weight} kg` : 'Chưa cập nhật' })}
-        </View>
-
-        {/* Công việc - Full width */}
-        <View style={styles.jobRow}>
-          {renderInfoCard({ 
-            icon: 'work', 
-            label: 'Công việc', 
-            value: job || 'Chưa cập nhật' 
-          }, true)}
-        </View>
+        {renderInfo(personalInfoItems)}
       </View>
 
-      {/* Nút hành động */}
       {renderActionButton()}
 
-      {/* Popup Ghép đôi */}
       <Modal
         visible={showMatchPopup}
         transparent={true}
@@ -277,7 +466,6 @@ export default function UserPersonalInfo({
         </View>
       </Modal>
 
-      {/* Popup Chia tay */}
       <Modal
         visible={showBreakupPopup}
         transparent={true}
@@ -287,7 +475,7 @@ export default function UserPersonalInfo({
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <MaterialIcons name="heart-broken" size={28} color="#ff4444" />
+              <MaterialIcons name="heart-broken" size={28} color="#ff4d6d" />
               <Text style={styles.modalTitle}>Xác nhận chia tay</Text>
             </View>
 
@@ -313,7 +501,7 @@ export default function UserPersonalInfo({
                 disabled={loading}
               >
                 <LinearGradient
-                  colors={['#ff4444', '#cc0000']}
+                  colors={['#ff4d6d', '#cd043dff']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.sendButton}
@@ -339,55 +527,82 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   container: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 20,
+    backgroundColor: '#000',
+    borderRadius: 14,
     padding: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 123, 191, 0.2)',
+    borderWidth: 2,
+    borderColor: '#ff7acb',
   },
-  statusRow: {
-    marginBottom: 12,
-  },
-  infoGrid: {
+  rowContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 12,
+    gap: 8,
+    marginBottom: 8,
   },
-  jobRow: {
-    marginTop: 0,
-  },
-  infoCard: {
-    width: '48%',
+  infoRow: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
     paddingVertical: 12,
+    paddingHorizontal: 12,
+    backgroundColor: '#0a0a0a',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#1a1a1a',
   },
-  fullWidth: {
-    width: '100%',
+  halfWidth: {
+    flex: 0.5,
   },
-  iconWrapper: {
+  relationshipRow: {
+    flex: 1,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  relationshipGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderColor: 'rgba(255, 107, 157, 0.4)',
+  },
+  relationshipValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  relationshipValue: {
+    color: '#ff6b9d',
+    fontWeight: '700',
+    fontSize: 17,
+    textShadowColor: 'rgba(255, 107, 157, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  heartIcon: {
+    marginLeft: 2,
+  },
+  iconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: 'rgba(255, 123, 191, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
   },
-  infoContent: {
+  infoTextContainer: {
     flex: 1,
-    gap: 2,
   },
-  label: {
-    fontSize: 11,
+  infoLabel: {
     color: '#999',
-    fontWeight: '500',
-  },
-  value: {
-    fontSize: 15,
-    color: '#fff',
+    fontSize: 13,
     fontWeight: '600',
+    marginBottom: 2,
+  },
+  infoValue: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
   },
   matchButtonWrapper: {
     marginTop: 20,

@@ -1,4 +1,3 @@
-// services/storageService.js
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from '../config/firebaseConfig';
 

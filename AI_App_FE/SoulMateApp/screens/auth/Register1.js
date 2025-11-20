@@ -15,7 +15,7 @@ export default function RegisterScreen1({ navigation }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // ✨ Hiệu ứng breathing + sao + quay
+  // Hiệu ứng breathing + sao + quay
   const glowAnim = useRef(new Animated.Value(0.7)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
@@ -42,7 +42,7 @@ export default function RegisterScreen1({ navigation }) {
   }, []);
   const rotate = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
-  // 🧠 Xử lý đăng ký
+  // Xử lý đăng ký
   const handleRegister = async () => {
     if (!email || !password || !confirmPassword)
       return Alert.alert('⚠️ Thiếu thông tin', 'Vui lòng điền đầy đủ.');

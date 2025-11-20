@@ -1,4 +1,3 @@
-// 📄 src/screens/IceBreakerScreen.jsx
 import React, { useState } from "react";
 import {
   View,
@@ -18,7 +17,7 @@ export default function IceBreakerScreen({ navigation, route }) {
 
   const partnerName = route?.params?.partnerName ?? "người này";
 
-  // ❌ XÓA 3 DEMO — GIỮ DANH SÁCH TRỐNG
+  // GIỮ DANH SÁCH TRỐNG
   const [suggestions, setSuggestions] = useState([]);
 
   const [loading, setLoading] = useState(false);
@@ -27,7 +26,7 @@ export default function IceBreakerScreen({ navigation, route }) {
     try {
       setLoading(true);
 
-      // ⭐ Prompt Fireworks AI
+      // Prompt Fireworks AI
       const prompt = `
       Bạn là AI tạo câu mở đầu cuộc trò chuyện thật tự nhiên. 
       Hãy tạo một câu Ice-breaker cực duyên để bắt chuyện với "${partnerName}".

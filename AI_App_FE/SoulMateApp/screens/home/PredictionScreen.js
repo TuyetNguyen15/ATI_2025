@@ -1,4 +1,3 @@
-// 📄 src/screens/prediction/PredictionScreen.jsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -21,7 +20,7 @@ export default function PredictionScreen({ route }) {
   const { userData, initialPrediction } = route.params || {};
   const [category, setCategory] = useState("daily");
   const [day, setDay] = useState("today");
-  const { loading, prediction, fetchPrediction } = useAstroAPI(); // 🌠
+  const { loading, prediction, fetchPrediction } = useAstroAPI(); 
 
   const [text, setText] = useState(initialPrediction || "");
   useEffect(() => {
@@ -31,7 +30,8 @@ export default function PredictionScreen({ route }) {
       });
     }
   }, [category, day]);
-  // 🎨 Gradient khác nhau cho từng category
+
+  // Gradient khác nhau cho từng category
   const getGradientColors = () => {
     switch (category) {
       case "love":
@@ -45,7 +45,7 @@ export default function PredictionScreen({ route }) {
 
   return (
     <LinearGradient colors={getGradientColors()} style={styles.container}>
-      {/* 🌙 Header */}
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Dự đoán</Text>
         <Text style={styles.subtitle}>
@@ -57,7 +57,7 @@ export default function PredictionScreen({ route }) {
         </Text>
       </View>
 
-      {/* 🔮 Tabs chọn category */}
+      {/* Tabs chọn category */}
       <View style={styles.categoryTabs}>
         {[
           { key: "daily", label: "Hằng ngày" },
@@ -84,7 +84,7 @@ export default function PredictionScreen({ route }) {
         ))}
       </View>
 
-      {/* 📆 Tabs chọn ngày */}
+      {/*Tabs chọn ngày */}
       <View style={styles.dayTabs}>
         {[
           { key: "yesterday", label: "Hôm qua" },
@@ -101,7 +101,7 @@ export default function PredictionScreen({ route }) {
         ))}
       </View>
 
-      {/* 📜 Box nội dung */}
+      {/* Box nội dung */}
       <View style={styles.predictionBox}>
         <Text style={styles.predictionTitle}>
           {category === "daily"
@@ -133,7 +133,7 @@ export default function PredictionScreen({ route }) {
   );
 }
 
-// 🌈 Màu riêng cho từng tab khi active
+// Màu riêng cho từng tab khi active
 const getActiveButtonColor = (key) => {
   switch (key) {
     case "love":

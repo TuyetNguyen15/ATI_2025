@@ -1,8 +1,6 @@
-// services/astrologyService.js
 import { ZODIAC_TRANSLATIONS, PLANET_TRANSLATIONS } from "../constants/translations";
 import { ELEMENT_MAP } from "../constants/astrologyMap";
-const API_KEY = 'ByNqfA4kvD1EBGyi6ZlUC8aekqCi7FgF8VuJ8SF1';
-const BASE_URL = 'https://json.freeastrologyapi.com/western';
+import { ASTROLOGY_API_KEY, ASTROLOGY_BASE_URL } from "../config/api";
 
 // Helper: delay để tránh vượt quá 1 request/second
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -27,14 +25,14 @@ async function getCoordinates(address) {
   }
 }
 
-// Helper: Parse date và time
+// Parse date và time
 function parseDateTime(birthDate, birthTime) {
   const [year, month, date] = birthDate.split('-').map(Number);
   const [hours, minutes] = birthTime.split(':').map(Number);
   return { year, month, date, hours, minutes, seconds: 0 };
 }
 
-// Helper: Tính timezone offset
+// Tính timezone offset
 function getTimezoneOffset(date) {
   const offset = -date.getTimezoneOffset() / 60;
   return offset;
@@ -73,11 +71,11 @@ function createRequestBody(birthDate, birthTime, latitude, longitude) {
 async function callAPI(endpoint, requestBody, retryCount = 3) {
   for (let i = 0; i < retryCount; i++) {
     try {
-      const response = await fetch(`${BASE_URL}/${endpoint}`, {
+      const response = await fetch(`${ASTROLOGY_BASE_URL}/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
+          'x-api-key': ASTROLOGY_API_KEY,
         },
         body: JSON.stringify(requestBody),
       });
@@ -96,7 +94,7 @@ async function callAPI(endpoint, requestBody, retryCount = 3) {
   }
 }
 
-// Lấy thông tin hành tinh (bao gồm tất cả planets)
+// Lấy thông tin tất cả planets
 async function getPlanetsInfo(requestBody) {
   const data = await callAPI('planets', requestBody);
   const planets = {};
@@ -135,7 +133,7 @@ async function getPlanetsInfo(requestBody) {
   return planets;
 }
 
-// Lấy thông tin cung nhà (chuyển sang tiếng Việt)
+// Lấy thông tin cung nhà
 async function getHousesInfo(requestBody) {
   await delay(1100);
   const data = await callAPI('houses', requestBody);
@@ -189,7 +187,7 @@ async function getNatalChart(requestBody) {
   return data.output || '';
 }
 
-// Tính tỷ lệ nguyên tố (với tên tiếng Việt)
+// Tính tỷ lệ nguyên tố
 function calculateElementalRatio(planets) {
   const counts = { 'Hoả': 0, 'Thổ': 0, 'Khí': 0, 'Thuỷ': 0 };
   
@@ -235,7 +233,7 @@ function calculateAge(birthDate) {
   }
 }
 
-// Main function: Lấy toàn bộ thông tin chiêm tinh
+// Lấy toàn bộ thông tin chiêm tinh
 export async function fetchAstrologyData(birthDate, birthTime, birthPlace) {
   try {
     console.log('🔮 Fetching astrology data...');

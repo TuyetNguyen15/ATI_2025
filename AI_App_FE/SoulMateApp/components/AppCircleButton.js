@@ -25,8 +25,8 @@ const styles = StyleSheet.create({
   button: {
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 3, // bóng đổ nhẹ (Android)
-    shadowColor: '#000', // bóng đổ (iOS)
+    elevation: 3, 
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,

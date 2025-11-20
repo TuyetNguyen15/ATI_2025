@@ -17,6 +17,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { updateProfileField, resetProfile } from '../my_profile/profileSlice';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../config/firebaseConfig';
+import { BASE_URL } from '../../config/api';
 
 export default function EditProfile({ navigation, route }) {
   const dispatch = useDispatch();
@@ -43,7 +44,7 @@ export default function EditProfile({ navigation, route }) {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // ✅ Validate form với các giới hạn hợp lý
+  // Validate form với các giới hạn hợp lý
   const validatePersonalInfo = () => {
     // Tên: không được rỗng, chỉ chứa chữ cái, khoảng trắng, dấu tiếng Việt
     if (!name.trim()) {
@@ -170,7 +171,7 @@ export default function EditProfile({ navigation, route }) {
     return true;
   };
 
-  // ✅ Xử lý input chỉ cho phép số và dấu chấm
+  // Xử lý input chỉ cho phép số và dấu chấm
   const handleHeightChange = (text) => {
     // Chỉ cho phép số và 1 dấu chấm
     const cleaned = text.replace(/[^0-9.]/g, '');
@@ -193,7 +194,7 @@ export default function EditProfile({ navigation, route }) {
     setAge(cleaned);
   };
 
-  // ✅ Hàm logout đúng cách
+  // Hàm logout đúng cách
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -226,7 +227,7 @@ export default function EditProfile({ navigation, route }) {
         };
 
         // Gọi API để cập nhật
-        const response = await fetch('http://192.168.23.106:5000/update-profile', {
+        const response = await fetch(`${BASE_URL}/update-profile`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -238,7 +239,7 @@ export default function EditProfile({ navigation, route }) {
         const result = await response.json();
 
         if (result.success) {
-          // ✅ Sửa: Cập nhật từng field thay vì truyền object
+          // Cập nhật từng field
           Object.entries(updatedFields).forEach(([field, value]) => {
             dispatch(updateProfileField({ field, value }));
           });
@@ -254,10 +255,10 @@ export default function EditProfile({ navigation, route }) {
           return;
         }
 
-        // ✅ Nếu đổi mật khẩu, xác thực mật khẩu hiện tại trước
+        // Nếu đổi mật khẩu, xác thực mật khẩu hiện tại trước
         if (newPassword || email.trim() !== profile.email) {
           try {
-            const verifyResponse = await fetch('http://192.168.23.106:5000/verify-password', {
+            const verifyResponse = await fetch(`${BASE_URL}/verify-password`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -287,7 +288,7 @@ export default function EditProfile({ navigation, route }) {
           updatedFields.password = newPassword;
         }
 
-        const response = await fetch('http://192.168.23.106:5000/update-profile', {
+        const response = await fetch(`${BASE_URL}/update-profile`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -302,7 +303,7 @@ export default function EditProfile({ navigation, route }) {
           // Chỉ cập nhật email vào Redux (không cập nhật password)
           dispatch(updateProfileField({ field: 'email', value: updatedFields.email }));
 
-          // ✅ Nếu đổi email hoặc mật khẩu, bắt buộc đăng xuất
+          // Nếu đổi email hoặc mật khẩu, bắt buộc đăng xuất
           if (result.authUpdated) {
             Alert.alert(
               'Thành công',
@@ -310,7 +311,7 @@ export default function EditProfile({ navigation, route }) {
               [
                 {
                   text: 'OK',
-                  onPress: handleLogout, // ✅ Sửa: Gọi hàm handleLogout thay vì dispatch(logout())
+                  onPress: handleLogout, 
                 },
               ],
               { cancelable: false }

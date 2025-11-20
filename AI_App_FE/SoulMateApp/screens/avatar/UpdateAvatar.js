@@ -16,6 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firebaseConfig';
 import { updateProfileField } from '../my_profile/profileSlice';
+import { BASE_URL } from '../../config/api';
 
 export default function UpdateAvatar({ route, navigation }) {
   const { imageType } = route.params; // "avatar" hoặc "coverImage"
@@ -30,7 +31,7 @@ export default function UpdateAvatar({ route, navigation }) {
     ? require('../../assets/default_avatar.jpg')
     : require('../../assets/default_cover_image.jpg');
 
-  // 📸 Chọn ảnh từ thư viện
+  // Chọn ảnh từ thư viện
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
@@ -40,7 +41,7 @@ export default function UpdateAvatar({ route, navigation }) {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'], // ✅ Updated: Use array instead of MediaTypeOptions
+      mediaTypes: ['images'], // Use array instead of MediaTypeOptions
       allowsEditing: true,
       aspect: imageType === 'avatar' ? [1, 1] : [16, 9],
       quality: 0.8,
@@ -52,7 +53,7 @@ export default function UpdateAvatar({ route, navigation }) {
     }
   };
 
-  // 📷 Chụp ảnh mới
+  // Chụp ảnh mới
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     
@@ -73,7 +74,7 @@ export default function UpdateAvatar({ route, navigation }) {
     }
   };
 
-  // ☁️ Upload ảnh lên server
+  // Upload ảnh lên server
   const uploadImage = async () => {
     if (!selectedImage) {
       Alert.alert('⚠️', 'Vui lòng chọn ảnh trước!');
@@ -84,7 +85,7 @@ export default function UpdateAvatar({ route, navigation }) {
 
     try {
       // Gửi base64 lên Flask server
-      const response = await fetch('http://192.168.23.106:5000/upload-image', {
+      const response = await fetch(`${BASE_URL}/upload-image`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +119,7 @@ export default function UpdateAvatar({ route, navigation }) {
     }
   };
 
-  // 🗑️ Xóa ảnh hiện tại
+  // Xóa ảnh hiện tại
   const deleteImage = async () => {
     Alert.alert(
       '🗑️ Xóa ảnh',
@@ -133,7 +134,7 @@ export default function UpdateAvatar({ route, navigation }) {
               setUploading(true);
 
               // Xóa trên server
-              await fetch('http://192.168.23.106:5000/delete-image', {
+              await fetch(`${BASE_URL}/delete-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

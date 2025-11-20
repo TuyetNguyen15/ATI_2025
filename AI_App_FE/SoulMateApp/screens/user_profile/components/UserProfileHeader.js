@@ -1,11 +1,18 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
-export default function UserProfileHeader({ user }) {
+export default function UserProfileHeader({ user, navigation }) {
   const { name, sun, avatar, coverImage } = user || {};
 
   const defaultCover = require('../../../assets/default_cover_image.jpg');
   const defaultAvatar = require('../../../assets/default_avatar.jpg');
+
+  const handleGoBack = () => {
+    if (navigation && navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -14,6 +21,14 @@ export default function UserProfileHeader({ user }) {
           source={coverImage ? { uri: coverImage } : defaultCover}
           style={styles.coverImage}
         />
+        
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={handleGoBack}
+          activeOpacity={0.8}
+        >
+          <MaterialIcons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.avatarContainer}>
@@ -36,12 +51,25 @@ const styles = StyleSheet.create({
   },
   coverContainer: {
     width: '100%',
+    position: 'relative',
   },
   coverImage: {
     width: '100%',
     height: 200,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
   },
   avatarContainer: {
     alignItems: 'center',

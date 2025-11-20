@@ -21,7 +21,7 @@ const actions = [
 
 export default function ConnectionActionsScreen({ navigation, route }) {
 
-  // ⭐ LẤY UID NGƯỜI ĐỐI DIỆN
+  // LẤY UID NGƯỜI ĐỐI DIỆN
   const partnerId = route?.params?.partnerId;
   const partnerName = route?.params?.partnerName;
 
@@ -47,7 +47,7 @@ export default function ConnectionActionsScreen({ navigation, route }) {
         break;
 
       case "compat":
-        navigation.navigate("DetailedCompatScreen", { uid: partnerId });
+        navigation.navigate("DetailedCompatibilityScreen", { uid: partnerId });
         break;
 
       case "block":

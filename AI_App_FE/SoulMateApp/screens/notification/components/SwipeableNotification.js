@@ -1,4 +1,3 @@
-// src/components/SwipeableNotification.js
 import React, { useRef, useState } from 'react';
 import { 
   View, 
@@ -11,7 +10,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const SwipeableNotification = ({ notif, onMarkAsRead, onDelete }) => {
+const SwipeableNotification = ({ notif, onPress, onMarkAsRead, onDelete }) => {
   const translateX = useRef(new Animated.Value(0)).current;
   const [swiping, setSwiping] = useState(false);
   const [revealed, setRevealed] = useState(false);
@@ -77,8 +76,18 @@ const SwipeableNotification = ({ notif, onMarkAsRead, onDelete }) => {
     });
   };
 
+  const handleNotificationPress = () => {
+    if (!swiping && onPress) {
+      onPress(notif);
+    }
+  };
+
   const getIconColor = (type) => {
     switch (type) {
+      case 'match_request':
+        return '#ff5c8d';
+      case 'match_accepted':
+        return '#4CAF50';
       case 'prediction':
         return '#ff7bbf';
       case 'love':
@@ -122,7 +131,7 @@ const SwipeableNotification = ({ notif, onMarkAsRead, onDelete }) => {
         >
           <TouchableOpacity
             style={styles.notification}
-            onPress={() => !swiping && onMarkAsRead(notif.id)}
+            onPress={handleNotificationPress}
             activeOpacity={0.9}
             disabled={swiping}
           >
@@ -146,7 +155,7 @@ const SwipeableNotification = ({ notif, onMarkAsRead, onDelete }) => {
                 <Text style={styles.notificationTitle}>
                   {notif.title}
                 </Text>
-                <Text style={styles.notificationMessage}>
+                <Text style={styles.notificationMessage} numberOfLines={2}>
                   {notif.message}
                 </Text>
                 <Text style={styles.notificationTime}>

@@ -1,5 +1,3 @@
-// 📄 App.js — Bản chuẩn nhất (2025)
-
 import * as React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -11,11 +9,8 @@ import { auth } from './config/firebaseConfig';
 import { loadUserProfile } from './services/profileLoader';
 import * as SplashScreen from 'expo-splash-screen';
 
-// --- IMPORT TẤT CẢ MÀN HÌNH (Chỉ 1 lần) ---
-// (LƯU Ý: Tôi đã gộp cả hai bộ màn hình, bạn hãy kiểm tra lại đường dẫn!)
-
 // Màn hình Onboarding
-import OnboardingScreen from './onboardingScreen/OnboardingScreen';
+import OnboardingScreen from './screens/onboarding/OnboardingScreen';
 import LoginScreen from './screens/auth/LoginScreen';
 import RegisterScreen1 from './screens/auth/Register1';
 import RegisterScreen2 from './screens/auth/Register2';
@@ -28,12 +23,14 @@ import NatalChartAnalysis from './screens/astrology_analysis/NatalChartAnalysis'
 import ProfileScreen from './screens/my_profile/ProfileScreen';
 import UserProfileScreen from './screens/user_profile/UserProfileScreen';
 import LoveMatchSelectScreen from './screens/match/LoveMatchSelectScreen';
+import MatchRequestDetailScreen from './screens/match_request/MatchRequestDetailScreen';
 
 // CONNECTION
 import ConnectionActionsScreen from './screens/conversation/ConnectionActionsScreen';
 import IceBreakerScreen from './screens/conversation/IceBreakerScreen';
 import ChatRoomScreen from './screens/chat/ChatRoomScreen';
 import ChatListScreen from './screens/chat/ChatListScreen';
+import DetailedCompatibilityScreen from './screens/conversation/DetailedCompatibilityScreen';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -120,8 +117,12 @@ function AppContent() {
           <Stack.Screen name="EditProfile" component={EditProfile} />
           <Stack.Screen name="NatalChartAnalysis" component={NatalChartAnalysis} />
           <Stack.Screen name="LoveMatchSelectScreen" component={LoveMatchSelectScreen} />
+          <Stack.Screen name="MatchRequestDetailScreen" component={MatchRequestDetailScreen} />
+
+          {/* CONNECTION */}
           <Stack.Screen name="ConnectionActionsScreen" component={ConnectionActionsScreen} />
           <Stack.Screen name="IceBreakerScreen" component={IceBreakerScreen} />
+          <Stack.Screen name="DetailedCompatibilityScreen" component={DetailedCompatibilityScreen} />
 
           {/* ⭐ PROFILE */}
           <Stack.Screen name="ProfileScreen" component={ProfileScreen} />

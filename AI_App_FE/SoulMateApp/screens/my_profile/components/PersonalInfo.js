@@ -8,8 +8,9 @@ export default function PersonalInfo({ navigation }) {
   const [activeTab, setActiveTab] = useState('personal');
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-  // ✅ Lấy state từ Redux (thêm sun, bỏ name)
-  const { relationshipStatus , age, gender, height, weight, job, email, password } = useSelector((state) => state.profile);
+  const { relationshipStatus, age, gender, height, weight, job, email, password } = useSelector((state) => state.profile);
+
+  const isInRelationship = relationshipStatus?.toLowerCase().trim() === 'đã có đôi';
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -24,9 +25,8 @@ export default function PersonalInfo({ navigation }) {
     outputRange: ['5%', '126%'],
   });
 
-  // Cấu hình field + icon (gắn value từ Redux)
   const personalInfoItems = [
-    { icon: 'favorite', label: 'Trạng thái', value: relationshipStatus || 'Chưa cập nhật', fullWidth: true },
+    { icon: 'favorite', label: 'Trạng thái', value: relationshipStatus || 'Chưa cập nhật', fullWidth: true, isRelationship: true },
     { icon: 'cake', label: 'Tuổi', value: age || 'Chưa cập nhật', halfWidth: true },
     { icon: 'wc', label: 'Giới tính', value: gender || 'Chưa cập nhật', halfWidth: true },
     { icon: 'straighten', label: 'Chiều cao', value: height != null ? `${height} m` : 'Chưa cập nhật', halfWidth: true },
@@ -43,17 +43,50 @@ export default function PersonalInfo({ navigation }) {
     navigation.navigate('EditProfile', { editType: activeTab });
   };
 
-  const renderInfoCard = (item) => (
-    <View style={[styles.infoRow, item.halfWidth && styles.halfWidth]}>
-      <View style={styles.iconContainer}>
-        <MaterialIcons name={item.icon} size={22} color="#ff7bbf" />
+  const renderInfoCard = (item) => {
+    const isRelationshipCard = item.isRelationship && isInRelationship;
+
+    if (isRelationshipCard) {
+      return (
+        <View 
+          style={styles.relationshipRow}
+          key={item.label}
+        >
+          <LinearGradient
+            colors={['rgba(255, 107, 157, 0.3)', 'rgba(196, 77, 255, 0.3)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.relationshipGradient}
+          >
+            <View style={styles.iconContainer}>
+              <MaterialIcons name={item.icon} size={24} color="#ff6b9d" />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>{item.label}</Text>
+              <View style={styles.relationshipValueContainer}>
+                <Text style={[styles.infoValue, styles.relationshipValue]}>
+                  {item.value}
+                </Text>
+                <MaterialIcons name="favorite" size={16} color="#ff6b9d" style={styles.heartIcon} />
+              </View>
+            </View>
+          </LinearGradient>
+        </View>
+      );
+    }
+
+    return (
+      <View style={[styles.infoRow, item.halfWidth && styles.halfWidth]} key={item.label}>
+        <View style={styles.iconContainer}>
+          <MaterialIcons name={item.icon} size={22} color="#ff7bbf" />
+        </View>
+        <View style={styles.infoTextContainer}>
+          <Text style={styles.infoLabel}>{item.label}</Text>
+          <Text style={styles.infoValue}>{item.value}</Text>
+        </View>
       </View>
-      <View style={styles.infoTextContainer}>
-        <Text style={styles.infoLabel}>{item.label}</Text>
-        <Text style={styles.infoValue}>{item.value}</Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   const renderInfo = (items) => {
     const rows = [];
@@ -63,7 +96,6 @@ export default function PersonalInfo({ navigation }) {
       const currentItem = items[i];
       
       if (currentItem.fullWidth) {
-        // Full width item
         rows.push(
           <View key={i} style={styles.rowContainer}>
             {renderInfoCard(currentItem)}
@@ -71,7 +103,6 @@ export default function PersonalInfo({ navigation }) {
         );
         i++;
       } else if (currentItem.halfWidth && i + 1 < items.length && items[i + 1].halfWidth) {
-        // Two half width items in a row
         rows.push(
           <View key={i} style={styles.rowContainer}>
             {renderInfoCard(currentItem)}
@@ -80,7 +111,6 @@ export default function PersonalInfo({ navigation }) {
         );
         i += 2;
       } else {
-        // Single half width item (fallback)
         rows.push(
           <View key={i} style={styles.rowContainer}>
             {renderInfoCard(currentItem)}
@@ -120,7 +150,6 @@ export default function PersonalInfo({ navigation }) {
 
   return (
     <View style={styles.containerWrapper}>
-      {/* Gradient Border với Shadow Blur */}
       <LinearGradient
         colors={['#ff7bbf', '#b36dff', '#ff7bbf']}
         start={{ x: 0, y: 0 }}
@@ -128,7 +157,6 @@ export default function PersonalInfo({ navigation }) {
         style={styles.gradientBorder}
       >
         <View style={styles.container}>
-          {/* Switch Tabs */}
           <View style={styles.switchWrapper}>
             <Animated.View style={[styles.switchIndicator, { transform: [{ translateX }] }]} />
             <View style={styles.switchRow}>
@@ -155,7 +183,6 @@ export default function PersonalInfo({ navigation }) {
             </View>
           </View>
 
-          {/* Content */}
           {renderContent()}
         </View>
       </LinearGradient>
@@ -169,7 +196,6 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginTop: 20,
     marginBottom: 32,
-    // Shadow blur effect (glowing)
     shadowColor: '#ff7acb',
     shadowOpacity: 0.6,
     shadowRadius: 20,
@@ -178,7 +204,7 @@ const styles = StyleSheet.create({
   },
   gradientBorder: {
     borderRadius: 16,
-    padding: 2, // Độ dày viền gradient
+    padding: 2,
   },
   container: {
     minHeight: 400,
@@ -277,11 +303,39 @@ const styles = StyleSheet.create({
   halfWidth: {
     flex: 0.5,
   },
+  relationshipRow: {
+    flex: 1,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  relationshipGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderColor: 'rgba(255, 107, 157, 0.4)',
+  },
+  relationshipValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  relationshipValue: {
+    color: '#ff6b9d',
+    fontWeight: '700',
+    fontSize: 17,
+    textShadowColor: 'rgba(255, 107, 157, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  heartIcon: {
+    marginLeft: 2,
+  },
   iconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 123, 191, 0.1)',
+    backgroundColor: 'rgba(255, 123, 191, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
